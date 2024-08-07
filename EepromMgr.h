@@ -49,34 +49,14 @@ void storeSplitTrans(byte type) {
   EEPROM.update(EEPROM_SPLITTRANS, type);
 }
 
-boolean getMonoMultiL() {
-  byte monoMultiL = EEPROM.read(EEPROM_MONOMULTI_L);
-  if (monoMultiL < 0 || monoMultiL > 1) return true;
-  return monoMultiL == 0 ? false : true;
-}
-
-void storeMonoMultiL(byte monoMultiL) {
-  EEPROM.update(EEPROM_MONOMULTI_L, monoMultiL);
-}
-
-boolean getMonoMultiU() {
-  byte monoMultiU = EEPROM.read(EEPROM_MONOMULTI_U);
-  if (monoMultiU < 0 || monoMultiU > 1) return true;
-  return monoMultiU == 0 ? false : true;
-}
-
-void storeMonoMultiU(byte monoMultiU) {
-  EEPROM.update(EEPROM_MONOMULTI_U, monoMultiU);
-}
-
 float getAfterTouchU() {
-  byte AfterTouchDestU = EEPROM.read(EEPROM_AFTERTOUCH_U);
-  if (AfterTouchDestU < 0 || AfterTouchDestU > 4) AfterTouchDestU = 0;
-  return AfterTouchDestU;  //If EEPROM has no key tracking stored
+  upperData[60] = EEPROM.read(EEPROM_AFTERTOUCH_U);
+  if (upperData[60] < 0 || upperData[60] > 4) upperData[60] = 0;
+  return upperData[60];  //If EEPROM has no key tracking stored
 }
 
-void storeAfterTouchU(byte AfterTouchDestU) {
-  EEPROM.update(EEPROM_AFTERTOUCH_U, AfterTouchDestU);
+void storeAfterTouchU(byte AfterTouchDestL) {
+  EEPROM.update(EEPROM_AFTERTOUCH_U, AfterTouchDestL);
 }
 
 float getAfterTouchL() {
@@ -118,66 +98,6 @@ boolean getEncoderDir() {
 
 void storeEncoderDir(byte encoderDir) {
   EEPROM.update(EEPROM_ENCODER_DIR, encoderDir);
-}
-
-boolean getFilterEnvU() {
-  byte fenv = EEPROM.read(EEPROM_FILTERENV_U);
-  if (fenv < 0 || fenv > 1) return true;
-  return fenv == 0 ? false : true;
-}
-
-boolean getFilterEnvL() {
-  byte fenv = EEPROM.read(EEPROM_FILTERENV_L);
-  if (fenv < 0 || fenv > 1) return true;
-  return fenv == 0 ? false : true;
-}
-
-void storeFilterEnvU(byte filterLogLinU) {
-  EEPROM.update(EEPROM_FILTERENV_U, filterLogLinU);
-}
-
-void storeFilterEnvL(byte filterLogLinL) {
-  EEPROM.update(EEPROM_FILTERENV_L, filterLogLinL);
-}
-
-boolean getAmpEnvU() {
-  byte aenv = EEPROM.read(EEPROM_AMPENV_U);
-  if (aenv < 0 || aenv > 1) return true;
-  return aenv == 0 ? false : true;
-}
-
-boolean getAmpEnvL() {
-  byte aenv = EEPROM.read(EEPROM_AMPENV_L);
-  if (aenv < 0 || aenv > 1) return true;
-  return aenv == 0 ? false : true;
-}
-
-void storeAmpEnvU(byte ampLogLinU) {
-  EEPROM.update(EEPROM_AMPENV_U, ampLogLinU);
-}
-
-void storeAmpEnvL(byte ampLogLinL) {
-  EEPROM.update(EEPROM_AMPENV_L, ampLogLinL);
-}
-
-boolean getKeyTrackU() {
-  byte keyTrackSWU = EEPROM.read(EEPROM_KEYTRACK_U);
-  if (keyTrackSWU < 0 || keyTrackSWU > 1) return true;
-  return keyTrackSWU == 0 ? false : true;
-}
-
-boolean getKeyTrackL() {
-  byte keyTrackSWL = EEPROM.read(EEPROM_KEYTRACK_L);
-  if (keyTrackSWL < 0 || keyTrackSWL > 1) return true;
-  return keyTrackSWL == 0 ? false : true;
-}
-
-void storeKeyTrackU(byte keyTrackSWU) {
-  EEPROM.update(EEPROM_KEYTRACK_U, keyTrackSWU);
-}
-
-void storeKeyTrackL(byte keyTrackSWL) {
-  EEPROM.update(EEPROM_KEYTRACK_L, keyTrackSWL);
 }
 
 int getLastPatchU() {

@@ -147,20 +147,6 @@ void renderCurrentPatchPage() {
   }
 }
 
-void renderEnv(float att, float dec, float sus, float rel) {
-  if (upperSW) {
-    tft.drawLine(100, 94, 100 + (att * 60), 74, ST7735_CYAN);
-    tft.drawLine(100 + (att * 60), 74.0, 100 + ((att + dec) * 60), 94 - (sus / 52), ST7735_CYAN);
-    tft.drawFastHLine(100 + ((att + dec) * 60), 94 - (sus / 52), 40 - ((att + dec) * 60), ST7735_CYAN);
-    tft.drawLine(139, 94 - (sus / 52), 139 + (rel * 60), 94, ST7735_CYAN);
-  } else {
-    tft.drawLine(100, 94, 100 + (att * 60), 74, ST7735_CYAN);
-    tft.drawLine(100 + (att * 60), 74.0, 100 + ((att + dec) * 60), 94 - (sus / 52), ST7735_CYAN);
-    tft.drawFastHLine(100 + ((att + dec) * 60), 94 - (sus / 52), 40 - ((att + dec) * 60), ST7735_CYAN);
-    tft.drawLine(139, 94 - (sus / 52), 139 + (rel * 60), 94, ST7735_CYAN);
-  }
-}
-
 void renderCurrentParameterPage() {
   switch (state) {
     case PARAMETER:
@@ -190,14 +176,6 @@ void renderCurrentParameterPage() {
         tft.setCursor(1, 122);
         tft.setTextColor(ST7735_WHITE);
         tft.println(currentPatchNameL);
-        switch (paramType) {
-          case FILTER_ENV:
-            renderEnv(filterAttackU * 0.0001, filterDecayU * 0.0001, filterSustainU, filterReleaseU * 0.0001);
-            break;
-          case AMP_ENV:
-            renderEnv(ampAttackU * 0.0001, ampDecayU * 0.0001, ampSustainU, ampReleaseU * 0.0001);
-            break;
-        }
       } else {
         if (wholemode) {
           //upper whole mode patch
@@ -260,14 +238,6 @@ void renderCurrentParameterPage() {
           tft.setCursor(1, 55);
           tft.setTextColor(ST7735_WHITE);
           tft.println(currentPatchNameU);
-          switch (paramType) {
-            case FILTER_ENV:
-              renderEnv(filterAttackL * 0.0001, filterDecayL * 0.0001, filterSustainL, filterReleaseL * 0.0001);
-              break;
-            case AMP_ENV:
-              renderEnv(ampAttackL * 0.0001, ampDecayL * 0.0001, ampSustainL, ampReleaseL * 0.0001);
-              break;
-          }
         }
       }
       break;

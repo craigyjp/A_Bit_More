@@ -29,7 +29,7 @@ const float PULSEWIDTH[128] = {0, 0, 0, 1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6
 #define RE_READ -9
 #define LFOMAXRATE 40.0f//40Hz
 #define NO_OF_VOICES 8
-#define NO_OF_PARAMS 72
+#define NO_OF_PARAMS 76
 const char* INITPATCHNAME = "Initial Patch";
 const uint32_t CLICK_DURATION = 250;
 #define HOLD_DURATION 1000
