@@ -29,9 +29,7 @@
 #include "HWControls.h"
 #include "EepromMgr.h"
 #include "Settings.h"
-#include <ShiftRegister74HC595.h>
 #include <RoxMux.h>
-
 
 #define PARAMETER 0      //The main page for displaying the current patch and control (parameter) changes
 #define RECALL 1         //Patches list
@@ -99,6 +97,23 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);  //RX - Pin 0
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial6, MIDI6);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial5, MIDI5);
 
+#define SRP_TOTAL 8
+Rox74HC595<SRP_TOTAL> srp;
+
+// pins for 74HC595
+#define LED_DATA 6   // pin 14 on 74HC595 (DATA)
+#define LED_CLK 7    // pin 11 on 74HC595 (CLK)
+#define LED_LATCH 8  // pin 12 on 74HC595 (LATCH)
+#define LED_PWM -1    // pin 13 on 74HC595
+
+#define OCTO_TOTAL 4
+#define BTN_DEBOUNCE 50
+RoxOctoswitch<OCTO_TOTAL, BTN_DEBOUNCE> octoswitch;
+
+// pins for 74HC165
+#define PIN_DATA 17  // pin 9 on 74HC165 (DATA)
+#define PIN_CLK 41   // pin 2 on 74HC165 (CLK))
+#define PIN_LOAD 40  // pin 1 on 74HC165 (LOAD)
 
 int count = 0;  //For MIDI Clk Sync
 int DelayForSH3 = 50;
@@ -113,14 +128,16 @@ unsigned long buttonDebounce = 0;
 // create a global shift register object
 // parameters: <number of shift registers> (data pin, clock pin, latch pin)
 
-ShiftRegister74HC595<8> srp(6, 7, 8);
-
 void setup() {
   SPI.begin();
-  SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
   setupDisplay();
   setUpSettings();
   setupHardware();
+
+  octoswitch.begin(PIN_DATA, PIN_LOAD, PIN_CLK);
+  octoswitch.setCallback(onButtonPress);
+
+  srp.begin(LED_DATA, LED_LATCH, LED_CLK, LED_PWM);
 
   SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE1));
   digitalWrite(DAC_CS1, LOW);
@@ -911,9 +928,9 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P LowPass"));
           }
         }
-        srp.set(FILTERA_UPPER, LOW);
-        srp.set(FILTERB_UPPER, LOW);
-        srp.set(FILTERC_UPPER, LOW);
+        srp.writePin(FILTERA_UPPER, LOW);
+        srp.writePin(FILTERB_UPPER, LOW);
+        srp.writePin(FILTERC_UPPER, LOW);
         break;
 
       case 1:
@@ -926,9 +943,9 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P LowPass"));
           }
         }
-        srp.set(FILTERA_UPPER, HIGH);
-        srp.set(FILTERB_UPPER, LOW);
-        srp.set(FILTERC_UPPER, LOW);
+        srp.writePin(FILTERA_UPPER, HIGH);
+        srp.writePin(FILTERB_UPPER, LOW);
+        srp.writePin(FILTERC_UPPER, LOW);
         break;
 
       case 2:
@@ -941,9 +958,9 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P HighPass"));
           }
         }
-        srp.set(FILTERA_UPPER, LOW);
-        srp.set(FILTERB_UPPER, HIGH);
-        srp.set(FILTERC_UPPER, LOW);
+        srp.writePin(FILTERA_UPPER, LOW);
+        srp.writePin(FILTERB_UPPER, HIGH);
+        srp.writePin(FILTERC_UPPER, LOW);
         break;
 
       case 3:
@@ -956,9 +973,9 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P HighPass"));
           }
         }
-        srp.set(FILTERA_UPPER, HIGH);
-        srp.set(FILTERB_UPPER, HIGH);
-        srp.set(FILTERC_UPPER, LOW);
+        srp.writePin(FILTERA_UPPER, HIGH);
+        srp.writePin(FILTERB_UPPER, HIGH);
+        srp.writePin(FILTERC_UPPER, LOW);
         break;
 
       case 4:
@@ -971,9 +988,9 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P BandPass"));
           }
         }
-        srp.set(FILTERA_UPPER, LOW);
-        srp.set(FILTERB_UPPER, LOW);
-        srp.set(FILTERC_UPPER, HIGH);
+        srp.writePin(FILTERA_UPPER, LOW);
+        srp.writePin(FILTERB_UPPER, LOW);
+        srp.writePin(FILTERC_UPPER, HIGH);
         break;
 
       case 5:
@@ -986,9 +1003,9 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P BandPass"));
           }
         }
-        srp.set(FILTERA_UPPER, HIGH);
-        srp.set(FILTERB_UPPER, LOW);
-        srp.set(FILTERC_UPPER, HIGH);
+        srp.writePin(FILTERA_UPPER, HIGH);
+        srp.writePin(FILTERB_UPPER, LOW);
+        srp.writePin(FILTERC_UPPER, HIGH);
         break;
 
       case 6:
@@ -1001,9 +1018,9 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("3P AllPass"));
           }
         }
-        srp.set(FILTERA_UPPER, LOW);
-        srp.set(FILTERB_UPPER, HIGH);
-        srp.set(FILTERC_UPPER, HIGH);
+        srp.writePin(FILTERA_UPPER, LOW);
+        srp.writePin(FILTERB_UPPER, HIGH);
+        srp.writePin(FILTERC_UPPER, HIGH);
         break;
 
       case 7:
@@ -1016,9 +1033,9 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("Notch"));
           }
         }
-        srp.set(FILTERA_UPPER, HIGH);
-        srp.set(FILTERB_UPPER, HIGH);
-        srp.set(FILTERC_UPPER, HIGH);
+        srp.writePin(FILTERA_UPPER, HIGH);
+        srp.writePin(FILTERB_UPPER, HIGH);
+        srp.writePin(FILTERC_UPPER, HIGH);
         break;
     }
   } else {
@@ -1033,13 +1050,13 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P LowPass"));
           }
         }
-        srp.set(FILTERA_LOWER, LOW);
-        srp.set(FILTERB_LOWER, LOW);
-        srp.set(FILTERC_LOWER, LOW);
+        srp.writePin(FILTERA_LOWER, LOW);
+        srp.writePin(FILTERB_LOWER, LOW);
+        srp.writePin(FILTERC_LOWER, LOW);
         if (wholemode) {
-          srp.set(FILTERA_UPPER, LOW);
-          srp.set(FILTERB_UPPER, LOW);
-          srp.set(FILTERC_UPPER, LOW);
+          srp.writePin(FILTERA_UPPER, LOW);
+          srp.writePin(FILTERB_UPPER, LOW);
+          srp.writePin(FILTERC_UPPER, LOW);
         }
         break;
 
@@ -1053,13 +1070,13 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P LowPass"));
           }
         }
-        srp.set(FILTERA_LOWER, HIGH);
-        srp.set(FILTERB_LOWER, LOW);
-        srp.set(FILTERC_LOWER, LOW);
+        srp.writePin(FILTERA_LOWER, HIGH);
+        srp.writePin(FILTERB_LOWER, LOW);
+        srp.writePin(FILTERC_LOWER, LOW);
         if (wholemode) {
-          srp.set(FILTERA_UPPER, HIGH);
-          srp.set(FILTERB_UPPER, LOW);
-          srp.set(FILTERC_UPPER, LOW);
+          srp.writePin(FILTERA_UPPER, HIGH);
+          srp.writePin(FILTERB_UPPER, LOW);
+          srp.writePin(FILTERC_UPPER, LOW);
         }
         break;
 
@@ -1073,13 +1090,13 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P HighPass"));
           }
         }
-        srp.set(FILTERA_LOWER, LOW);
-        srp.set(FILTERB_LOWER, HIGH);
-        srp.set(FILTERC_LOWER, LOW);
+        srp.writePin(FILTERA_LOWER, LOW);
+        srp.writePin(FILTERB_LOWER, HIGH);
+        srp.writePin(FILTERC_LOWER, LOW);
         if (wholemode) {
-          srp.set(FILTERA_UPPER, LOW);
-          srp.set(FILTERB_UPPER, HIGH);
-          srp.set(FILTERC_UPPER, LOW);
+          srp.writePin(FILTERA_UPPER, LOW);
+          srp.writePin(FILTERB_UPPER, HIGH);
+          srp.writePin(FILTERC_UPPER, LOW);
         }
         break;
 
@@ -1093,13 +1110,13 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P HighPass"));
           }
         }
-        srp.set(FILTERA_LOWER, HIGH);
-        srp.set(FILTERB_LOWER, HIGH);
-        srp.set(FILTERC_LOWER, LOW);
+        srp.writePin(FILTERA_LOWER, HIGH);
+        srp.writePin(FILTERB_LOWER, HIGH);
+        srp.writePin(FILTERC_LOWER, LOW);
         if (wholemode) {
-          srp.set(FILTERA_UPPER, HIGH);
-          srp.set(FILTERB_UPPER, HIGH);
-          srp.set(FILTERC_UPPER, LOW);
+          srp.writePin(FILTERA_UPPER, HIGH);
+          srp.writePin(FILTERB_UPPER, HIGH);
+          srp.writePin(FILTERC_UPPER, LOW);
         }
         break;
 
@@ -1113,13 +1130,13 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P BandPass"));
           }
         }
-        srp.set(FILTERA_LOWER, LOW);
-        srp.set(FILTERB_LOWER, LOW);
-        srp.set(FILTERC_LOWER, HIGH);
+        srp.writePin(FILTERA_LOWER, LOW);
+        srp.writePin(FILTERB_LOWER, LOW);
+        srp.writePin(FILTERC_LOWER, HIGH);
         if (wholemode) {
-          srp.set(FILTERA_UPPER, LOW);
-          srp.set(FILTERB_UPPER, LOW);
-          srp.set(FILTERC_UPPER, HIGH);
+          srp.writePin(FILTERA_UPPER, LOW);
+          srp.writePin(FILTERB_UPPER, LOW);
+          srp.writePin(FILTERC_UPPER, HIGH);
         }
         break;
 
@@ -1133,13 +1150,13 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P BandPass"));
           }
         }
-        srp.set(FILTERA_LOWER, HIGH);
-        srp.set(FILTERB_LOWER, LOW);
-        srp.set(FILTERC_LOWER, HIGH);
+        srp.writePin(FILTERA_LOWER, HIGH);
+        srp.writePin(FILTERB_LOWER, LOW);
+        srp.writePin(FILTERC_LOWER, HIGH);
         if (wholemode) {
-          srp.set(FILTERA_UPPER, HIGH);
-          srp.set(FILTERB_UPPER, LOW);
-          srp.set(FILTERC_UPPER, HIGH);
+          srp.writePin(FILTERA_UPPER, HIGH);
+          srp.writePin(FILTERB_UPPER, LOW);
+          srp.writePin(FILTERC_UPPER, HIGH);
         }
         break;
 
@@ -1154,13 +1171,13 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("3P AllPass"));
           }
         }
-        srp.set(FILTERA_LOWER, LOW);
-        srp.set(FILTERB_LOWER, HIGH);
-        srp.set(FILTERC_LOWER, HIGH);
+        srp.writePin(FILTERA_LOWER, LOW);
+        srp.writePin(FILTERB_LOWER, HIGH);
+        srp.writePin(FILTERC_LOWER, HIGH);
         if (wholemode) {
-          srp.set(FILTERA_UPPER, LOW);
-          srp.set(FILTERB_UPPER, HIGH);
-          srp.set(FILTERC_UPPER, HIGH);
+          srp.writePin(FILTERA_UPPER, LOW);
+          srp.writePin(FILTERB_UPPER, HIGH);
+          srp.writePin(FILTERC_UPPER, HIGH);
         }
         break;
 
@@ -1174,13 +1191,13 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("Notch"));
           }
         }
-        srp.set(FILTERA_LOWER, HIGH);
-        srp.set(FILTERB_LOWER, HIGH);
-        srp.set(FILTERC_LOWER, HIGH);
+        srp.writePin(FILTERA_LOWER, HIGH);
+        srp.writePin(FILTERB_LOWER, HIGH);
+        srp.writePin(FILTERC_LOWER, HIGH);
         if (wholemode) {
-          srp.set(FILTERA_UPPER, HIGH);
-          srp.set(FILTERB_UPPER, HIGH);
-          srp.set(FILTERC_UPPER, HIGH);
+          srp.writePin(FILTERA_UPPER, HIGH);
+          srp.writePin(FILTERB_UPPER, HIGH);
+          srp.writePin(FILTERC_UPPER, HIGH);
         }
         break;
     }
@@ -1671,7 +1688,7 @@ void updatefilterPoleSwitch(boolean announce) {
       }
       midiCCOut(CCfilterPoleSW, 127);
       midiCCOut52(CCfilterPoleSW, 127);
-      srp.set(FILTER_POLE_UPPER, HIGH);
+      srp.writePin(FILTER_POLE_UPPER, HIGH);
     } else {
       if (announce) {
         //showCurrentParameterPage("VCF Pole", "Off");
@@ -1679,7 +1696,7 @@ void updatefilterPoleSwitch(boolean announce) {
       }
       midiCCOut(CCfilterPoleSW, 0);
       midiCCOut52(CCfilterPoleSW, 0);
-      srp.set(FILTER_POLE_UPPER, LOW);
+      srp.writePin(FILTER_POLE_UPPER, LOW);
     }
   } else {
     if (lowerData[P_filterPoleSW] == 1) {
@@ -1689,9 +1706,9 @@ void updatefilterPoleSwitch(boolean announce) {
       }
       midiCCOut(CCfilterPoleSW, 127);
       midiCCOut52(CCfilterPoleSW, 127);
-      srp.set(FILTER_POLE_LOWER, HIGH);
+      srp.writePin(FILTER_POLE_LOWER, HIGH);
       if (wholemode) {
-        srp.set(FILTER_POLE_UPPER, HIGH);
+        srp.writePin(FILTER_POLE_UPPER, HIGH);
       }
     } else {
       if (announce) {
@@ -1700,9 +1717,9 @@ void updatefilterPoleSwitch(boolean announce) {
       }
       midiCCOut(CCfilterPoleSW, 0);
       midiCCOut52(CCfilterPoleSW, 0);
-      srp.set(FILTER_POLE_LOWER, LOW);
+      srp.writePin(FILTER_POLE_LOWER, LOW);
       if (wholemode) {
-        srp.set(FILTER_POLE_UPPER, LOW);
+        srp.writePin(FILTER_POLE_UPPER, LOW);
       }
     }
   }
@@ -1718,8 +1735,8 @@ void updatefilterPoleSwitch(boolean announce) {
 //         }
 //         // sr.set(FILTERLOOP_LED, HIGH);        // LED on
 //         // sr.set(FILTERLOOP_DOUBLE_LED, LOW);  // LED on
-//         srp.set(FILTER_MODE_BIT0_UPPER, LOW);
-//         srp.set(FILTER_MODE_BIT1_UPPER, HIGH);
+//         srp.writePin(FILTER_MODE_BIT0_UPPER, LOW);
+//         srp.writePin(FILTER_MODE_BIT1_UPPER, HIGH);
 //         oldfilterLoop = statefilterLoop;
 //         break;
 
@@ -1730,8 +1747,8 @@ void updatefilterPoleSwitch(boolean announce) {
 //         }
 //         // sr.set(FILTERLOOP_DOUBLE_LED, HIGH);  // LED on
 //         // sr.set(FILTERLOOP_LED, LOW);
-//         srp.set(FILTER_MODE_BIT0_UPPER, HIGH);
-//         srp.set(FILTER_MODE_BIT1_UPPER, HIGH);
+//         srp.writePin(FILTER_MODE_BIT0_UPPER, HIGH);
+//         srp.writePin(FILTER_MODE_BIT1_UPPER, HIGH);
 //         oldfilterLoop = statefilterLoop;
 //         break;
 
@@ -1742,8 +1759,8 @@ void updatefilterPoleSwitch(boolean announce) {
 //         }
 //         // sr.set(FILTERLOOP_LED, LOW);         // LED off
 //         // sr.set(FILTERLOOP_DOUBLE_LED, LOW);  // LED on
-//         srp.set(FILTER_MODE_BIT0_UPPER, LOW);
-//         srp.set(FILTER_MODE_BIT1_UPPER, LOW);
+//         srp.writePin(FILTER_MODE_BIT0_UPPER, LOW);
+//         srp.writePin(FILTER_MODE_BIT1_UPPER, LOW);
 //         oldfilterLoop = 0;
 //         break;
 //     }
@@ -1756,11 +1773,11 @@ void updatefilterPoleSwitch(boolean announce) {
 //         }
 //         // sr.set(FILTERLOOP_LED, HIGH);        // LED on
 //         // sr.set(FILTERLOOP_DOUBLE_LED, LOW);  // LED on
-//         srp.set(FILTER_MODE_BIT0_LOWER, LOW);
-//         srp.set(FILTER_MODE_BIT1_LOWER, HIGH);
+//         srp.writePin(FILTER_MODE_BIT0_LOWER, LOW);
+//         srp.writePin(FILTER_MODE_BIT1_LOWER, HIGH);
 //         if (wholemode) {
-//           srp.set(FILTER_MODE_BIT0_UPPER, LOW);
-//           srp.set(FILTER_MODE_BIT1_UPPER, HIGH);
+//           srp.writePin(FILTER_MODE_BIT0_UPPER, LOW);
+//           srp.writePin(FILTER_MODE_BIT1_UPPER, HIGH);
 //         }
 //         oldfilterLoop = statefilterLoopL;
 //         break;
@@ -1772,11 +1789,11 @@ void updatefilterPoleSwitch(boolean announce) {
 //         }
 //         // sr.set(FILTERLOOP_DOUBLE_LED, HIGH);  // LED on
 //         // sr.set(FILTERLOOP_LED, LOW);
-//         srp.set(FILTER_MODE_BIT0_LOWER, HIGH);
-//         srp.set(FILTER_MODE_BIT1_LOWER, HIGH);
+//         srp.writePin(FILTER_MODE_BIT0_LOWER, HIGH);
+//         srp.writePin(FILTER_MODE_BIT1_LOWER, HIGH);
 //         if (wholemode) {
-//           srp.set(FILTER_MODE_BIT0_UPPER, LOW);
-//           srp.set(FILTER_MODE_BIT1_UPPER, LOW);
+//           srp.writePin(FILTER_MODE_BIT0_UPPER, LOW);
+//           srp.writePin(FILTER_MODE_BIT1_UPPER, LOW);
 //         }
 //         oldfilterLoop = statefilterLoopL;
 //         break;
@@ -1788,11 +1805,11 @@ void updatefilterPoleSwitch(boolean announce) {
 //         }
 //         // sr.set(FILTERLOOP_LED, LOW);         // LED off
 //         // sr.set(FILTERLOOP_DOUBLE_LED, LOW);  // LED on
-//         srp.set(FILTER_MODE_BIT0_LOWER, LOW);
-//         srp.set(FILTER_MODE_BIT1_LOWER, LOW);
+//         srp.writePin(FILTER_MODE_BIT0_LOWER, LOW);
+//         srp.writePin(FILTER_MODE_BIT1_LOWER, LOW);
 //         if (wholemode) {
-//           srp.set(FILTER_MODE_BIT0_UPPER, LOW);
-//           srp.set(FILTER_MODE_BIT1_UPPER, LOW);
+//           srp.writePin(FILTER_MODE_BIT0_UPPER, LOW);
+//           srp.writePin(FILTER_MODE_BIT1_UPPER, LOW);
 //         }
 //         oldfilterLoop = 0;
 //         break;
@@ -1808,7 +1825,7 @@ void updatefilterEGinv(boolean announce) {
       }
       midiCCOut(CCfilterEGinv, 0);
       midiCCOut52(CCfilterEGinv, 0);
-      srp.set(FILTER_EG_INV_UPPER, LOW);
+      srp.writePin(FILTER_EG_INV_UPPER, LOW);
     } else {
       if (announce) {
         showCurrentParameterPage("Filter Env", "Negative");
@@ -1816,7 +1833,7 @@ void updatefilterEGinv(boolean announce) {
       midiCCOut(CCfilterEGinv, 127);
       midiCCOut52(CCfilterEGinv, 127);
       // sr.set(FILTERINV_LED, HIGH);  // LED on
-      srp.set(FILTER_EG_INV_UPPER, HIGH);
+      srp.writePin(FILTER_EG_INV_UPPER, HIGH);
     }
   } else {
     if (lowerData[P_filterEGinv] == 0) {
@@ -1825,9 +1842,9 @@ void updatefilterEGinv(boolean announce) {
       }
       midiCCOut(CCfilterEGinv, 0);
       midiCCOut52(CCfilterEGinv, 0);
-      srp.set(FILTER_EG_INV_LOWER, LOW);
+      srp.writePin(FILTER_EG_INV_LOWER, LOW);
       if (wholemode) {
-        srp.set(FILTER_EG_INV_UPPER, LOW);
+        srp.writePin(FILTER_EG_INV_UPPER, LOW);
       }
     } else {
       if (announce) {
@@ -1835,9 +1852,9 @@ void updatefilterEGinv(boolean announce) {
       }
       midiCCOut(CCfilterEGinv, 127);
       midiCCOut52(CCfilterEGinv, 127);
-      srp.set(FILTER_EG_INV_LOWER, HIGH);
+      srp.writePin(FILTER_EG_INV_LOWER, HIGH);
       if (wholemode) {
-        srp.set(FILTER_EG_INV_UPPER, HIGH);
+        srp.writePin(FILTER_EG_INV_UPPER, HIGH);
       }
     }
   }
@@ -1851,14 +1868,14 @@ void updatesyncSW(boolean announce) {
       }
       midiCCOut(CCsyncSW, 0);
       midiCCOut52(CCsyncSW, 0);
-      srp.set(SYNC_UPPER, LOW);
+      srp.writePin(SYNC_UPPER, LOW);
     } else {
       if (announce) {
         showCurrentParameterPage("Sync", "On");
       }
       midiCCOut(CCsyncSW, 127);
       midiCCOut52(CCsyncSW, 127);
-      srp.set(SYNC_UPPER, HIGH);
+      srp.writePin(SYNC_UPPER, HIGH);
     }
   } else {
     if (!lowerData[P_sync]) {
@@ -1867,9 +1884,9 @@ void updatesyncSW(boolean announce) {
       }
       midiCCOut(CCsyncSW, 0);
       midiCCOut52(CCsyncSW, 0);
-      srp.set(SYNC_LOWER, LOW);
+      srp.writePin(SYNC_LOWER, LOW);
       if (wholemode) {
-        srp.set(SYNC_UPPER, LOW);
+        srp.writePin(SYNC_UPPER, LOW);
       }
     } else {
       if (announce) {
@@ -1877,9 +1894,9 @@ void updatesyncSW(boolean announce) {
       }
       midiCCOut(CCsyncSW, 127);
       midiCCOut52(CCsyncSW, 127);
-      srp.set(SYNC_LOWER, HIGH);
+      srp.writePin(SYNC_LOWER, HIGH);
       if (wholemode) {
-        srp.set(SYNC_UPPER, HIGH);
+        srp.writePin(SYNC_UPPER, HIGH);
       }
     }
   }
@@ -1893,14 +1910,14 @@ void updatesyncSW(boolean announce) {
 //         midiCCOut(CCfilterVel, 1);
 //       }
 //       // sr.set(FILTERVEL_LED, LOW);  // LED off
-//       srp.set(FILTER_VELOCITY_UPPER, LOW);
+//       srp.writePin(FILTER_VELOCITY_UPPER, LOW);
 //     } else {
 //       if (announce) {
 //         showCurrentParameterPage("VCF Velocity", "On");
 //         midiCCOut(CCfilterVel, 127);
 //       }
 //       // sr.set(FILTERVEL_LED, HIGH);  // LED on
-//       srp.set(FILTER_VELOCITY_UPPER, HIGH);
+//       srp.writePin(FILTER_VELOCITY_UPPER, HIGH);
 //     }
 //   } else {
 //     if (lowerData[P_filterVel] == 0) {
@@ -1909,9 +1926,9 @@ void updatesyncSW(boolean announce) {
 //         midiCCOut(CCfilterVel, 1);
 //       }
 //       // sr.set(FILTERVEL_LED, LOW);  // LED off
-//       srp.set(FILTER_VELOCITY_LOWER, LOW);
+//       srp.writePin(FILTER_VELOCITY_LOWER, LOW);
 //       if (wholemode) {
-//         srp.set(FILTER_VELOCITY_UPPER, LOW);
+//         srp.writePin(FILTER_VELOCITY_UPPER, LOW);
 //       }
 //     } else {
 //       if (announce) {
@@ -1919,9 +1936,9 @@ void updatesyncSW(boolean announce) {
 //         midiCCOut(CCfilterVel, 127);
 //       }
 //       // sr.set(FILTERVEL_LED, HIGH);  // LED on
-//       srp.set(FILTER_VELOCITY_LOWER, HIGH);
+//       srp.writePin(FILTER_VELOCITY_LOWER, HIGH);
 //       if (wholemode) {
-//         srp.set(FILTER_VELOCITY_UPPER, HIGH);
+//         srp.writePin(FILTER_VELOCITY_UPPER, HIGH);
 //       }
 //     }
 //   }
@@ -1937,8 +1954,8 @@ void updatesyncSW(boolean announce) {
 //         }
 //         // sr.set(VCALOOP_LED, HIGH);        // LED on
 //         // sr.set(VCALOOP_DOUBLE_LED, LOW);  // LED on
-//         srp.set(AMP_MODE_BIT0_UPPER, LOW);
-//         srp.set(AMP_MODE_BIT1_UPPER, HIGH);
+//         srp.writePin(AMP_MODE_BIT0_UPPER, LOW);
+//         srp.writePin(AMP_MODE_BIT1_UPPER, HIGH);
 //         oldvcaLoop = statevcaLoopU;
 //         break;
 
@@ -1949,8 +1966,8 @@ void updatesyncSW(boolean announce) {
 //         }
 //         // sr.set(VCALOOP_DOUBLE_LED, HIGH);  // LED on
 //         // sr.set(VCALOOP_LED, LOW);
-//         srp.set(AMP_MODE_BIT0_UPPER, HIGH);
-//         srp.set(AMP_MODE_BIT1_UPPER, HIGH);
+//         srp.writePin(AMP_MODE_BIT0_UPPER, HIGH);
+//         srp.writePin(AMP_MODE_BIT1_UPPER, HIGH);
 //         oldvcaLoop = statevcaLoopU;
 //         break;
 
@@ -1961,8 +1978,8 @@ void updatesyncSW(boolean announce) {
 //         }
 //         // sr.set(VCALOOP_LED, LOW);         // LED off
 //         // sr.set(VCALOOP_DOUBLE_LED, LOW);  // LED on
-//         srp.set(AMP_MODE_BIT0_UPPER, LOW);
-//         srp.set(AMP_MODE_BIT1_UPPER, LOW);
+//         srp.writePin(AMP_MODE_BIT0_UPPER, LOW);
+//         srp.writePin(AMP_MODE_BIT1_UPPER, LOW);
 //         oldvcaLoop = 0;
 //         break;
 //     }
@@ -1975,11 +1992,11 @@ void updatesyncSW(boolean announce) {
 //         }
 //         // sr.set(VCALOOP_LED, HIGH);        // LED on
 //         // sr.set(VCALOOP_DOUBLE_LED, LOW);  // LED on
-//         srp.set(AMP_MODE_BIT0_LOWER, LOW);
-//         srp.set(AMP_MODE_BIT1_LOWER, HIGH);
+//         srp.writePin(AMP_MODE_BIT0_LOWER, LOW);
+//         srp.writePin(AMP_MODE_BIT1_LOWER, HIGH);
 //         if (wholemode) {
-//           srp.set(AMP_MODE_BIT0_UPPER, LOW);
-//           srp.set(AMP_MODE_BIT1_UPPER, HIGH);
+//           srp.writePin(AMP_MODE_BIT0_UPPER, LOW);
+//           srp.writePin(AMP_MODE_BIT1_UPPER, HIGH);
 //         }
 //         oldvcaLoop = statevcaLoopL;
 //         break;
@@ -1991,11 +2008,11 @@ void updatesyncSW(boolean announce) {
 //         }
 //         // sr.set(VCALOOP_DOUBLE_LED, HIGH);  // LED on
 //         // sr.set(VCALOOP_LED, LOW);
-//         srp.set(AMP_MODE_BIT0_LOWER, HIGH);
-//         srp.set(AMP_MODE_BIT1_LOWER, HIGH);
+//         srp.writePin(AMP_MODE_BIT0_LOWER, HIGH);
+//         srp.writePin(AMP_MODE_BIT1_LOWER, HIGH);
 //         if (wholemode) {
-//           srp.set(AMP_MODE_BIT0_UPPER, LOW);
-//           srp.set(AMP_MODE_BIT1_UPPER, LOW);
+//           srp.writePin(AMP_MODE_BIT0_UPPER, LOW);
+//           srp.writePin(AMP_MODE_BIT1_UPPER, LOW);
 //         }
 //         oldvcaLoop = statevcaLoopL;
 //         break;
@@ -2007,11 +2024,11 @@ void updatesyncSW(boolean announce) {
 //         }
 //         // sr.set(VCALOOP_LED, LOW);         // LED off
 //         // sr.set(VCALOOP_DOUBLE_LED, LOW);  // LED on
-//         srp.set(AMP_MODE_BIT0_LOWER, LOW);
-//         srp.set(AMP_MODE_BIT1_LOWER, LOW);
+//         srp.writePin(AMP_MODE_BIT0_LOWER, LOW);
+//         srp.writePin(AMP_MODE_BIT1_LOWER, LOW);
 //         if (wholemode) {
-//           srp.set(AMP_MODE_BIT0_UPPER, LOW);
-//           srp.set(AMP_MODE_BIT1_UPPER, LOW);
+//           srp.writePin(AMP_MODE_BIT0_UPPER, LOW);
+//           srp.writePin(AMP_MODE_BIT1_UPPER, LOW);
 //         }
 //         oldvcaLoop = 0;
 //         break;
@@ -2027,14 +2044,14 @@ void updatesyncSW(boolean announce) {
 //         midiCCOut(CCvcaVel, 1);
 //       }
 //       // sr.set(VCAVEL_LED, LOW);  // LED off
-//       srp.set(AMP_VELOCITY_UPPER, LOW);
+//       srp.writePin(AMP_VELOCITY_UPPER, LOW);
 //     } else {
 //       if (announce) {
 //         showCurrentParameterPage("VCA Velocity", "On");
 //         midiCCOut(CCvcaVel, 127);
 //       }
 //       // sr.set(VCAVEL_LED, HIGH);  // LED on
-//       srp.set(AMP_VELOCITY_UPPER, HIGH);
+//       srp.writePin(AMP_VELOCITY_UPPER, HIGH);
 //     }
 //   } else {
 //     if (lowerData[P_vcaVel] == 0) {
@@ -2043,9 +2060,9 @@ void updatesyncSW(boolean announce) {
 //         midiCCOut(CCvcaVel, 1);
 //       }
 //       // sr.set(VCAVEL_LED, LOW);  // LED off
-//       srp.set(AMP_VELOCITY_LOWER, LOW);
+//       srp.writePin(AMP_VELOCITY_LOWER, LOW);
 //       if (wholemode) {
-//         srp.set(AMP_VELOCITY_UPPER, LOW);
+//         srp.writePin(AMP_VELOCITY_UPPER, LOW);
 //       }
 //     } else {
 //       if (announce) {
@@ -2053,9 +2070,9 @@ void updatesyncSW(boolean announce) {
 //         midiCCOut(CCvcaVel, 127);
 //       }
 //       // sr.set(VCAVEL_LED, HIGH);  // LED on
-//       srp.set(AMP_VELOCITY_LOWER, HIGH);
+//       srp.writePin(AMP_VELOCITY_LOWER, HIGH);
 //       if (wholemode) {
-//         srp.set(AMP_VELOCITY_UPPER, HIGH);
+//         srp.writePin(AMP_VELOCITY_UPPER, HIGH);
 //       }
 //     }
 //   }
@@ -2129,13 +2146,13 @@ void updatelfoAlt(boolean announce) {
       midiCCOut(CClfoAlt, 0);
       midiCCOut52(CClfoAlt, 0);
       updateStratusLFOWaveform(1);
-      srp.set(LFO_ALT_UPPER, HIGH);
+      srp.writePin(LFO_ALT_UPPER, HIGH);
     } else {
       lfoAlt = 127;
       midiCCOut(CClfoAlt, 127);
       midiCCOut52(CClfoAlt, 127);
       updateStratusLFOWaveform(1);
-      srp.set(LFO_ALT_UPPER, LOW);
+      srp.writePin(LFO_ALT_UPPER, LOW);
     }
   } else {
     if (lowerData[P_lfoAlt] == 0) {
@@ -2143,18 +2160,18 @@ void updatelfoAlt(boolean announce) {
       midiCCOut(CClfoAlt, 0);
       midiCCOut52(CClfoAlt, 0);
       updateStratusLFOWaveform(1);
-      srp.set(LFO_ALT_LOWER, HIGH);
+      srp.writePin(LFO_ALT_LOWER, HIGH);
       if (wholemode) {
-        srp.set(LFO_ALT_UPPER, HIGH);
+        srp.writePin(LFO_ALT_UPPER, HIGH);
       }
     } else {
       lfoAlt = 127;
       midiCCOut(CClfoAlt, 127);
       midiCCOut52(CClfoAlt, 127);
       updateStratusLFOWaveform(1);
-      srp.set(LFO_ALT_LOWER, LOW);
+      srp.writePin(LFO_ALT_LOWER, LOW);
       if (wholemode) {
-        srp.set(LFO_ALT_UPPER, LOW);
+        srp.writePin(LFO_ALT_UPPER, LOW);
       }
     }
   }
@@ -2163,20 +2180,20 @@ void updatelfoAlt(boolean announce) {
 // void updatekeyTrackSW(boolean announce) {
 //   if (upperSW) {
 //     if (upperData[P_keyTrackSW] == 0) {
-//       srp.set(FILTER_KEYTRACK_UPPER, LOW);
+//       srp.writePin(FILTER_KEYTRACK_UPPER, LOW);
 //     } else {
-//       srp.set(FILTER_KEYTRACK_UPPER, HIGH);
+//       srp.writePin(FILTER_KEYTRACK_UPPER, HIGH);
 //     }
 //   } else {
 //     if (lowerData[P_keyTrackSW] == 0) {
-//       srp.set(FILTER_KEYTRACK_LOWER, LOW);
+//       srp.writePin(FILTER_KEYTRACK_LOWER, LOW);
 //       if (wholemode) {
-//         srp.set(FILTER_KEYTRACK_UPPER, LOW);
+//         srp.writePin(FILTER_KEYTRACK_UPPER, LOW);
 //       }
 //     } else {
-//       srp.set(FILTER_KEYTRACK_LOWER, HIGH);
+//       srp.writePin(FILTER_KEYTRACK_LOWER, HIGH);
 //       if (wholemode) {
-//         srp.set(FILTER_KEYTRACK_UPPER, HIGH);
+//         srp.writePin(FILTER_KEYTRACK_UPPER, HIGH);
 //       }
 //     }
 //   }
@@ -2211,8 +2228,8 @@ void updatelowerSW() {
 //   // sr.set(DUAL_LED, LOW);    // LED off
 //   // sr.set(SPLIT_LED, LOW);   // LED off
 //   // sr.set(UPPER_LED, LOW);   // LED off
-//   // srp.set(UPPER_RELAY_1, HIGH);
-//   // srp.set(UPPER_RELAY_2, HIGH);
+//   // srp.writePin(UPPER_RELAY_1, HIGH);
+//   // srp.writePin(UPPER_RELAY_2, HIGH);
 //   upperSW = 0;
 //   setAllButtons();
 //   dualmode = 0;
@@ -2225,7 +2242,7 @@ void updatelowerSW() {
 //   // sr.set(DUAL_LED, HIGH);  // LED off
 //   // sr.set(WHOLE_LED, LOW);  // LED off
 //   // sr.set(SPLIT_LED, LOW);  // LED off
-//   srp.set(UPPER2, LOW);
+//   srp.writePin(UPPER2, LOW);
 //   wholemode = 0;
 //   splitmode = 0;
 // }
@@ -2236,45 +2253,45 @@ void updatelowerSW() {
 //   // sr.set(SPLIT_LED, HIGH);  // LED off
 //   // sr.set(WHOLE_LED, LOW);   // LED off
 //   // sr.set(DUAL_LED, LOW);    // LED off
-//   srp.set(UPPER2, LOW);
+//   srp.writePin(UPPER2, LOW);
 //   wholemode = 0;
 //   dualmode = 0;
 // }
 
 // void updateFilterEnv(boolean announce) {
 //   if (upperData[P_filterLogLin] == 0) {
-//     srp.set(FILTER_LIN_LOG_UPPER, HIGH);
+//     srp.writePin(FILTER_LIN_LOG_UPPER, HIGH);
 //   } else {
-//     srp.set(FILTER_LIN_LOG_UPPER, LOW);
+//     srp.writePin(FILTER_LIN_LOG_UPPER, LOW);
 //   }
 //   if (lowerData[P_filterLogLin] == 0) {
-//     srp.set(FILTER_LIN_LOG_LOWER, HIGH);
+//     srp.writePin(FILTER_LIN_LOG_LOWER, HIGH);
 //     if (wholemode) {
-//       srp.set(FILTER_LIN_LOG_UPPER, HIGH);
+//       srp.writePin(FILTER_LIN_LOG_UPPER, HIGH);
 //     }
 //   } else {
-//     srp.set(FILTER_LIN_LOG_LOWER, LOW);
+//     srp.writePin(FILTER_LIN_LOG_LOWER, LOW);
 //     if (wholemode) {
-//       srp.set(FILTER_LIN_LOG_UPPER, LOW);
+//       srp.writePin(FILTER_LIN_LOG_UPPER, LOW);
 //     }
 //   }
 // }
 
 // void updateAmpEnv(boolean announce) {
 //   if (upperData[P_ampLogLin] == 0) {
-//     srp.set(AMP_LIN_LOG_UPPER, LOW);
+//     srp.writePin(AMP_LIN_LOG_UPPER, LOW);
 //   } else {
-//     srp.set(AMP_LIN_LOG_UPPER, HIGH);
+//     srp.writePin(AMP_LIN_LOG_UPPER, HIGH);
 //   }
 //   if (lowerData[P_ampLogLin] == 0) {
-//     srp.set(AMP_LIN_LOG_LOWER, LOW);
+//     srp.writePin(AMP_LIN_LOG_LOWER, LOW);
 //     if (wholemode) {
-//       srp.set(AMP_LIN_LOG_UPPER, LOW);
+//       srp.writePin(AMP_LIN_LOG_UPPER, LOW);
 //     }
 //   } else {
-//     srp.set(AMP_LIN_LOG_LOWER, HIGH);
+//     srp.writePin(AMP_LIN_LOG_LOWER, HIGH);
 //     if (wholemode) {
-//       srp.set(AMP_LIN_LOG_UPPER, HIGH);
+//       srp.writePin(AMP_LIN_LOG_UPPER, HIGH);
 //     }
 //   }
 // }
@@ -3407,145 +3424,45 @@ void setCurrentPatchData(String data[]) {
       oldfilterCutoffU = upperData[P_filterCutoff];
     }
   }
-
-  if (wholemode) {
-    //Switches
-    oldupperSW = upperSW;
-    //for (upperSW = 0; upperSW < 2; upperSW++) {
-    // midiCCOut52(CCupperSW, upperSW);
-    // delay(1);
-    // midiCCOut52(CClowerSW, lowerSW);
-    // delay(1);
-    midiCCOut53(CCdumpStartedSW, 1);
-    delay(1);
-    updateglideTime(0);
-    updateglideSW(0);
-    // updatefilterLoop(0);
-    // updatefilterVel(0);
-    // updatevcaLoop(0);
-    // updatevcaVel(0);
-    // updatevcaGate(0);
-    updateosc1Range(0);
-    updatefmDepth(0);
-    // updateMonoMulti(0);
-    // updateFilterEnv(0);
-    // updateAmpEnv(0);
-    updatesyncSW(0);
-    updateOsc1SawLevel(0);
-    updateOsc1PulseLevel(0);
-    updateOsc1SubLevel(0);
-    updateosc1PW(0);
-    updateosc1PWM(0);
-    updateosc2Range(0);
-    updateosc2PW(0);
-    updateosc2PWM(0);
-    updateOsc2SawLevel(0);
-    updateOsc2PulseLevel(0);
-    updateOsc2TriangleLevel(0);
-    updateosc2Detune(0);
-    updateosc2Interval(0);
-    updateFilterCutoff(0);
-    updatefilterPoleSwitch(0);
-    updatefilterRes(0);
-    updatekeytrack(0);
-    updatefilterEGlevel(0);
-    updatefilterLFO(0);
-    updateFilterType(0);
-    updatefilterAttack(0);
-    updatefilterDecay(0);
-    updatefilterSustain(0);
-    updatefilterRelease(0);
-    updatefilterEGinv(0);
-    updateampAttack(0);
-    updateampDecay(0);
-    updateampSustain(0);
-    updateampRelease(0);
-    updateLFORate(0);
-    updateLFODelay(0);
-    updatepwLFO(0);
-    updatelfoAlt(0);
-    updateStratusLFOWaveform(0);
-    updateeffectPot1(0);
-    updateeffectPot2(0);
-    updateeffectPot3(0);
-    updateeffectsMix(0);
-    updatevolumeControl(0);
-    updateamDepth(0);
-    updatePM_DCO2(0);
-    updatePM_FilterEnv(0);
-    delay(1);
-    midiCCOut53(CCdumpCompleteSW, 0);
-    //}
-    upperSW = oldupperSW;
-  }
-
-  // else {
-  //   midiCCOut52(CClowerSW, 1);
-  //   delay(1);
-  //   midiCCOut52(CCupperSW, 0);
-  //   delay(1);
-  // midiCCOut53(CCdumpStartedSW, 1);
-  // delay(1);
-  // updateglideTime(0);
-  // updateglideSW(0);
-  // // updatefilterLoop(0);
-  // // updatefilterVel(0);
-  // // updatevcaLoop(0);
-  // // updatevcaVel(0);
-  // // updatevcaGate(0);
-  // // updatelfoAlt(0);
-  // updateosc1Range(0);
-  // updatefmDepth(0);
-  // // updateMonoMulti(0);
-  // // updateFilterEnv(0);
-  // // updateAmpEnv(0);
-  // updatesyncSW(0);
-  // updateOsc1SawLevel(0);
-  // updateOsc1PulseLevel(0);
-  // updateOsc1SubLevel(0);
-  // updateosc1PW(0);
-  // updateosc1PWM(0);
-  // updateosc2Range(0);
-  // updateosc2PW(0);
-  // updateosc2PWM(0);
-  // updateOsc2SawLevel(0);
-  // updateOsc2PulseLevel(0);
-  // updateOsc2TriangleLevel(0);
-  // updateosc2Detune(0);
-  // updateosc2Interval(0);
-  // updateFilterCutoff(0);
-  // updatefilterPoleSwitch(0);
-  // updatefilterRes(0);
-  // updatekeytrack(0);
-  // updatefilterEGlevel(0);
-  // updatefilterLFO(0);
-  // updateFilterType(0);
-  // updatefilterAttack(0);
-  // updatefilterDecay(0);
-  // updatefilterSustain(0);
-  // updatefilterRelease(0);
-  // updatefilterEGinv(0);
-  // updateampAttack(0);
-  // updateampDecay(0);
-  // updateampSustain(0);
-  // updateampRelease(0);
-  // updateLFORate(0);
-  // updateLFODelay(0);
-  // updatepwLFO(0);
-  // updateeffectPot1(0);
-  // updateeffectPot2(0);
-  // updateeffectPot3(0);
-  // updateeffectsMix(0);
-  // updatevolumeControl(0);
-  // updateamDepth(0);
-  // updatePM_DCO2(0);
-  // updatePM_FilterEnv(0);
-  // delay(1);
-  // midiCCOut53(CCdumpCompleteSW, 0);
-  // }
-
+  // Convert and send the SysEx message
+  convertData();
+  MIDI5.sendNoteOn(0, 127, 1);
+  sendSysExMessage();
+  MIDI5.sendNoteOff(0, 0, 1);
   //Patchname
   updatePatchname();
+}
+
+void sendSysExMessage() {
+
+  // SysEx start byte
+
+  byte startByte = 0xF0;
+  // SysEx end byte
+  byte endByte = 0xF7;
+  // Manufacturer ID (3 bytes for non-real-time messages)
+  byte manufacturerID[] = {0x7D, 0x00, 0x00}; // 0x7D is reserved for educational use
+  
+  // Begin the SysEx message
+  //MIDI5.sendSysEx(startByte + sizeof(manufacturerID) + sysexDataLength + endByte, sysexData, true);
+  
+  // Alternatively, you can construct the message manually:
+  Serial5.write(startByte);
+  Serial5.write(manufacturerID, sizeof(manufacturerID));
+  Serial5.write(sysexData, sysexDataLength);
+  Serial5.write(endByte);
+  
+  Serial.println("SysEx message sent.");
+
+}
+
+void convertData() {
+    sysexData[0] = upperData[0];
+    for (int i = 1; i < originalDataLength; i++) {
+      sysexData[i] = map(upperData[i], 0, 1023, 0, 127);
+      //Serial.print("i ");
+      //Serial.println(sysexData[i]);
+    }
 }
 
 void setAllButtons() {
@@ -4354,6 +4271,199 @@ void checkEncoder() {
   }
 }
 
+void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
+
+  if (btnIndex == GLIDE_SW && btnType == ROX_PRESSED) {
+    panelData[P_glideSW] = !panelData[P_glideSW];
+    myControlChange(midiChannel, CCglideSW, panelData[P_glideSW]);
+  }
+
+  if (btnIndex == FILTER_POLE_SW && btnType == ROX_PRESSED) {
+    panelData[P_filterPoleSW] = !panelData[P_filterPoleSW];
+    myControlChange(midiChannel, CCfilterPoleSW, panelData[P_filterPoleSW]);
+  }
+
+  if (btnIndex == EG_INVERT_SW && btnType == ROX_PRESSED) {
+    panelData[P_filterEGinv] = !panelData[P_filterEGinv];
+    myControlChange(midiChannel, CCfilterEGinv, panelData[P_filterEGinv]);
+  }
+
+  if (btnIndex == DCO1_OCT_SW && btnType == ROX_PRESSED) {
+    panelData[P_osc1Range] = panelData[P_osc1Range] + 1;
+    if (panelData[P_osc1Range] > 2) {
+      panelData[P_osc1Range] = 0;
+    }
+    myControlChange(midiChannel, CCosc1Oct, panelData[P_osc1Range]);
+  }
+
+  if (btnIndex == DCO2_OCT_SW && btnType == ROX_PRESSED) {
+    panelData[P_osc2Range] = panelData[P_osc2Range] + 1;
+    if (panelData[P_osc2Range] > 2) {
+      panelData[P_osc2Range] = 0;
+    }
+    myControlChange(midiChannel, CCosc2Oct, panelData[P_osc2Range]);
+  }
+
+  if (btnIndex == FILTER_TYPE_SW && btnType == ROX_PRESSED) {
+    panelData[P_filterType] = panelData[P_filterType] + 1;
+    if (panelData[P_filterType] > 7) {
+      panelData[P_filterType] = 0;
+    }
+    myControlChange(midiChannel, CCfilterType, panelData[P_filterType]);
+  }
+
+  if (btnIndex == LFO_ALT_SW && btnType == ROX_PRESSED) {
+    panelData[P_lfoAlt] = !panelData[P_lfoAlt];
+    myControlChange(midiChannel, CClfoAlt, panelData[P_lfoAlt]);
+  }
+
+  if (btnIndex == PW_LFO_WAVEFORM_SW && btnType == ROX_PRESSED) {
+    pwLFOwaveformSW = pwLFOwaveformSW + 1;
+    if (pwLFOwaveformSW > 7) {
+      pwLFOwaveformSW = 0;
+    }
+    myControlChange(midiChannel, CCpwLFOwaveformSW, pwLFOwaveformSW);
+  }
+
+  if (btnIndex == LFO_WAVEFORM_SW && btnType == ROX_PRESSED) {
+    panelData[P_LFOWaveform] = panelData[P_LFOWaveform] + 1;
+    if (panelData[P_LFOWaveform] > 7) {
+      panelData[P_LFOWaveform] = 0;
+    }
+    myControlChange(midiChannel, CCLFOWaveform, panelData[P_LFOWaveform]);
+  }
+
+  if (btnIndex == FILTER_ENV_VELOCITY_SW && btnType == ROX_PRESSED) {
+    panelData[P_filterVel] = !panelData[P_filterVel];
+    myControlChange(midiChannel, CCfilterVel, panelData[P_filterVel]);
+  }
+
+  if (btnIndex == AMP_ENV_VELOCITY_SW && btnType == ROX_PRESSED) {
+    panelData[P_vcaVel] = !panelData[P_vcaVel];
+    myControlChange(midiChannel, CCvcaVel, panelData[P_vcaVel]);
+  }
+
+  if (btnIndex == FILTER_ENV_LOOP_SW && btnType == ROX_PRESSED) {
+    panelData[P_filterLoop] = panelData[P_filterLoop] + 1;
+    if (panelData[P_filterLoop] > 2) {
+      panelData[P_filterLoop] = 0;
+    }
+    myControlChange(midiChannel, CCFilterLoop, panelData[P_filterLoop]);
+  }
+
+  if (btnIndex == AMP_ENV_LOOP_SW && btnType == ROX_PRESSED) {
+    panelData[P_vcaLoop] = panelData[P_vcaLoop] + 1;
+    if (panelData[P_vcaLoop] > 2) {
+      panelData[P_vcaLoop] = 0;
+    }
+    myControlChange(midiChannel, CCAmpLoop, panelData[P_vcaLoop]);
+  }
+
+  if (btnIndex == AMP_GATED_SW && btnType == ROX_PRESSED) {
+    panelData[P_vcaGate] = !panelData[P_vcaGate];
+    myControlChange(midiChannel, CCAmpGatedSW, panelData[P_vcaGate]);
+  }
+
+  if (btnIndex == EFFECT_NUMBER_SW && btnType == ROX_PRESSED) {
+    effectNumSW = effectNumSW + 1;
+    if (effectNumSW > 7) {
+      effectNumSW = 0;
+    }
+    myControlChange(midiChannel, CCeffectNumSW, effectNumSW);
+  }
+
+  if (btnIndex == EFFECT_BANK_SW && btnType == ROX_PRESSED) {
+    effectBankSW = effectBankSW + 1;
+    if (effectBankSW > 3) {
+      effectBankSW = 0;
+    }
+    myControlChange(midiChannel, CCeffectBankSW, effectBankSW);
+  }
+
+  if (btnIndex == FILTER_ENV_LIN_LOG_SW && btnType == ROX_PRESSED) {
+    filterenvLinLogSW = !filterenvLinLogSW;
+    myControlChange(midiChannel, CCfilterenvLinLogSW, filterenvLinLogSW);
+  }
+
+  if (btnIndex == AMP_ENV_LIN_LOG_SW && btnType == ROX_PRESSED) {
+    ampenvLinLogSW = !ampenvLinLogSW;
+    myControlChange(midiChannel, CCampenvLinLogSW, ampenvLinLogSW);
+  }
+
+  if (btnIndex == POLY1_SW && btnType == ROX_PRESSED) {
+    keyboardMode = 0;
+    myControlChange(midiChannel, CCkeyboardMode, keyboardMode);
+  }
+
+  if (btnIndex == POLY2_SW && btnType == ROX_PRESSED) {
+    keyboardMode = 1;
+    myControlChange(midiChannel, CCkeyboardMode, keyboardMode);
+  }
+
+  if (btnIndex == UNISON_SW && btnType == ROX_PRESSED) {
+    keyboardMode = 2;
+    myControlChange(midiChannel, CCkeyboardMode, keyboardMode);
+  }
+
+  if (btnIndex == MONO_SW && btnType == ROX_PRESSED) {
+    keyboardMode = 3;
+    myControlChange(midiChannel, CCkeyboardMode, keyboardMode);
+  }
+
+  if (btnIndex == KEYBOARD_SW && btnType == ROX_PRESSED) {
+    playMode = playMode + 1;
+    if (playMode > 2) {
+      playMode = 0;
+    }
+    myControlChange(midiChannel, CCplayMode, playMode);
+  }
+
+  if (btnIndex == PRIORITY_SW && btnType == ROX_PRESSED) {
+    NotePriority = NotePriority + 1;
+    if (NotePriority > 2) {
+      NotePriority = 0;
+    }
+    myControlChange(midiChannel, CCNotePriority, NotePriority);
+  }
+
+  if (btnIndex == LFO_MULTI_MONO_SW && btnType == ROX_PRESSED) {
+    monoMultiSW = !monoMultiSW;
+    myControlChange(midiChannel, CCmonoMulti, monoMultiSW);
+  }
+
+  if (btnIndex == CHORD_HOLD_SW && btnType == ROX_PRESSED) {
+    chordHoldSW = !chordHoldSW;
+    myControlChange(midiChannel, CCchordHoldSW, chordHoldSW);
+  }
+
+  if (btnIndex == SYNC_SW && btnType == ROX_PRESSED) {
+    syncSW = !syncSW;
+    myControlChange(midiChannel, CCsyncSW, syncSW);
+  }
+
+  if (btnIndex == LOWER_SW && btnType == ROX_PRESSED) {
+    lowerSW = 1;
+    upperSW = 0;
+    myControlChange(midiChannel, CClowerSW, lowerSW);
+  }
+
+  if (btnIndex == UPPER_SW && btnType == ROX_PRESSED) {
+    lowerSW = 0;
+    upperSW = 1;
+    myControlChange(midiChannel, CCupperSW, upperSW);
+  }
+
+  if (btnIndex == PM_DCO1_DEST_SW && btnType == ROX_PRESSED) {
+    pmDestDCO1SW = !pmDestDCO1SW;
+    myControlChange(midiChannel, CCpmDestDCO1SW, pmDestDCO1SW);
+  }
+
+  if (btnIndex == PM_FILT_ENV_DEST_SW && btnType == ROX_PRESSED) {
+    pmDestFilterSW = !pmDestFilterSW;
+    myControlChange(midiChannel, CCpmDestFilterSW, pmDestFilterSW);
+  }
+}
+
 void loop() {
   checkSwitches();
   checkEeprom();
@@ -4364,5 +4474,7 @@ void loop() {
   MIDI6.read(midiChannel);
   MIDI5.read();
   usbMIDI.read(midiChannel);
+  octoswitch.update();  // read all the buttons for the Synth
+  srp.update();         // update all the LEDs in the buttons
   LFODelayHandle();
 }

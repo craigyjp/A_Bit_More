@@ -15,6 +15,11 @@ float keytrackingAmount = 0.5;
 
 int upperData[70];
 int lowerData[70];
+int panelData[70];
+
+const int originalDataLength = 70;
+const int sysexDataLength = originalDataLength;
+byte sysexData[sysexDataLength];
 
 #define P_pwLFO 1
 #define P_fmDepth 2
@@ -82,6 +87,21 @@ int lowerData[70];
 #define P_osc1SubLevel 64
 #define P_keyTrackSW 65
 #define P_LFODelay 66
+
+boolean syncSW = false;
+boolean filterenvLinLogSW = false;
+boolean ampenvLinLogSW = false;
+int lfoMult = 0;
+int effectBankSW = 0;
+int effectNumSW = 0;
+boolean pmDestDCO1SW = false;
+boolean pmDestFilterSW = false;
+boolean monoMultiSW = false;
+int pwLFOwaveformSW = 0;
+
+int keyboardMode = 0;
+int playMode = 0;
+int NotePriority = 0;
 
 //Delayed LFO
 int numberOfNotesU = 0;
