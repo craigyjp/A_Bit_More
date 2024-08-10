@@ -187,7 +187,6 @@ void setup() {
   MIDI.turnThruOn(midi::Thru::Mode::Off);
   //Serial.println("MIDI In DIN Listening");
 
-
   MIDI5.begin();
   MIDI5.setHandleControlChange(panelControlChange);
   MIDI5.turnThruOn(midi::Thru::Mode::Off);
@@ -3460,8 +3459,8 @@ void convertData() {
     sysexData[0] = upperData[0];
     for (int i = 1; i < originalDataLength; i++) {
       sysexData[i] = map(upperData[i], 0, 1023, 0, 127);
-      //Serial.print("i ");
-      //Serial.println(sysexData[i]);
+      Serial.print("i ");
+      Serial.println(sysexData[i]);
     }
 }
 
