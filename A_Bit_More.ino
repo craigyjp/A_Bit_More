@@ -118,8 +118,8 @@ unsigned long buttonDebounce = 0;
 
 void setup() {
   SPI.begin();
-  Wire.begin();  // Join the I2C bus as Master
-  //Wire.setClock(400000);  // Set I2C speed to 400 kHz
+  Wire.begin();           // Join the I2C bus as Master
+  Wire.setClock(400000);  // Set I2C speed to 400 kHz
   setupDisplay();
   setUpSettings();
   setupHardware();
@@ -2517,66 +2517,65 @@ void updatevcaVel(boolean announce) {
   }
 }
 
-
-// void updatevcaGate(boolean announce) {
-//   if (upperSW) {
-//     if (upperData[P_vcaGate] == 0) {
-//       if (announce) {
-//         showCurrentParameterPage("VCA Gate", "Off");
-//         midiCCOut(CCvcaGate, 1);
-//       }
-//       // sr.set(VCAGATE_LED, LOW);  // LED off
-//       upperData[P_ampAttack] = upperData[P_oldampAttack];
-//       upperData[P_ampDecay] = upperData[P_oldampDecay];
-//       upperData[P_ampSustain] = upperData[P_oldampSustain];
-//       upperData[P_ampRelease] = upperData[P_oldampRelease];
-//     } else {
-//       if (announce) {
-//         showCurrentParameterPage("VCA Gate", "On");
-//         midiCCOut(CCvcaGate, 127);
-//       }
-//       // sr.set(VCAGATE_LED, HIGH);  // LED on
-//       upperData[P_ampAttack] = 0;
-//       upperData[P_ampDecay] = 0;
-//       upperData[P_ampSustain] = 1023;
-//       upperData[P_ampRelease] = 0;
-//     }
-//   } else {
-//     if (lowerData[P_vcaGate] == 0) {
-//       if (announce) {
-//         showCurrentParameterPage("VCA Gate", "Off");
-//         midiCCOut(CCvcaGate, 1);
-//       }
-//       // sr.set(VCAGATE_LED, LOW);  // LED off
-//       lowerData[P_ampAttack] = lowerData[P_oldampAttack];
-//       lowerData[P_ampDecay] = lowerData[P_oldampDecay];
-//       lowerData[P_ampSustain] = lowerData[P_oldampSustain];
-//       lowerData[P_ampRelease] = lowerData[P_oldampRelease];
-//       if (wholemode) {
-//         upperData[P_ampAttack] = upperData[P_oldampAttack];
-//         upperData[P_ampDecay] = upperData[P_oldampDecay];
-//         upperData[P_ampSustain] = upperData[P_oldampSustain];
-//         upperData[P_ampRelease] = upperData[P_oldampRelease];
-//       }
-//     } else {
-//       if (announce) {
-//         showCurrentParameterPage("VCA Gate", "On");
-//         midiCCOut(CCvcaGate, 127);
-//       }
-//       // sr.set(VCAGATE_LED, HIGH);  // LED on
-//       lowerData[P_ampAttack] = 0;
-//       lowerData[P_ampDecay] = 0;
-//       lowerData[P_ampSustain] = 1023;
-//       lowerData[P_ampRelease] = 0;
-//       if (wholemode) {
-//         upperData[P_ampAttack] = 0;
-//         upperData[P_ampDecay] = 0;
-//         upperData[P_ampSustain] = 1023;
-//         upperData[P_ampRelease] = 0;
-//       }
-//     }
-//   }
-// }
+void updatevcaGate(boolean announce) {
+  if (upperSW) {
+    if (!upperData[P_vcaGate]) {
+      if (announce) {
+        showCurrentParameterPage("VCA Gate", "Off");
+      }
+      midiCCOut(CCvcaGate, 0);
+      midiCCOut72(CCvcaGate, 0);
+      upperData[P_ampAttack] = upperData[P_oldampAttack];
+      upperData[P_ampDecay] = upperData[P_oldampDecay];
+      upperData[P_ampSustain] = upperData[P_oldampSustain];
+      upperData[P_ampRelease] = upperData[P_oldampRelease];
+    } else {
+      if (announce) {
+        showCurrentParameterPage("VCA Gate", "On");
+      }
+      midiCCOut(CCvcaGate, 127);
+      midiCCOut72(CCvcaGate, 1);
+      upperData[P_ampAttack] = 0;
+      upperData[P_ampDecay] = 0;
+      upperData[P_ampSustain] = 1023;
+      upperData[P_ampRelease] = 0;
+    }
+  } else {
+    if (!lowerData[P_vcaGate]) {
+      if (announce) {
+        showCurrentParameterPage("VCA Gate", "Off");
+      }
+      midiCCOut(CCvcaGate, 0);
+      midiCCOut72(CCvcaGate, 0);
+      lowerData[P_ampAttack] = lowerData[P_oldampAttack];
+      lowerData[P_ampDecay] = lowerData[P_oldampDecay];
+      lowerData[P_ampSustain] = lowerData[P_oldampSustain];
+      lowerData[P_ampRelease] = lowerData[P_oldampRelease];
+      if (wholemode) {
+        upperData[P_ampAttack] = upperData[P_oldampAttack];
+        upperData[P_ampDecay] = upperData[P_oldampDecay];
+        upperData[P_ampSustain] = upperData[P_oldampSustain];
+        upperData[P_ampRelease] = upperData[P_oldampRelease];
+      }
+    } else {
+      if (announce) {
+        showCurrentParameterPage("VCA Gate", "On");
+      }
+      midiCCOut(CCvcaGate, 127);
+      midiCCOut72(CCvcaGate, 1);
+      lowerData[P_ampAttack] = 0;
+      lowerData[P_ampDecay] = 0;
+      lowerData[P_ampSustain] = 1023;
+      lowerData[P_ampRelease] = 0;
+      if (wholemode) {
+        upperData[P_ampAttack] = 0;
+        upperData[P_ampDecay] = 0;
+        upperData[P_ampSustain] = 1023;
+        upperData[P_ampRelease] = 0;
+      }
+    }
+  }
+}
 
 void updatelfoAlt(boolean announce) {
   if (upperSW) {
@@ -2632,29 +2631,37 @@ void updatelowerSW() {
   }
 }
 
-// void updateMonoMulti(boolean announce) {
-//   if (upperSW) {
-//     if (upperData[P_monoMulti] == 0) {
-//       if (announce) {
-//         showCurrentParameterPage("LFO Retrigger", "Off");
-//       }
-//     } else {
-//       if (announce) {
-//         showCurrentParameterPage("LFO Retrigger", "On");
-//       }
-//     }
-//   } else {
-//     if (lowerData[P_monoMulti] == 0) {
-//       if (announce) {
-//         showCurrentParameterPage("LFO Retrigger", "Off");
-//       }
-//     } else {
-//       if (announce) {
-//         showCurrentParameterPage("LFO Retrigger", "On");
-//       }
-//     }
-//   }
-// }
+void updateMonoMulti(boolean announce) {
+  if (upperSW) {
+    if (!upperData[P_monoMulti]) {
+      if (announce) {
+        showCurrentParameterPage("LFO Retrigger", "Off");
+      }
+      midiCCOut(CCmonoMulti, 0);
+      midiCCOut72(CCmonoMulti, 0);
+    } else {
+      if (announce) {
+        showCurrentParameterPage("LFO Retrigger", "On");
+      }
+      midiCCOut(CCmonoMulti, 127);
+      midiCCOut72(CCmonoMulti, 1);
+    }
+  } else {
+    if (!lowerData[P_monoMulti]) {
+      if (announce) {
+        showCurrentParameterPage("LFO Retrigger", "Off");
+      }
+      midiCCOut(CCmonoMulti, 0);
+      midiCCOut72(CCmonoMulti, 0);
+    } else {
+      if (announce) {
+        showCurrentParameterPage("LFO Retrigger", "On");
+      }
+      midiCCOut(CCmonoMulti, 127);
+      midiCCOut72(CCmonoMulti, 1);
+    }
+  }
+}
 
 void updatePitchBend() {
   showCurrentParameterPage("Bender Range", int(PitchBendLevelstr));
@@ -3275,9 +3282,9 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCglideSW:
       if (upperSW) {
-        upperData[P_glideSW] = value;
+        upperData[P_glideSW] = !upperData[P_glideSW];
       } else {
-        lowerData[P_glideSW] = value;
+        lowerData[P_glideSW] = !lowerData[P_glideSW];
       }
       updateglideSW(1);
       break;
@@ -3293,45 +3300,45 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterVel:
       if (upperSW) {
-        upperData[P_filterVel] = value;
+        upperData[P_filterVel] = !upperData[P_filterVel];
       } else {
-        lowerData[P_filterVel] = value;
+        lowerData[P_filterVel] = !lowerData[P_filterVel];
       }
       updatefilterVel(1);
       break;
 
     case CCfilterEGinv:
       if (upperSW) {
-        upperData[P_filterEGinv] = value;
+        upperData[P_filterEGinv] = !upperData[P_filterEGinv];
       } else {
-        lowerData[P_filterEGinv] = value;
+        lowerData[P_filterEGinv] = !lowerData[P_filterEGinv];
       }
       updatefilterEGinv(1);
       break;
 
     case CCsyncSW:
       if (upperSW) {
-        upperData[P_sync] = value;
+        upperData[P_sync] = !upperData[P_sync];
       } else {
-        lowerData[P_sync] = value;
+        lowerData[P_sync] = !lowerData[P_sync];
       }
       updatesyncSW(1);
       break;
 
     case CCfilterenvLinLogSW:
       if (upperSW) {
-        upperData[P_filterLogLin] = value;
+        upperData[P_filterLogLin] = !upperData[P_filterLogLin];
       } else {
-        lowerData[P_filterLogLin] = value;
+        lowerData[P_filterLogLin] = !lowerData[P_filterLogLin];
       }
       updatefilterenvLogLin(1);
       break;
 
     case CCampenvLinLogSW:
       if (upperSW) {
-        upperData[P_ampLogLin] = value;
+        upperData[P_ampLogLin] = !upperData[P_ampLogLin];
       } else {
-        lowerData[P_ampLogLin] = value;
+        lowerData[P_ampLogLin] = !lowerData[P_ampLogLin];
       }
       updateampenvLogLin(1);
       break;
@@ -3365,9 +3372,9 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCvcaVel:
       if (upperSW) {
-        upperData[P_vcaVel] = value;
+        upperData[P_vcaVel] = !upperData[P_vcaVel];
       } else {
-        lowerData[P_vcaVel] = value;
+        lowerData[P_vcaVel] = !lowerData[P_vcaVel];
       }
       updatevcaVel(1);
       break;
@@ -3390,19 +3397,23 @@ void myControlChange(byte channel, byte control, int value) {
       updateeffectNumSW(1);
       break;
 
-      // case CCvcaGate:
-      //   if (upperSW) {
-      //     upperData[P_vcaGate] = !upperData[P_vcaGate];
-      //   } else {
-      //     lowerData[P_vcaGate] = !lowerData[P_vcaGate];
-      //   }
-      //   updatevcaGate(1);
-      //   break;
+    case CCvcaGate:
+      if (upperSW) {
+        upperData[P_vcaGate] = !upperData[P_vcaGate];
+      } else {
+        lowerData[P_vcaGate] = !lowerData[P_vcaGate];
+      }
+      updatevcaGate(1);
+      break;
 
-      // case CCmonoMulti:
-      //   value > 0 ? monoMulti = 1 : monoMulti = 0;
-      //   updateMonoMulti(1);
-      //   break;
+    case CCmonoMulti:
+      if (upperSW) {
+        upperData[P_monoMulti] = !upperData[P_monoMulti];
+      } else {
+        lowerData[P_monoMulti] = !lowerData[P_monoMulti];
+      }
+      updateMonoMulti(1);
+      break;
 
       //   // case CCPBDepth:
       //   //   PitchBendLevel = value;
@@ -3412,9 +3423,9 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CClfoAlt:
       if (upperSW) {
-        upperData[P_lfoAlt] = value;
+        upperData[P_lfoAlt] = !upperData[P_lfoAlt];
       } else {
-        lowerData[P_lfoAlt] = value;
+        lowerData[P_lfoAlt] = !lowerData[P_lfoAlt];
       }
       updatelfoAlt(1);
       break;
@@ -3799,33 +3810,24 @@ void setCurrentPatchData(String data[]) {
 }
 
 void sendi2cMessage() {
-  int offset = 0;
 
   if (upperSW) {
 
-    while (offset < 70) {
-      Wire.beginTransmission(8);
-      for (int i = offset; i < offset + 14 && i < 70; i++) {
-        Wire.write((uint8_t)(upperData[i] >> 8));    // High byte
-        Wire.write((uint8_t)(upperData[i] & 0xFF));  // Low byte
-      }
-      Wire.endTransmission();
-      offset += 14;
-      delay(1);  // Small delay between chunks
+    Wire.beginTransmission(8);
+    for (int i = 0; i < 70; i++) {
+      Wire.write((uint8_t)(upperData[i] >> 8));    // High byte
+      Wire.write((uint8_t)(upperData[i] & 0xFF));  // Low byte
     }
+    Wire.endTransmission();
 
   } else {
 
-    while (offset < 70) {
-      Wire.beginTransmission(8);
-      for (int i = offset; i < offset + 14 && i < 70; i++) {
-        Wire.write((uint8_t)(lowerData[i] >> 8));    // High byte
-        Wire.write((uint8_t)(lowerData[i] & 0xFF));  // Low byte
-      }
-      Wire.endTransmission();
-      offset += 14;
-      delay(1);  // Small delay between chunks
+    Wire.beginTransmission(8);
+    for (int i = 0; i < 70; i++) {
+      Wire.write((uint8_t)(lowerData[i] >> 8));    // High byte
+      Wire.write((uint8_t)(lowerData[i] & 0xFF));  // Low byte
     }
+    Wire.endTransmission();
   }
 }
 
@@ -4740,7 +4742,7 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
 
   if (btnIndex == AMP_GATED_SW && btnType == ROX_PRESSED) {
     panelData[P_vcaGate] = !panelData[P_vcaGate];
-    myControlChange(midiChannel, CCAmpGatedSW, panelData[P_vcaGate]);
+    myControlChange(midiChannel, CCvcaGate, panelData[P_vcaGate]);
   }
 
   if (btnIndex == EFFECT_NUMBER_SW && btnType == ROX_PRESSED) {
@@ -4806,8 +4808,8 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
   }
 
   if (btnIndex == LFO_MULTI_MONO_SW && btnType == ROX_PRESSED) {
-    monoMultiSW = !monoMultiSW;
-    myControlChange(midiChannel, CCmonoMulti, monoMultiSW);
+    panelData[P_monoMulti] = !panelData[P_monoMulti];
+    myControlChange(midiChannel, CCmonoMulti, panelData[P_monoMulti]);
   }
 
   if (btnIndex == CHORD_HOLD_SW && btnType == ROX_PRESSED) {

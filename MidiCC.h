@@ -25,7 +25,7 @@
 #define   CCPM_DCO2 26
 #define   CCFilterLoop 27
 #define   CCAmpLoop 28
-#define   CCAmpGatedSW 29
+
 #define   CCkeyTrack 30
 
 #define   CCwholemode 32

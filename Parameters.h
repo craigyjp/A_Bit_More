@@ -95,7 +95,6 @@ boolean syncSW = false;
 int lfoMult = 0;
 boolean pmDestDCO1SW = false;
 boolean pmDestFilterSW = false;
-boolean monoMultiSW = false;
 int pwLFOwaveformSW = 0;
 
 int playMode = 0;
@@ -232,10 +231,6 @@ int vcaVel = 0;
 int vcaGate = 0;
 int chorus1 = 0;
 int chorus2 = 0;
-int monoMulti = 0;
-
-int oldmonoMultiU = 0;
-int oldmonoMultiL = 0;
 int filterPoleSW = 0;
 int filterVel = 0;
 int filterLoop = 0;
