@@ -18,9 +18,10 @@ int lowerData[70];
 int panelData[70];
 
 const int originalDataLength = 70;
-const int sysexDataLength = originalDataLength;
+const int sysexDataLength = originalDataLength * 2;
 byte sysexData[sysexDataLength];
 
+#define P_sysex 0
 #define P_pwLFO 1
 #define P_fmDepth 2
 #define P_osc2PW 3
@@ -85,21 +86,18 @@ byte sysexData[sysexDataLength];
 #define P_ampLogLin 62
 #define P_osc2TriangleLevel 63
 #define P_osc1SubLevel 64
-#define P_keyTrackSW 65
+#define P_keyboardMode 65
 #define P_LFODelay 66
+#define P_effectNum 67
+#define P_effectBank 68
 
 boolean syncSW = false;
-boolean filterenvLinLogSW = false;
-boolean ampenvLinLogSW = false;
 int lfoMult = 0;
-int effectBankSW = 0;
-int effectNumSW = 0;
 boolean pmDestDCO1SW = false;
 boolean pmDestFilterSW = false;
 boolean monoMultiSW = false;
 int pwLFOwaveformSW = 0;
 
-int keyboardMode = 0;
 int playMode = 0;
 int NotePriority = 0;
 
@@ -132,10 +130,6 @@ int osc1PW = 0;
 float osc1PWstr = 0;
 int osc1PWM = 0;
 float osc1PWMstr = 0;
-int osc1Range = 0;
-float osc1Rangestr = 0;
-int osc2Range = 0;
-float osc2Rangestr = 0;
 int glideTime = 0;
 float glideTimestr = 0;
 int osc2Detune = 0;
@@ -234,19 +228,10 @@ int modWheelLevel = 0;
 float modWheelLevelstr = 0;
 
 int glideSW = 0;
-int vcaLoop = 0;
-int statevcaLoop = 0;
-int oldvcaLoop = 0;
-int statevcaLoopU = 0;
-int oldvcaLoopU = 0;
-int statevcaLoopL = 0;
-int oldvcaLoopL = 0;
-int vcadoubleLoop = 0;
 int vcaVel = 0;
 int vcaGate = 0;
 int chorus1 = 0;
 int chorus2 = 0;
-int lfoAlt = 0;
 int monoMulti = 0;
 
 int oldmonoMultiU = 0;
@@ -266,9 +251,6 @@ int upperSW = 0;
 int oldupperSW = 0;
 int lowerSW = 0;
 int oldlowerSW = 0;
-int filterLogLin = 0;
-int ampLogLin = 0;
-int sync = 0;
 int chordHoldSW = 0;
 int chordHoldU = 0;
 int chordHoldL = 0;
@@ -278,11 +260,7 @@ int AfterTouchDest = 0;
 int AfterTouchDestU = 0;
 int AfterTouchDestL = 0;
 int oldAfterTouchDestU = 0;
-int oldAfterTouchDestL = 0;
-int oldfilterLogLinU;
-int oldfilterLogLinL;
-int oldampLogLinU;
-int oldampLogLinL;
+int oldAfterTouchDestL = 0;;
 int oldkeyTrackSWU;
 int oldkeyTrackSWL;
 

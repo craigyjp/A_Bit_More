@@ -10,7 +10,7 @@
 ADC *adc = new ADC();
 
 //Teensy 3.6 - Mux Pins
-#define MUX_0 29
+#define MUX_0 37
 #define MUX_1 30
 #define MUX_2 31
 #define MUX_3 32
@@ -281,10 +281,10 @@ ADC *adc = new ADC();
 
 // System Switches etc
 
-#define RECALL_SW 18
+#define RECALL_SW 20
 #define SAVE_SW 23
 #define SETTINGS_SW 22
-#define BACK_SW 19
+#define BACK_SW 21
 
 #define ENCODER_PINA 5
 #define ENCODER_PINB 4
