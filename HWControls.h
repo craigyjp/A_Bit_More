@@ -176,10 +176,10 @@ ADC *adc = new ADC();
 #define LOWER_SW 4
 #define UPPER_SW 5
 #define CHORD_HOLD_SW 6
-#define PRIORITY_SW 7
+#define KEYBOARD_SW 7
 
 #define GLIDE_SW 8
-#define KEYBOARD_SW 9
+#define PRIORITY_SW 9
 #define DCO1_OCT_SW 10
 #define DCO2_OCT_SW 11
 #define SPARE_SYNC_SW 12
@@ -203,7 +203,7 @@ ADC *adc = new ADC();
 #define EFFECT_BANK_SW 28
 #define LFO_ALT_SW 29
 #define LFO_MULTI_MONO_SW 30
-#define PW_LFO_WAVEFORM_SW 31
+#define LFO_MULT_SW 31
 
 // New 595 outputs X8
 

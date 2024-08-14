@@ -79,17 +79,6 @@ void storePitchBendRange(byte pitchBendRange) {
   EEPROM.update(EEPROM_PITCHBEND, pitchBendRange);
 }
 
-float getModWheelDepth() {
-  int mw = EEPROM.read(EEPROM_MODWHEEL_DEPTH);
-  if (mw < 1 || mw > 10) return modWheelDepth;  //If EEPROM has no mod wheel depth stored
-  return mw;
-}
-
-void storeModWheelDepth(float mwDepth) {
-  int mw = mwDepth;
-  EEPROM.update(EEPROM_MODWHEEL_DEPTH, mw);
-}
-
 boolean getEncoderDir() {
   byte ed = EEPROM.read(EEPROM_ENCODER_DIR);
   if (ed < 0 || ed > 1) return true;  //If EEPROM has no encoder direction stored

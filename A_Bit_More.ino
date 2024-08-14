@@ -198,9 +198,6 @@ void setup() {
   //Read Pitch Bend Range from EEPROM
   pitchBendRange = getPitchBendRange();
 
-  //Read Mod Wheel Depth from EEPROM
-  modWheelDepth = getModWheelDepth();
-
   //Read Encoder Direction from EEPROM
   encCW = getEncoderDir();
 
@@ -921,6 +918,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P LowPass"));
           }
         }
+        midiCCOut72(CCfilterType, 0);
+        midiCCOut(CCfilterType, 0);
         srp.writePin(FILTERA_UPPER, LOW);
         srp.writePin(FILTERB_UPPER, LOW);
         srp.writePin(FILTERC_UPPER, LOW);
@@ -936,6 +935,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P LowPass"));
           }
         }
+        midiCCOut72(CCfilterType, 1);
+        midiCCOut(CCfilterType, 1);
         srp.writePin(FILTERA_UPPER, HIGH);
         srp.writePin(FILTERB_UPPER, LOW);
         srp.writePin(FILTERC_UPPER, LOW);
@@ -951,6 +952,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P HighPass"));
           }
         }
+        midiCCOut72(CCfilterType, 2);
+        midiCCOut(CCfilterType, 2);
         srp.writePin(FILTERA_UPPER, LOW);
         srp.writePin(FILTERB_UPPER, HIGH);
         srp.writePin(FILTERC_UPPER, LOW);
@@ -966,6 +969,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P HighPass"));
           }
         }
+        midiCCOut72(CCfilterType, 3);
+        midiCCOut(CCfilterType, 3);
         srp.writePin(FILTERA_UPPER, HIGH);
         srp.writePin(FILTERB_UPPER, HIGH);
         srp.writePin(FILTERC_UPPER, LOW);
@@ -981,6 +986,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P BandPass"));
           }
         }
+        midiCCOut72(CCfilterType, 4);
+        midiCCOut(CCfilterType, 4);
         srp.writePin(FILTERA_UPPER, LOW);
         srp.writePin(FILTERB_UPPER, LOW);
         srp.writePin(FILTERC_UPPER, HIGH);
@@ -996,6 +1003,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P BandPass"));
           }
         }
+        midiCCOut72(CCfilterType, 5);
+        midiCCOut(CCfilterType, 5);
         srp.writePin(FILTERA_UPPER, HIGH);
         srp.writePin(FILTERB_UPPER, LOW);
         srp.writePin(FILTERC_UPPER, HIGH);
@@ -1011,6 +1020,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("3P AllPass"));
           }
         }
+        midiCCOut72(CCfilterType, 6);
+        midiCCOut(CCfilterType, 6);
         srp.writePin(FILTERA_UPPER, LOW);
         srp.writePin(FILTERB_UPPER, HIGH);
         srp.writePin(FILTERC_UPPER, HIGH);
@@ -1026,6 +1037,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("Notch"));
           }
         }
+        midiCCOut72(CCfilterType, 7);
+        midiCCOut(CCfilterType, 7);
         srp.writePin(FILTERA_UPPER, HIGH);
         srp.writePin(FILTERB_UPPER, HIGH);
         srp.writePin(FILTERC_UPPER, HIGH);
@@ -1043,6 +1056,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P LowPass"));
           }
         }
+        midiCCOut72(CCfilterType, 0);
+        midiCCOut(CCfilterType, 0);
         srp.writePin(FILTERA_LOWER, LOW);
         srp.writePin(FILTERB_LOWER, LOW);
         srp.writePin(FILTERC_LOWER, LOW);
@@ -1063,6 +1078,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P LowPass"));
           }
         }
+        midiCCOut72(CCfilterType, 1);
+        midiCCOut(CCfilterType, 1);
         srp.writePin(FILTERA_LOWER, HIGH);
         srp.writePin(FILTERB_LOWER, LOW);
         srp.writePin(FILTERC_LOWER, LOW);
@@ -1083,6 +1100,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P HighPass"));
           }
         }
+        midiCCOut72(CCfilterType, 2);
+        midiCCOut(CCfilterType, 2);
         srp.writePin(FILTERA_LOWER, LOW);
         srp.writePin(FILTERB_LOWER, HIGH);
         srp.writePin(FILTERC_LOWER, LOW);
@@ -1103,6 +1122,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P HighPass"));
           }
         }
+        midiCCOut72(CCfilterType, 3);
+        midiCCOut(CCfilterType, 3);
         srp.writePin(FILTERA_LOWER, HIGH);
         srp.writePin(FILTERB_LOWER, HIGH);
         srp.writePin(FILTERC_LOWER, LOW);
@@ -1123,6 +1144,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("4P BandPass"));
           }
         }
+        midiCCOut72(CCfilterType, 4);
+        midiCCOut(CCfilterType, 4);
         srp.writePin(FILTERA_LOWER, LOW);
         srp.writePin(FILTERB_LOWER, LOW);
         srp.writePin(FILTERC_LOWER, HIGH);
@@ -1143,6 +1166,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("2P BandPass"));
           }
         }
+        midiCCOut72(CCfilterType, 5);
+        midiCCOut(CCfilterType, 5);
         srp.writePin(FILTERA_LOWER, HIGH);
         srp.writePin(FILTERB_LOWER, LOW);
         srp.writePin(FILTERC_LOWER, HIGH);
@@ -1164,6 +1189,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("3P AllPass"));
           }
         }
+        midiCCOut72(CCfilterType, 6);
+        midiCCOut(CCfilterType, 6);
         srp.writePin(FILTERA_LOWER, LOW);
         srp.writePin(FILTERB_LOWER, HIGH);
         srp.writePin(FILTERC_LOWER, HIGH);
@@ -1184,6 +1211,8 @@ void updateFilterType(boolean announce) {
             showCurrentParameterPage("Filter Type", String("Notch"));
           }
         }
+        midiCCOut72(CCfilterType, 7);
+        midiCCOut(CCfilterType, 7);
         srp.writePin(FILTERA_LOWER, HIGH);
         srp.writePin(FILTERB_LOWER, HIGH);
         srp.writePin(FILTERC_LOWER, HIGH);
@@ -1195,7 +1224,6 @@ void updateFilterType(boolean announce) {
         break;
     }
   }
-  midiCCOut72(CCfilterType, filterType);
 }
 
 void updatefilterEGlevel(boolean announce) {
@@ -1317,7 +1345,7 @@ void updateeffectsMix(boolean announce) {
 
 void updateStratusLFOWaveform(boolean announce) {
   if (!panelData[P_lfoAlt]) {
-    switch (LFOWaveform) {
+    switch (panelData[P_LFOWaveform]) {
       case 0:
         StratusLFOWaveform = "Sawtooth Up";
         LFOWaveCV = 40;
@@ -1367,7 +1395,7 @@ void updateStratusLFOWaveform(boolean announce) {
         break;
     }
   } else {
-    switch (LFOWaveform) {
+    switch (panelData[P_LFOWaveform]) {
       case 0:
         StratusLFOWaveform = "Saw +Oct";
         LFOWaveCV = 40;
@@ -2017,6 +2045,129 @@ void updateeffectBankSW(boolean announce) {
   }
 }
 
+void updatelfoMultiplier(boolean announce) {
+  if (upperSW) {
+    if (upperData[P_lfoMultiplier] == 0) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x0.5");
+      }
+      srp.writePin(LFO_MULTI_BIT0_UPPER, LOW);
+      srp.writePin(LFO_MULTI_BIT1_UPPER, LOW);
+      srp.writePin(LFO_MULTI_BIT2_UPPER, LOW);
+      midiCCOut72(CClfoMult, 0);
+      midiCCOut(CClfoMult, 0);
+    } else if (upperData[P_lfoMultiplier] == 1) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x1.0");
+      }
+      srp.writePin(LFO_MULTI_BIT0_UPPER, HIGH);
+      srp.writePin(LFO_MULTI_BIT1_UPPER, LOW);
+      srp.writePin(LFO_MULTI_BIT2_UPPER, LOW);
+      midiCCOut72(CClfoMult, 1);
+      midiCCOut(CClfoMult, 1);
+    } else if (upperData[P_lfoMultiplier] == 2) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x1.5");
+      }
+      srp.writePin(LFO_MULTI_BIT0_UPPER, LOW);
+      srp.writePin(LFO_MULTI_BIT1_UPPER, HIGH);
+      srp.writePin(LFO_MULTI_BIT2_UPPER, LOW);
+      midiCCOut72(CClfoMult, 2);
+      midiCCOut(CClfoMult, 2);
+    } else if (upperData[P_lfoMultiplier] == 3) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x2.0");
+      }
+      srp.writePin(LFO_MULTI_BIT0_UPPER, HIGH);
+      srp.writePin(LFO_MULTI_BIT1_UPPER, HIGH);
+      srp.writePin(LFO_MULTI_BIT2_UPPER, LOW);
+      midiCCOut72(CClfoMult, 3);
+      midiCCOut(CClfoMult, 3);
+    } else if (upperData[P_lfoMultiplier] == 4) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x2.5");
+      }
+      srp.writePin(LFO_MULTI_BIT0_UPPER, LOW);
+      srp.writePin(LFO_MULTI_BIT1_UPPER, LOW);
+      srp.writePin(LFO_MULTI_BIT2_UPPER, HIGH);
+      midiCCOut72(CClfoMult, 4);
+      midiCCOut(CClfoMult, 4);
+    }
+  } else {
+    if (lowerData[P_lfoMultiplier] == 0) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x0.5");
+      }
+      srp.writePin(LFO_MULTI_BIT0_LOWER, LOW);
+      srp.writePin(LFO_MULTI_BIT1_LOWER, LOW);
+      srp.writePin(LFO_MULTI_BIT2_LOWER, LOW);
+      if (wholemode) {
+        srp.writePin(LFO_MULTI_BIT0_UPPER, LOW);
+        srp.writePin(LFO_MULTI_BIT1_UPPER, LOW);
+        srp.writePin(LFO_MULTI_BIT2_UPPER, LOW);
+      }
+      midiCCOut72(CClfoMult, 0);
+      midiCCOut(CClfoMult, 0);
+    } else if (lowerData[P_lfoMultiplier] == 1) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x1.0");
+      }
+      srp.writePin(LFO_MULTI_BIT0_LOWER, HIGH);
+      srp.writePin(LFO_MULTI_BIT1_LOWER, LOW);
+      srp.writePin(LFO_MULTI_BIT2_LOWER, LOW);
+      if (wholemode) {
+        srp.writePin(LFO_MULTI_BIT0_UPPER, HIGH);
+        srp.writePin(LFO_MULTI_BIT1_UPPER, LOW);
+        srp.writePin(LFO_MULTI_BIT2_UPPER, LOW);
+      }
+      midiCCOut72(CClfoMult, 1);
+      midiCCOut(CClfoMult, 1);
+    } else if (lowerData[P_lfoMultiplier] == 2) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x1.5");
+      }
+      srp.writePin(LFO_MULTI_BIT0_LOWER, LOW);
+      srp.writePin(LFO_MULTI_BIT1_LOWER, HIGH);
+      srp.writePin(LFO_MULTI_BIT2_LOWER, LOW);
+      if (wholemode) {
+        srp.writePin(LFO_MULTI_BIT0_UPPER, LOW);
+        srp.writePin(LFO_MULTI_BIT1_UPPER, HIGH);
+        srp.writePin(LFO_MULTI_BIT2_UPPER, LOW);
+      }
+      midiCCOut72(CClfoMult, 2);
+      midiCCOut(CClfoMult, 2);
+    } else if (lowerData[P_lfoMultiplier] == 3) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x2.0");
+      }
+      srp.writePin(LFO_MULTI_BIT0_LOWER, HIGH);
+      srp.writePin(LFO_MULTI_BIT1_LOWER, HIGH);
+      srp.writePin(LFO_MULTI_BIT2_LOWER, LOW);
+      if (wholemode) {
+        srp.writePin(LFO_MULTI_BIT0_UPPER, HIGH);
+        srp.writePin(LFO_MULTI_BIT1_UPPER, HIGH);
+        srp.writePin(LFO_MULTI_BIT2_UPPER, LOW);
+      }
+      midiCCOut72(CClfoMult, 3);
+      midiCCOut(CClfoMult, 3);
+    } else if (lowerData[P_lfoMultiplier] == 4) {
+      if (announce) {
+        showCurrentParameterPage("LFO Multiplier", "x2.5");
+      }
+      srp.writePin(LFO_MULTI_BIT0_LOWER, LOW);
+      srp.writePin(LFO_MULTI_BIT1_LOWER, LOW);
+      srp.writePin(LFO_MULTI_BIT2_LOWER, HIGH);
+      if (wholemode) {
+        srp.writePin(LFO_MULTI_BIT0_UPPER, LOW);
+        srp.writePin(LFO_MULTI_BIT1_UPPER, LOW);
+        srp.writePin(LFO_MULTI_BIT2_UPPER, HIGH);
+      }
+      midiCCOut72(CClfoMult, 4);
+      midiCCOut(CClfoMult, 4);
+    }
+  }
+}
+
 void updateglideSW(boolean announce) {
   if (upperSW) {
     if (upperData[P_glideSW] == 0) {
@@ -2226,6 +2377,90 @@ void updatefilterEGinv(boolean announce) {
   }
 }
 
+void updatepmDestDCO1(boolean announce) {
+  if (upperSW) {
+    if (!upperData[P_pmDestDCO1]) {
+      if (announce) {
+        showCurrentParameterPage("PolyMod DCO1", "Off");
+      }
+      midiCCOut(CCpmDestDCO1SW, 0);
+      midiCCOut72(CCpmDestDCO1SW, 0);
+      srp.writePin(POLYMOD_DEST_DCO1_UPPER, LOW);
+    } else {
+      if (announce) {
+        showCurrentParameterPage("PolyMod DCO1", "On");
+      }
+      midiCCOut(CCpmDestDCO1SW, 127);
+      midiCCOut72(CCpmDestDCO1SW, 1);
+      srp.writePin(POLYMOD_DEST_DCO1_UPPER, HIGH);
+    }
+  } else {
+    if (!lowerData[P_pmDestDCO1]) {
+      if (announce) {
+        showCurrentParameterPage("PolyMod DCO1", "Off");
+      }
+      midiCCOut(CCpmDestDCO1SW, 0);
+      midiCCOut72(CCpmDestDCO1SW, 0);
+      srp.writePin(POLYMOD_DEST_DCO1_LOWER, LOW);
+      if (wholemode) {
+        srp.writePin(POLYMOD_DEST_DCO1_UPPER, LOW);
+      }
+    } else {
+      if (announce) {
+        showCurrentParameterPage("PolyMod DCO1", "On");
+      }
+      midiCCOut(CCpmDestDCO1SW, 127);
+      midiCCOut72(CCpmDestDCO1SW, 1);
+      srp.writePin(POLYMOD_DEST_DCO1_LOWER, HIGH);
+      if (wholemode) {
+        srp.writePin(POLYMOD_DEST_DCO1_UPPER, HIGH);
+      }
+    }
+  }
+}
+
+void updatepmDestFilter(boolean announce) {
+  if (upperSW) {
+    if (!upperData[P_pmDestFilter]) {
+      if (announce) {
+        showCurrentParameterPage("PolyMod Filter", "Off");
+      }
+      midiCCOut(CCpmDestFilterSW, 0);
+      midiCCOut72(CCpmDestFilterSW, 0);
+      srp.writePin(POLYMOD_DEST_FILTER_UPPER, LOW);
+    } else {
+      if (announce) {
+        showCurrentParameterPage("PolyMod Filter", "On");
+      }
+      midiCCOut(CCpmDestFilterSW, 127);
+      midiCCOut72(CCpmDestFilterSW, 1);
+      srp.writePin(POLYMOD_DEST_FILTER_UPPER, HIGH);
+    }
+  } else {
+    if (!lowerData[P_pmDestFilter]) {
+      if (announce) {
+        showCurrentParameterPage("PolyMod Filter", "Off");
+      }
+      midiCCOut(CCpmDestFilterSW, 0);
+      midiCCOut72(CCpmDestFilterSW, 0);
+      srp.writePin(POLYMOD_DEST_FILTER_LOWER, LOW);
+      if (wholemode) {
+        srp.writePin(POLYMOD_DEST_FILTER_UPPER, LOW);
+      }
+    } else {
+      if (announce) {
+        showCurrentParameterPage("PolyMod Filter", "On");
+      }
+      midiCCOut(CCpmDestFilterSW, 127);
+      midiCCOut72(CCpmDestFilterSW, 1);
+      srp.writePin(POLYMOD_DEST_FILTER_LOWER, HIGH);
+      if (wholemode) {
+        srp.writePin(POLYMOD_DEST_FILTER_UPPER, HIGH);
+      }
+    }
+  }
+}
+
 void updatesyncSW(boolean announce) {
   if (upperSW) {
     if (!upperData[P_sync]) {
@@ -2391,6 +2626,62 @@ void updatefilterVel(boolean announce) {
       if (wholemode) {
         srp.writePin(FILTER_VELOCITY_UPPER, HIGH);
       }
+    }
+  }
+}
+
+void updateNotePriority(boolean announce) {
+  if (upperSW) {
+    switch (upperData[P_NotePriority]) {
+      case 0:
+        if (announce) {
+          showCurrentParameterPage("Note Priority", "Top");
+        }
+        midiCCOut72(CCNotePriority, 0);
+        midiCCOut(CCNotePriority, 0);
+        break;
+
+      case 1:
+        if (announce) {
+          showCurrentParameterPage("Note Priority", "Bottom");
+        }
+        midiCCOut72(CCNotePriority, 1);
+        midiCCOut(CCNotePriority, 63);
+        break;
+
+      case 2:
+        if (announce) {
+          showCurrentParameterPage("Note Priority", "Last");
+        }
+        midiCCOut72(CCNotePriority, 2);
+        midiCCOut(CCNotePriority, 127);
+        break;
+    }
+  } else {
+    switch (lowerData[P_NotePriority]) {
+      case 0:
+        if (announce) {
+          showCurrentParameterPage("Note Priority", "Top");
+        }
+        midiCCOut72(CCNotePriority, 0);
+        midiCCOut(CCNotePriority, 0);
+        break;
+
+      case 1:
+        if (announce) {
+          showCurrentParameterPage("Note Priority", "Bottom");
+        }
+        midiCCOut72(CCNotePriority, 1);
+        midiCCOut(CCNotePriority, 63);
+        break;
+
+      case 2:
+        if (announce) {
+          showCurrentParameterPage("Note Priority", "Last");
+        }
+        midiCCOut72(CCNotePriority, 2);
+        midiCCOut(CCNotePriority, 127);
+        break;
     }
   }
 }
@@ -2668,7 +2959,7 @@ void updatePitchBend() {
 }
 
 void updatemodWheel() {
-  showCurrentParameterPage("Mod Range", int(modWheelLevelstr));
+  showCurrentParameterPage("ModWheel Range", int(modWheelLevelstr));
 }
 
 void updatePatchname() {
@@ -2966,7 +3257,6 @@ void myControlChange(byte channel, byte control, int value) {
       break;
 
     case CCfilterType:
-      filterType = value;
       if (upperSW) {
         upperData[P_filterType] = value;
       } else {
@@ -3078,7 +3368,6 @@ void myControlChange(byte channel, byte control, int value) {
           upperData[P_LFOWaveform] = value;
         }
       }
-      LFOWaveform = value;
       updateStratusLFOWaveform(1);
       break;
 
@@ -3260,7 +3549,6 @@ void myControlChange(byte channel, byte control, int value) {
           upperData[P_amDepth] = value;
         }
       }
-      amDepth = value;
       amDepthstr = value >> midioutfrig;
       updateamDepth(1);
       break;
@@ -3269,6 +3557,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCplayMode:
       updateplayMode(1);
+      break;
+
+    case CCNotePriority:
+      if (upperSW) {
+        upperData[P_NotePriority] = value;
+      } else {
+        lowerData[P_NotePriority] = value;
+      }
+      updateNotePriority(1);
       break;
 
     case CCkeyboardMode:
@@ -3323,6 +3620,24 @@ void myControlChange(byte channel, byte control, int value) {
         lowerData[P_sync] = !lowerData[P_sync];
       }
       updatesyncSW(1);
+      break;
+
+    case CCpmDestDCO1SW:
+      if (upperSW) {
+        upperData[P_pmDestDCO1] = !upperData[P_pmDestDCO1];
+      } else {
+        lowerData[P_pmDestDCO1] = !lowerData[P_pmDestDCO1];
+      }
+      updatepmDestDCO1(1);
+      break;
+
+    case CCpmDestFilterSW:
+      if (upperSW) {
+        upperData[P_pmDestFilter] = !upperData[P_pmDestFilter];
+      } else {
+        lowerData[P_pmDestFilter] = !lowerData[P_pmDestFilter];
+      }
+      updatepmDestFilter(1);
       break;
 
     case CCfilterenvLinLogSW:
@@ -3386,6 +3701,15 @@ void myControlChange(byte channel, byte control, int value) {
         lowerData[P_effectBank] = value;
       }
       updateeffectBankSW(1);
+      break;
+
+    case CClfoMult:
+      if (upperSW) {
+        upperData[P_lfoMultiplier] = value;
+      } else {
+        lowerData[P_lfoMultiplier] = value;
+      }
+      updatelfoMultiplier(1);
       break;
 
     case CCeffectNumSW:
@@ -3654,6 +3978,12 @@ void setCurrentPatchData(String data[]) {
     upperData[P_osc1SubLevel] = data[64].toInt();       // osc1SubLevelU
     upperData[P_keyboardMode] = data[65].toInt();       // keyTrackSWU
     upperData[P_LFODelay] = data[66].toInt();           // LFODelayU
+    upperData[P_effectNum] = data[67].toInt();          // effectNumU
+    upperData[P_effectBank] = data[68].toInt();         // effectBankU
+    upperData[P_pmDestDCO1] = data[69].toInt();         // pmDestDCO1U
+    upperData[P_pmDestFilter] = data[70].toInt();       // pmDestFilterU
+    upperData[P_lfoMultiplier] = data[71].toInt();      // lfoMultiplierU
+    upperData[P_NotePriority] = data[72].toInt();       // NotePriorityU
 
     oldfilterCutoffU = upperData[P_filterCutoff];
 
@@ -3726,6 +4056,12 @@ void setCurrentPatchData(String data[]) {
     lowerData[P_osc1SubLevel] = data[64].toInt();       // osc1SubLevelL
     lowerData[P_keyboardMode] = data[65].toInt();       // keyTrackSWL
     lowerData[P_LFODelay] = data[66].toInt();           // LFODelayL
+    lowerData[P_effectNum] = data[67].toInt();          // effectNumL
+    lowerData[P_effectBank] = data[68].toInt();         // effectBankL
+    lowerData[P_pmDestDCO1] = data[69].toInt();         // pmDestDCO1L
+    lowerData[P_pmDestFilter] = data[70].toInt();       // pmDestFilterL
+    lowerData[P_lfoMultiplier] = data[71].toInt();      // lfoMultiplierL
+    lowerData[P_NotePriority] = data[72].toInt();       // NotePriorityL
 
     oldfilterCutoffL = lowerData[P_filterCutoff];
 
@@ -3798,6 +4134,12 @@ void setCurrentPatchData(String data[]) {
       upperData[P_osc1SubLevel] = data[64].toInt();       // osc1SubLevelU
       upperData[P_keyboardMode] = data[65].toInt();       // keyTrackSWU
       upperData[P_LFODelay] = data[66].toInt();           // LFODelayU
+      upperData[P_effectNum] = data[67].toInt();          // effectNumU
+      upperData[P_effectBank] = data[68].toInt();         // effectBankU
+      upperData[P_pmDestDCO1] = data[69].toInt();         // pmDestDCO1U
+      upperData[P_pmDestFilter] = data[70].toInt();       // pmDestFilterU
+      upperData[P_lfoMultiplier] = data[71].toInt();      // lfoMultiplierU
+      upperData[P_NotePriority] = data[72].toInt();       // NotePriorityU
 
       oldfilterCutoffU = upperData[P_filterCutoff];
     }
@@ -3814,7 +4156,7 @@ void sendi2cMessage() {
   if (upperSW) {
 
     Wire.beginTransmission(8);
-    for (int i = 0; i < 70; i++) {
+    for (int i = 0; i < 76; i++) {
       Wire.write((uint8_t)(upperData[i] >> 8));    // High byte
       Wire.write((uint8_t)(upperData[i] & 0xFF));  // Low byte
     }
@@ -3823,7 +4165,7 @@ void sendi2cMessage() {
   } else {
 
     Wire.beginTransmission(8);
-    for (int i = 0; i < 70; i++) {
+    for (int i = 0; i < 76; i++) {
       Wire.write((uint8_t)(lowerData[i] >> 8));    // High byte
       Wire.write((uint8_t)(lowerData[i] & 0xFF));  // Low byte
     }
@@ -3915,7 +4257,8 @@ String getCurrentPatchData() {
            + "," + String(upperData[P_amDepth]) + "," + String(upperData[P_sync]) + "," + String(upperData[P_effectPot1]) + "," + String(upperData[P_effectPot2]) + "," + String(upperData[P_effectPot3])
            + "," + String(upperData[P_oldampAttack]) + "," + String(upperData[P_oldampDecay]) + "," + String(upperData[P_oldampSustain]) + "," + String(upperData[P_oldampRelease])
            + "," + String(upperData[P_AfterTouchDest]) + "," + String(upperData[P_filterLogLin]) + "," + String(upperData[P_ampLogLin]) + "," + String(upperData[P_osc2TriangleLevel])
-           + "," + String(upperData[P_osc1SubLevel]) + "," + String(upperData[P_keyboardMode]) + "," + String(upperData[P_LFODelay]);
+           + "," + String(upperData[P_osc1SubLevel]) + "," + String(upperData[P_keyboardMode]) + "," + String(upperData[P_LFODelay]) + "," + String(upperData[P_effectNum]) + "," + String(upperData[P_effectBank])
+           + "," + String(upperData[P_pmDestDCO1]) + "," + String(upperData[P_pmDestFilter]) + "," + String(upperData[P_lfoMultiplier]) + "," + String(upperData[P_NotePriority]);
   } else {
     return patchNameL + "," + String(upperData[P_pwLFO]) + "," + String(lowerData[P_fmDepth]) + "," + String(lowerData[P_osc2PW]) + "," + String(lowerData[P_osc2PWM])
            + "," + String(lowerData[P_osc1PW]) + "," + String(lowerData[P_osc1PWM]) + "," + String(lowerData[P_osc1Range]) + "," + String(lowerData[P_osc2Range]) + "," + String(lowerData[P_osc2Interval])
@@ -3932,7 +4275,8 @@ String getCurrentPatchData() {
            + "," + String(lowerData[P_amDepth]) + "," + String(lowerData[P_sync]) + "," + String(lowerData[P_effectPot1]) + "," + String(lowerData[P_effectPot2]) + "," + String(lowerData[P_effectPot3])
            + "," + String(lowerData[P_oldampAttack]) + "," + String(lowerData[P_oldampDecay]) + "," + String(lowerData[P_oldampSustain]) + "," + String(lowerData[P_oldampRelease])
            + "," + String(lowerData[P_AfterTouchDest]) + "," + String(lowerData[P_filterLogLin]) + "," + String(lowerData[P_ampLogLin]) + "," + String(lowerData[P_osc2TriangleLevel])
-           + "," + String(lowerData[P_osc1SubLevel]) + "," + String(lowerData[P_keyboardMode]) + "," + String(lowerData[P_LFODelay]);
+           + "," + String(lowerData[P_osc1SubLevel]) + "," + String(lowerData[P_keyboardMode]) + "," + String(lowerData[P_LFODelay]) + "," + String(lowerData[P_effectNum]) + "," + String(lowerData[P_effectBank])
+           + "," + String(lowerData[P_pmDestDCO1]) + "," + String(lowerData[P_pmDestFilter]) + "," + String(lowerData[P_lfoMultiplier]) + "," + String(lowerData[P_NotePriority]);
   }
 }
 
@@ -4698,12 +5042,12 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
     myControlChange(midiChannel, CClfoAlt, panelData[P_lfoAlt]);
   }
 
-  if (btnIndex == PW_LFO_WAVEFORM_SW && btnType == ROX_PRESSED) {
-    pwLFOwaveformSW = pwLFOwaveformSW + 1;
-    if (pwLFOwaveformSW > 7) {
-      pwLFOwaveformSW = 0;
+  if (btnIndex == LFO_MULT_SW && btnType == ROX_PRESSED) {
+    panelData[P_lfoMultiplier] = panelData[P_lfoMultiplier] + 1;
+    if (panelData[P_lfoMultiplier] > 4) {
+      panelData[P_lfoMultiplier] = 0;
     }
-    myControlChange(midiChannel, CCpwLFOwaveformSW, pwLFOwaveformSW);
+    myControlChange(midiChannel, CClfoMult, panelData[P_lfoMultiplier]);
   }
 
   if (btnIndex == LFO_WAVEFORM_SW && btnType == ROX_PRESSED) {
@@ -4800,11 +5144,11 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
   }
 
   if (btnIndex == PRIORITY_SW && btnType == ROX_PRESSED) {
-    NotePriority = NotePriority + 1;
-    if (NotePriority > 2) {
-      NotePriority = 0;
+    panelData[P_NotePriority] = panelData[P_NotePriority] + 1;
+    if (panelData[P_NotePriority] > 2) {
+      panelData[P_NotePriority] = 0;
     }
-    myControlChange(midiChannel, CCNotePriority, NotePriority);
+    myControlChange(midiChannel, CCNotePriority, panelData[P_NotePriority]);
   }
 
   if (btnIndex == LFO_MULTI_MONO_SW && btnType == ROX_PRESSED) {
@@ -4835,13 +5179,13 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
   }
 
   if (btnIndex == PM_DCO1_DEST_SW && btnType == ROX_PRESSED) {
-    pmDestDCO1SW = !pmDestDCO1SW;
-    myControlChange(midiChannel, CCpmDestDCO1SW, pmDestDCO1SW);
+    panelData[P_pmDestDCO1] = !panelData[P_pmDestDCO1];
+    myControlChange(midiChannel, CCpmDestDCO1SW, panelData[P_pmDestDCO1]);
   }
 
   if (btnIndex == PM_FILT_ENV_DEST_SW && btnType == ROX_PRESSED) {
-    pmDestFilterSW = !pmDestFilterSW;
-    myControlChange(midiChannel, CCpmDestFilterSW, pmDestFilterSW);
+    panelData[P_pmDestFilter] = !panelData[P_pmDestFilter];
+    myControlChange(midiChannel, CCpmDestFilterSW, panelData[P_pmDestFilter]);
   }
 }
 

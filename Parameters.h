@@ -13,11 +13,11 @@ byte oldsplitTrans = 0;
 int lowerTranspose = 0;
 float keytrackingAmount = 0.5;
 
-int upperData[70];
-int lowerData[70];
-int panelData[70];
+int upperData[76];
+int lowerData[76];
+int panelData[76];
 
-const int originalDataLength = 70;
+const int originalDataLength = 76;
 const int sysexDataLength = originalDataLength * 2;
 byte sysexData[sysexDataLength];
 
@@ -90,15 +90,12 @@ byte sysexData[sysexDataLength];
 #define P_LFODelay 66
 #define P_effectNum 67
 #define P_effectBank 68
-
-boolean syncSW = false;
-int lfoMult = 0;
-boolean pmDestDCO1SW = false;
-boolean pmDestFilterSW = false;
-int pwLFOwaveformSW = 0;
+#define P_pmDestDCO1 69
+#define P_pmDestFilter 70
+#define P_lfoMultiplier 71
+#define P_NotePriority 72
 
 int playMode = 0;
-int NotePriority = 0;
 
 //Delayed LFO
 int numberOfNotesU = 0;
@@ -116,132 +113,16 @@ boolean encCW = true;//This is to set the encoder to increment when turned CW - 
 boolean announce = true;
 // polykit parameters in order of mux
 
-int pwLFO = 0;
-float pwLFOstr = 0; // for display
-int fmDepth = 0;
+String StratusLFOWaveform = "                ";
 
-float fmDepthstr = 0;
-int osc2PW = 0;
-float osc2PWstr = 0;
-int osc2PWM = 0;
-float osc2PWMstr = 0;
-int osc1PW = 0;
-float osc1PWstr = 0;
-int osc1PWM = 0;
-float osc1PWMstr = 0;
-int glideTime = 0;
-float glideTimestr = 0;
-int osc2Detune = 0;
-float osc2Detunestr = 0;
-int osc2Interval = 0;
-float osc2Intervalstr = 0;
-int modWheelDepth = 0;
-float modWheelDepthstr = 0;
-int noiseLevel = 0;
-float noiseLevelstr = 0;
-float osc2SawLevelstr = 0;
-int osc2SawLevel = 0;
-int osc1SawLevel = 0;
-float osc1SawLevelstr = 0;
-int osc2PulseLevel = 0;
-float osc2PulseLevelstr = 0;
-int osc1PulseLevel = 0;
-float osc1PulseLevelstr = 0;
-int osc2TriangleLevel = 0;
-float osc2TriangleLevelstr = 0; // for display
-int osc1SubLevel = 0;
-float osc1SubLevelstr = 0; // for display
-
-int filterCutoff = 0;
 int oldfilterCutoff = 0;
 int oldfilterCutoffU = 0;
 int oldfilterCutoffL = 0;
-float filterCutoffstr = 0; // for display
-int filterLFO = 0;
-float filterLFOstr = 0; // for display
-int filterRes = 0;
-float filterResstr = 0;
-int filterType = 0;
-int filterEGlevel = 0;
-float filterEGlevelstr = 0;
-int LFORate = 0;
-float LFORatestr = 0; //for display
-int LFODelay = 0;
-float LFODelaystr = 0; //for display
-String StratusLFOWaveform = "                ";
-int LFOWaveformstr = 0;
-int LFOWaveform = 0;
-int LFOWaveCV = 0;
-int filterAttack = 0;
-float filterAttackstr = 0;
-int filterDecay = 0;
-float filterDecaystr = 0;
-int filterSustain = 0;
-float filterSustainstr = 0;
-int filterRelease = 0;
-float filterReleasestr = 0;
-int ampAttack = 0;
-int oldampAttack = 0;
-float ampAttackstr = 0;
-int ampDecay = 0;
-int oldampDecay = 0;
-int oldampDecayU = 0;
-int oldampDecayL = 0;
-float ampDecaystr = 0;
-int ampSustain = 0;
-int oldampSustain = 0;
-int oldampSustainU = 0;
-int oldampSustainL = 0;
-float ampSustainstr = 0;
-int ampRelease = 0;
-int oldampRelease = 0;
-int oldampReleaseU = 0;
-int oldampReleaseL  = 0;
-float ampReleasestr = 0;
-int volumeControl = 0;
-float volumeControlstr = 0; // for display
-int amDepth = 0;;
-float amDepthstr = 0; // for display
-int keytrack = 0;
-float keytrackstr = 0;
-int keyTrackSW = 0;
-
-int effectPot1 = 0;
-float effectPot1str = 0;
-int effectPot2 = 0;
-float effectPot2str = 0;
-int effectPot3 = 0;
-float effectPot3str = 0;
-int effectsMix= 0;
-float effectsMixstr = 0;
-
-int pmDCO2 = 0;
-float pmDCO2str = 0;
-int pmFilterEnv = 0;
-float pmFilterEnvstr = 0;
 
 int pitchBendRange = 0;
 int PitchBendLevel = 0;
 int PitchBendLevelstr = 0; // for display
-int modWheelLevel = 0;
-float modWheelLevelstr = 0;
 
-int glideSW = 0;
-int vcaVel = 0;
-int vcaGate = 0;
-int chorus1 = 0;
-int chorus2 = 0;
-int filterPoleSW = 0;
-int filterVel = 0;
-int filterLoop = 0;
-int statefilterLoop = 0;
-int oldfilterLoop = 0;
-int statefilterLoopU = 0;
-int oldfilterLoopU = 0;
-int statefilterLoopL = 0;
-int oldfilterLoopL = 0;
-int filterdoubleLoop = 0;
-int filterEGinv = 0;
 int upperSW = 0;
 int oldupperSW = 0;
 int lowerSW = 0;
@@ -255,13 +136,53 @@ int AfterTouchDest = 0;
 int AfterTouchDestU = 0;
 int AfterTouchDestL = 0;
 int oldAfterTouchDestU = 0;
-int oldAfterTouchDestL = 0;;
-int oldkeyTrackSWU;
-int oldkeyTrackSWL;
+int oldAfterTouchDestL = 0;
+float pwLFOstr = 0;
+float fmDepthstr = 0;
+float osc2PWstr = 0;
+float osc2PWMstr = 0;
+float osc1PWstr = 0;
+float osc1PWMstr = 0;
+float glideTimestr = 0;
+float osc2Detunestr = 0;
+float osc2Intervalstr = 0;
+float noiseLevelstr = 0;
+float osc2SawLevelstr = 0;
+float osc1SawLevelstr = 0;
+float osc2PulseLevelstr = 0;
+float osc1PulseLevelstr = 0;
+float osc2TriangleLevelstr = 0;
+float osc1SubLevelstr = 0;
+float filterCutoffstr = 0;
+float filterLFOstr = 0;
+float filterResstr = 0;
+float filterEGlevelstr = 0;
+float LFORatestr = 0;
+float LFODelaystr = 0;
+int LFOWaveformstr = 0;
+float filterAttackstr = 0;
+float filterDecaystr = 0;
+float filterSustainstr = 0;
+float filterReleasestr = 0;
+float amDepthstr = 0; 
+float volumeControlstr = 0;
+float ampReleasestr = 0;
+float ampSustainstr = 0;
+float ampDecaystr = 0;
+float ampAttackstr = 0;
+float effectPot1str = 0;
+float effectPot2str = 0;
+float effectPot3str = 0;
+float effectsMixstr = 0;
+float pmDCO2str = 0;
+float pmFilterEnvstr = 0;
+float keytrackstr = 0;
+float modWheelDepthstr = 0;
+int modWheelLevelstr = 0;
 
 int wholemode = 1;
 int dualmode = 0;
 int splitmode = 0;
-
+int LFOWaveCV = 0;
 
 int returnvalue = 0;

@@ -3,39 +3,18 @@
 void settingsMIDICh();
 void settingsSplitPoint();
 void settingsSplitTrans();
-void settingsMonoMultiU();
-void settingsMonoMultiL();
 void settingsAfterTouchU();
 void settingsAfterTouchL();
 void settingsPitchBend();
-void settingsModWheelDepth();
 void settingsEncoderDir();
-void settingsFilterEnvU();
-void settingsFilterEnvL();
-void settingsAmpEnvU();
-void settingsAmpEnvL();
-void settingsKeyTrackU();
-void settingsKeyTrackL();
-
-
 
 int currentIndexMIDICh();
 int currentIndexSplitPoint();
 int currentIndexSplitTrans();
-int currentIndexMonoMultiU();
-int currentIndexMonoMultiL();
 int currentIndexAfterTouchU();
 int currentIndexAfterTouchL();
 int currentIndexPitchBend();
-int currentIndexModWheelDepth();
 int currentIndexEncoderDir();
-int currentIndexFilterEnvU();
-int currentIndexFilterEnvL();
-int currentIndexAmpEnvU();
-int currentIndexAmpEnvL();
-int currentIndexKeyTrackU();
-int currentIndexKeyTrackL();
-
 
 void settingsSplitPoint(int index, const char *value) {
   if (strcmp(value, "36") == 0) newsplitPoint = 0;
@@ -107,11 +86,6 @@ void settingsPitchBend(int index, const char *value) {
   storePitchBendRange(pitchBendRange);
 }
 
-void settingsModWheelDepth(int index, const char *value) {
-  modWheelDepth = atoi(value);
-  storeModWheelDepth(modWheelDepth);
-}
-
 void settingsEncoderDir(int index, const char *value) {
   if (strcmp(value, "Type 1") == 0) {
     encCW = true;
@@ -145,10 +119,6 @@ int currentIndexPitchBend() {
   return getPitchBendRange() - 1;
 }
 
-int currentIndexModWheelDepth() {
-  return getModWheelDepth() - 1;
-}
-
 int currentIndexEncoderDir() {
   return getEncoderDir() ? 0 : 1;
 }
@@ -160,7 +130,6 @@ void setUpSettings() {
   settings::append(settings::SettingsOption{ "Split Point", { "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", "\0" }, settingsSplitPoint, currentIndexSplitPoint });
   settings::append(settings::SettingsOption{ "Split Trans", { "-2 Octave", "-1 Octave", "Original", "+1 Octave", "+2 Octave", "\0" }, settingsSplitTrans, currentIndexSplitTrans });
   settings::append(settings::SettingsOption{ "Pitch Bend", { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "\0" }, settingsPitchBend, currentIndexPitchBend });
-  settings::append(settings::SettingsOption{ "MW Depth", { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "\0" }, settingsModWheelDepth, currentIndexModWheelDepth });
   settings::append(settings::SettingsOption{ "AfterTouch U", { "Off", "DCO Mod", "CutOff Freq", "VCF Mod", "VCA Mod", "\0" }, settingsAfterTouchU, currentIndexAfterTouchU });
   settings::append(settings::SettingsOption{ "AfterTouch L", { "Off", "DCO Mod", "CutOff Freq", "VCF Mod", "VCA Mod", "\0" }, settingsAfterTouchL, currentIndexAfterTouchL });
   settings::append(settings::SettingsOption{ "Encoder", { "Type 1", "Type 2", "\0" }, settingsEncoderDir, currentIndexEncoderDir });
