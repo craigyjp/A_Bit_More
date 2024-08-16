@@ -11,7 +11,12 @@ byte newsplitPoint = 0;
 byte splitTrans = 0;
 byte oldsplitTrans = 0;
 int lowerTranspose = 0;
-float keytrackingAmount = 0.5;
+
+int noteMsg;
+int noteVel;
+int lastPlayedNote = -1;  // Track the last note played
+int lastPlayedVoice = 0;  // Track the voice of the last note played
+int lastUsedVoice = 0; // Global variable to store the last used voice
 
 int upperData[76];
 int lowerData[76];
@@ -98,6 +103,8 @@ byte sysexData[sysexDataLength];
 int playMode = 0;
 
 //Delayed LFO
+int numberOfNotes = 0;
+int oldnumberOfNotes = 0;
 int numberOfNotesU = 0;
 int oldnumberOfNotesU = 0;
 int numberOfNotesL = 0;

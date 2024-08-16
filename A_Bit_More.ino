@@ -1,5 +1,5 @@
 /*
-Version 1.2
+Version 1.3
 */
 
 #include <Arduino.h>
@@ -18,6 +18,9 @@ Version 1.2
 #include "EepromMgr.h"
 #include "Settings.h"
 #include <RoxMux.h>
+#include <map>  // Include the map library
+
+std::map<int, int> voiceAssignment;
 
 #define PARAMETER 0      //The main page for displaying the current patch and control (parameter) changes
 #define RECALL 1         //Patches list
@@ -55,22 +58,27 @@ struct VoiceAndNote {
   int note;
   int velocity;
   long timeOn;
+  bool sustained;  // Sustain flag
+  bool keyDown;
+  double noteFreq;  // Note frequency
+  int position;
+  bool noteOn;
 };
 
 struct VoiceAndNote voices[NO_OF_VOICES] = {
-  { -1, -1, 0 },
-  { -1, -1, 0 },
-  { -1, -1, 0 },
-  { -1, -1, 0 },
-  { -1, -1, 0 },
-  { -1, -1, 0 },
-  { -1, -1, 0 },
-  { -1, -1, 0 }
+  { -1, -1, 0, false, false, 0, -1, false },
+  { -1, -1, 0, false, false, 0, -1, false },
+  { -1, -1, 0, false, false, 0, -1, false },
+  { -1, -1, 0, false, false, 0, -1, false },
+  { -1, -1, 0, false, false, 0, -1, false },
+  { -1, -1, 0, false, false, 0, -1, false },
+  { -1, -1, 0, false, false, 0, -1, false },
+  { -1, -1, 0, false, false, 0, -1, false }
 };
 
 boolean voiceOn[NO_OF_VOICES] = { false, false, false, false, false, false, false, false };
 int prevNote = 0;  //Initialised to middle value
-bool notes[88] = { 0 }, initial_loop = 1;
+bool notes[128] = { 0 }, initial_loop = 1;
 int8_t noteOrder[40] = { 0 }, orderIndx = { 0 };
 
 //USB HOST MIDI Class Compliant
@@ -162,8 +170,8 @@ void setup() {
   usbMIDI.setHandleProgramChange(myProgramChange);
   usbMIDI.setHandleAfterTouchChannel(myAfterTouch);
   usbMIDI.setHandlePitchChange(DinHandlePitchBend);
-  usbMIDI.setHandleNoteOn(DinHandleNoteOn);
-  usbMIDI.setHandleNoteOff(DinHandleNoteOff);
+  usbMIDI.setHandleNoteOn(myNoteOn);
+  usbMIDI.setHandleNoteOff(myNoteOff);
   //Serial.println("USB Client MIDI Listening");
 
   //MIDI 5 Pin DIN
@@ -172,8 +180,8 @@ void setup() {
   MIDI.setHandleProgramChange(myProgramChange);
   MIDI.setHandleAfterTouchChannel(myAfterTouch);
   MIDI.setHandlePitchBend(DinHandlePitchBend);
-  MIDI.setHandleNoteOn(DinHandleNoteOn);
-  MIDI.setHandleNoteOff(DinHandleNoteOff);
+  MIDI.setHandleNoteOn(myNoteOn);
+  MIDI.setHandleNoteOff(myNoteOff);
   MIDI.turnThruOn(midi::Thru::Mode::Off);
   //Serial.println("MIDI In DIN Listening");
 
@@ -239,6 +247,11 @@ void editControlChange(byte channel, byte control, byte value) {
 void panelControlChange(byte channel, byte control, byte value) {
   int newvalue = value;
   myControlChange(channel, control, newvalue);
+}
+
+int mod(int a, int b) {
+  int r = a % b;
+  return r < 0 ? r + b : r;
 }
 
 void setTranspose(int splitTrans) {
@@ -311,146 +324,561 @@ void LFODelayHandle() {
   }
 }
 
-void DinHandleNoteOn(byte channel, byte note, byte velocity) {
-  numberOfNotesU = numberOfNotesU + 1;
-  numberOfNotesL = numberOfNotesL + 1;
+void commandTopNote() {
+  int topNote = 0;
+  bool noteActive = false;
 
-  if (wholemode) {
-    if (note < 0 || note > 127) return;
-    switch (getVoiceNo(-1)) {
-      case 1:
-        voices[0].note = note;
-        voices[0].velocity = velocity;
-        voices[0].timeOn = millis();
-        MIDI.sendNoteOn(note, velocity, 1);
-        voiceOn[0] = true;
-        break;
-      case 2:
-        voices[1].note = note;
-        voices[1].velocity = velocity;
-        voices[1].timeOn = millis();
-        MIDI.sendNoteOn(note, velocity, 2);
-        voiceOn[1] = true;
-        break;
-      case 3:
-        voices[2].note = note;
-        voices[2].velocity = velocity;
-        voices[2].timeOn = millis();
-        MIDI.sendNoteOn(note, velocity, 1);
-        voiceOn[2] = true;
-        break;
-      case 4:
-        voices[3].note = note;
-        voices[3].velocity = velocity;
-        voices[3].timeOn = millis();
-        MIDI.sendNoteOn(note, velocity, 2);
-        voiceOn[3] = true;
-        break;
-      case 5:
-        voices[4].note = note;
-        voices[4].velocity = velocity;
-        voices[4].timeOn = millis();
-        MIDI.sendNoteOn(note, velocity, 1);
-        voiceOn[4] = true;
-        break;
-      case 6:
-        voices[5].note = note;
-        voices[5].velocity = velocity;
-        voices[5].timeOn = millis();
-        MIDI.sendNoteOn(note, velocity, 2);
-        voiceOn[5] = true;
-        break;
-      case 7:
-        voices[6].note = note;
-        voices[6].velocity = velocity;
-        voices[6].timeOn = millis();
-        MIDI.sendNoteOn(note, velocity, 1);
-        voiceOn[6] = true;
-        break;
-      case 8:
-        voices[7].note = note;
-        voices[7].velocity = velocity;
-        voices[7].timeOn = millis();
-        MIDI.sendNoteOn(note, velocity, 2);
-        voiceOn[7] = true;
-        break;
+  for (int i = 0; i < 128; i++) {
+    if (notes[i]) {
+      topNote = i;
+      noteActive = true;
     }
   }
-  if (dualmode) {
-    MIDI.sendNoteOn(note, velocity, 1);
-    MIDI.sendNoteOn(note, velocity, 2);
-  }
-  if (splitmode) {
-    if (note < (newsplitPoint + 36)) {
-      MIDI.sendNoteOn((note + lowerTranspose), velocity, 1);
-    } else {
-      MIDI.sendNoteOn(note, velocity, 2);
+
+  if (noteActive)
+    commandNote(topNote);
+  else  // All notes are off, turn off gate
+    MIDI6.sendNoteOff(noteMsg, 0, 1);
+}
+
+void commandBottomNote() {
+  int bottomNote = 0;
+  bool noteActive = false;
+
+  for (int i = 127; i >= 0; i--) {
+    if (notes[i]) {
+      bottomNote = i;
+      noteActive = true;
     }
+  }
+
+  if (noteActive)
+    commandNote(bottomNote);
+  else  // All notes are off, turn off gate
+    MIDI6.sendNoteOff(noteMsg, 0, 1);
+}
+
+void commandLastNote() {
+
+  int8_t noteIndx;
+
+  for (int i = 0; i < 40; i++) {
+    noteIndx = noteOrder[mod(orderIndx - i, 40)];
+    if (notes[noteIndx]) {
+      commandNote(noteIndx);
+      return;
+    }
+  }
+  MIDI6.sendNoteOff(noteMsg, 0, 1);
+}
+
+void commandNote(int noteMsg) {
+  MIDI6.sendNoteOn(noteMsg, noteVel, 1);
+}
+
+void commandTopNoteUni() {
+  int topNote = 0;
+  bool noteActive = false;
+
+  for (int i = 0; i < 128; i++) {
+    if (notes[i]) {
+      topNote = i;
+      noteActive = true;
+    }
+  }
+
+  if (noteActive) {
+    commandNoteUni(topNote);
+  } else {  // All notes are off, turn off gate
+    MIDI6.sendNoteOff(noteMsg, 0, 1);
+    MIDI6.sendNoteOff(noteMsg, 0, 2);
+    MIDI6.sendNoteOff(noteMsg, 0, 3);
+    MIDI6.sendNoteOff(noteMsg, 0, 4);
+    MIDI6.sendNoteOff(noteMsg, 0, 5);
+    MIDI6.sendNoteOff(noteMsg, 0, 6);
+    MIDI6.sendNoteOff(noteMsg, 0, 7);
+    MIDI6.sendNoteOff(noteMsg, 0, 8);
   }
 }
 
-void DinHandleNoteOff(byte channel, byte note, byte velocity) {
-  numberOfNotesU = numberOfNotesU - 1;
-  oldnumberOfNotesU = oldnumberOfNotesU - 1;
-  numberOfNotesL = numberOfNotesL - 1;
-  oldnumberOfNotesL = oldnumberOfNotesL - 1;
+void commandBottomNoteUni() {
+  int bottomNote = 0;
+  bool noteActive = false;
 
-  if (wholemode) {
-    switch (getVoiceNo(note)) {
-      case 1:
-        MIDI.sendNoteOff(note, velocity, 1);
-        voices[0].note = -1;
-        voiceOn[0] = false;
-        break;
-      case 2:
-        MIDI.sendNoteOff(note, velocity, 2);
-        voices[1].note = -1;
-        voiceOn[1] = false;
-        break;
-      case 3:
-        MIDI.sendNoteOff(note, velocity, 1);
-        voices[2].note = -1;
-        voiceOn[2] = false;
-        break;
-      case 4:
-        MIDI.sendNoteOff(note, velocity, 2);
-        voices[3].note = -1;
-        voiceOn[3] = false;
-        break;
-      case 5:
-        MIDI.sendNoteOff(note, velocity, 1);
-        voices[4].note = -1;
-        voiceOn[4] = false;
-        break;
-      case 6:
-        MIDI.sendNoteOff(note, velocity, 2);
-        voices[5].note = -1;
-        voiceOn[5] = false;
-        break;
-      case 7:
-        MIDI.sendNoteOff(note, velocity, 1);
-        voices[6].note = -1;
-        voiceOn[6] = false;
-        break;
-      case 8:
-        MIDI.sendNoteOff(note, velocity, 2);
-        voices[7].note = -1;
-        voiceOn[7] = false;
-        break;
+  for (int i = 127; i >= 0; i--) {
+    if (notes[i]) {
+      bottomNote = i;
+      noteActive = true;
     }
   }
-  if (dualmode) {
-    MIDI.sendNoteOff(note, velocity, 1);
-    MIDI.sendNoteOff(note, velocity, 2);
-  }
-  if (splitmode) {
-    if (note < (newsplitPoint + 36)) {
-      MIDI.sendNoteOff((note + lowerTranspose), velocity, 1);
-    } else {
-      MIDI.sendNoteOff(note, velocity, 2);
-    }
+
+  if (noteActive) {
+    commandNoteUni(bottomNote);
+  } else {  // All notes are off, turn off gate
+    MIDI6.sendNoteOff(noteMsg, 0, 1);
+    MIDI6.sendNoteOff(noteMsg, 0, 2);
+    MIDI6.sendNoteOff(noteMsg, 0, 3);
+    MIDI6.sendNoteOff(noteMsg, 0, 4);
+    MIDI6.sendNoteOff(noteMsg, 0, 5);
+    MIDI6.sendNoteOff(noteMsg, 0, 6);
+    MIDI6.sendNoteOff(noteMsg, 0, 7);
+    MIDI6.sendNoteOff(noteMsg, 0, 8);
   }
 }
+
+void commandLastNoteUni() {
+
+  int8_t noteIndx;
+
+  for (int i = 0; i < 40; i++) {
+    noteIndx = noteOrder[mod(orderIndx - i, 40)];
+    if (notes[noteIndx]) {
+      commandNoteUni(noteIndx);
+      return;
+    }
+  }
+  MIDI6.sendNoteOff(noteMsg, 0, 1);
+  MIDI6.sendNoteOff(noteIndx, 0, 2);
+  MIDI6.sendNoteOff(noteIndx, 0, 3);
+  MIDI6.sendNoteOff(noteIndx, 0, 4);
+  MIDI6.sendNoteOff(noteIndx, 0, 5);
+  MIDI6.sendNoteOff(noteIndx, 0, 6);
+  MIDI6.sendNoteOff(noteIndx, 0, 7);
+  MIDI6.sendNoteOff(noteIndx, 0, 8);
+}
+
+void commandNoteUni(int noteMsg) {
+
+  MIDI6.sendNoteOn(noteMsg, noteVel, 1);
+  MIDI6.sendNoteOn(noteMsg, noteVel, 2);
+  MIDI6.sendNoteOn(noteMsg, noteVel, 3);
+  MIDI6.sendNoteOn(noteMsg, noteVel, 4);
+  MIDI6.sendNoteOn(noteMsg, noteVel, 5);
+  MIDI6.sendNoteOn(noteMsg, noteVel, 6);
+  MIDI6.sendNoteOn(noteMsg, noteVel, 7);
+  MIDI6.sendNoteOn(noteMsg, noteVel, 8);
+}
+
+void myNoteOn(byte channel, byte note, byte velocity) {
+
+  // for lfo multi trigger
+  numberOfNotes = numberOfNotes + 1;
+
+  //Check for out of range notes
+  if (note >= 0 && note <= 127) {
+    voiceAssignment[note] = getVoiceNoPoly2(note) - 1;
+  }
+
+  prevNote = note;
+  switch (panelData[P_keyboardMode]) {
+    case 0:
+      switch (getVoiceNo(-1)) {
+        case 1:
+          voices[0].note = note;
+          voices[0].velocity = velocity;
+          voices[0].timeOn = millis();
+          updateVoice1();
+          MIDI6.sendNoteOn(voices[0].note, voices[0].velocity, 1);
+          //trig.writePin(GATE_NOTE1, HIGH);
+          voiceOn[0] = true;
+          break;
+        case 2:
+          voices[1].note = note;
+          voices[1].velocity = velocity;
+          voices[1].timeOn = millis();
+          updateVoice2();
+          MIDI6.sendNoteOn(voices[1].note, voices[1].velocity, 2);
+          //trig.writePin(GATE_NOTE2, HIGH);
+          voiceOn[1] = true;
+          break;
+        case 3:
+          voices[2].note = note;
+          voices[2].velocity = velocity;
+          voices[2].timeOn = millis();
+          updateVoice3();
+          MIDI6.sendNoteOn(voices[2].note, voices[2].velocity, 3);
+          //trig.writePin(GATE_NOTE3, HIGH);
+          voiceOn[2] = true;
+          break;
+        case 4:
+          voices[3].note = note;
+          voices[3].velocity = velocity;
+          voices[3].timeOn = millis();
+          updateVoice4();
+          MIDI6.sendNoteOn(voices[3].note, voices[3].velocity, 4);
+          //trig.writePin(GATE_NOTE4, HIGH);
+          voiceOn[3] = true;
+          break;
+        case 5:
+          voices[4].note = note;
+          voices[4].velocity = velocity;
+          voices[4].timeOn = millis();
+          updateVoice5();
+          MIDI6.sendNoteOn(voices[4].note, voices[4].velocity, 5);
+          //trig.writePin(GATE_NOTE5, HIGH);
+          voiceOn[4] = true;
+          break;
+        case 6:
+          voices[5].note = note;
+          voices[5].velocity = velocity;
+          voices[5].timeOn = millis();
+          updateVoice6();
+          MIDI6.sendNoteOn(voices[5].note, voices[5].velocity, 6);
+          //trig.writePin(GATE_NOTE6, HIGH);
+          voiceOn[5] = true;
+          break;
+        case 7:
+          voices[6].note = note;
+          voices[6].velocity = velocity;
+          voices[6].timeOn = millis();
+          updateVoice7();
+          MIDI6.sendNoteOn(voices[6].note, voices[6].velocity, 7);
+          //trig.writePin(GATE_NOTE7, HIGH);
+          voiceOn[6] = true;
+          break;
+        case 8:
+          voices[7].note = note;
+          voices[7].velocity = velocity;
+          voices[7].timeOn = millis();
+          updateVoice8();
+          MIDI6.sendNoteOn(voices[7].note, voices[7].velocity, 8);
+          //trig.writePin(GATE_NOTE8, HIGH);
+          voiceOn[7] = true;
+          break;
+      }
+      break;
+
+    case 1:
+      switch (getVoiceNoPoly2(-1)) {
+        case 1:
+          voices[0].note = note;
+          voices[0].velocity = velocity;
+          voices[0].timeOn = millis();
+          updateVoice1();
+          MIDI6.sendNoteOn(voices[0].note, voices[0].velocity, 1);
+          //trig.writePin(GATE_NOTE1, HIGH);
+          voiceOn[0] = true;
+          break;
+        case 2:
+          voices[1].note = note;
+          voices[1].velocity = velocity;
+          voices[1].timeOn = millis();
+          updateVoice2();
+          MIDI6.sendNoteOn(voices[1].note, voices[1].velocity, 2);
+          //trig.writePin(GATE_NOTE2, HIGH);
+          voiceOn[1] = true;
+          break;
+        case 3:
+          voices[2].note = note;
+          voices[2].velocity = velocity;
+          voices[2].timeOn = millis();
+          updateVoice3();
+          MIDI6.sendNoteOn(voices[2].note, voices[2].velocity, 3);
+          //trig.writePin(GATE_NOTE3, HIGH);
+          voiceOn[2] = true;
+          break;
+        case 4:
+          voices[3].note = note;
+          voices[3].velocity = velocity;
+          voices[3].timeOn = millis();
+          updateVoice4();
+          MIDI6.sendNoteOn(voices[3].note, voices[3].velocity, 4);
+          //trig.writePin(GATE_NOTE4, HIGH);
+          voiceOn[3] = true;
+          break;
+        case 5:
+          voices[4].note = note;
+          voices[4].velocity = velocity;
+          voices[4].timeOn = millis();
+          updateVoice5();
+          MIDI6.sendNoteOn(voices[4].note, voices[4].velocity, 5);
+          //trig.writePin(GATE_NOTE5, HIGH);
+          voiceOn[4] = true;
+          break;
+        case 6:
+          voices[5].note = note;
+          voices[5].velocity = velocity;
+          voices[5].timeOn = millis();
+          updateVoice6();
+          MIDI6.sendNoteOn(voices[5].note, voices[5].velocity, 6);
+          //trig.writePin(GATE_NOTE6, HIGH);
+          voiceOn[5] = true;
+          break;
+        case 7:
+          voices[6].note = note;
+          voices[6].velocity = velocity;
+          voices[6].timeOn = millis();
+          updateVoice7();
+          MIDI6.sendNoteOn(voices[6].note, voices[6].velocity, 7);
+          //trig.writePin(GATE_NOTE7, HIGH);
+          voiceOn[6] = true;
+          break;
+        case 8:
+          voices[7].note = note;
+          voices[7].velocity = velocity;
+          voices[7].timeOn = millis();
+          updateVoice8();
+          MIDI6.sendNoteOn(voices[7].note, voices[7].velocity, 8);
+          //trig.writePin(GATE_NOTE8, HIGH);
+          voiceOn[7] = true;
+          break;
+      }
+      break;
+
+    case 2:
+      noteMsg = note;
+      noteVel = velocity;
+
+      if (velocity == 0) {
+        notes[noteMsg] = false;
+      } else {
+        notes[noteMsg] = true;
+      }
+
+      if (panelData[P_NotePriority] == 0) {  // Highest note priority
+        commandTopNote();
+      } else if (panelData[P_NotePriority] == 1) {  // Lowest note priority
+        commandBottomNote();
+      } else {                 // Last note priority
+        if (notes[noteMsg]) {  // If note is on and using last note priority, add to ordered list
+          orderIndx = (orderIndx + 1) % 40;
+          noteOrder[orderIndx] = noteMsg;
+        }
+        commandLastNote();
+      }
+      break;
+
+    case 3:
+      noteMsg = note;
+      noteVel = velocity;
+
+      if (velocity == 0) {
+        notes[noteMsg] = false;
+      } else {
+        notes[noteMsg] = true;
+      }
+
+      if (panelData[P_NotePriority] == 0) {  // Highest note priority
+        commandTopNoteUni();
+      } else if (panelData[P_NotePriority] == 1) {  // Lowest note priority
+        commandBottomNoteUni();
+      } else {                 // Last note priority
+        if (notes[noteMsg]) {  // If note is on and using last note priority, add to ordered list
+          orderIndx = (orderIndx + 1) % 40;
+          noteOrder[orderIndx] = noteMsg;
+        }
+        commandLastNoteUni();
+      }
+      break;
+  }
+}
+
+void myNoteOff(byte channel, byte note, byte velocity) {
+
+  numberOfNotes = numberOfNotes - 1;
+  oldnumberOfNotes = oldnumberOfNotes - 1;
+
+  switch (panelData[P_keyboardMode]) {
+    case 0:
+      switch (getVoiceNo(note)) {
+        case 1:
+          MIDI6.sendNoteOn(voices[0].note, 0, 1);
+          voices[0].note = -1;
+          voiceOn[0] = false;
+          break;
+        case 2:
+          MIDI6.sendNoteOn(voices[1].note, 0, 2);
+          voices[1].note = -1;
+          voiceOn[1] = false;
+          break;
+        case 3:
+          MIDI6.sendNoteOn(voices[2].note, 0, 3);
+          voices[2].note = -1;
+          voiceOn[2] = false;
+          break;
+        case 4:
+          MIDI6.sendNoteOn(voices[3].note, 0, 4);
+          voices[3].note = -1;
+          voiceOn[3] = false;
+          break;
+        case 5:
+          MIDI6.sendNoteOn(voices[4].note, 0, 5);
+          voices[4].note = -1;
+          voiceOn[4] = false;
+          break;
+        case 6:
+          MIDI6.sendNoteOn(voices[5].note, 0, 6);
+          voices[5].note = -1;
+          voiceOn[5] = false;
+          break;
+        case 7:
+          MIDI6.sendNoteOn(voices[6].note, 0, 7);
+          voices[6].note = -1;
+          voiceOn[6] = false;
+          break;
+        case 8:
+          MIDI6.sendNoteOn(voices[7].note, 0, 8);
+          voices[7].note = -1;
+          voiceOn[7] = false;
+          break;
+      }
+      break;
+
+    case 1:
+      switch (getVoiceNoPoly2(note)) {
+        case 1:
+          MIDI6.sendNoteOn(voices[0].note, 0, 1);
+          voices[0].note = -1;
+          voiceOn[0] = false;
+          break;
+        case 2:
+          MIDI6.sendNoteOn(voices[1].note, 0, 2);
+          voices[1].note = -1;
+          voiceOn[1] = false;
+          break;
+        case 3:
+          MIDI6.sendNoteOn(voices[2].note, 0, 3);
+          voices[2].note = -1;
+          voiceOn[2] = false;
+          break;
+        case 4:
+          MIDI6.sendNoteOn(voices[3].note, 0, 4);
+          voices[3].note = -1;
+          voiceOn[3] = false;
+          break;
+        case 5:
+          MIDI6.sendNoteOn(voices[4].note, 0, 5);
+          voices[4].note = -1;
+          voiceOn[4] = false;
+          break;
+        case 6:
+          MIDI6.sendNoteOn(voices[5].note, 0, 6);
+          voices[5].note = -1;
+          voiceOn[5] = false;
+          break;
+        case 7:
+          MIDI6.sendNoteOn(voices[6].note, 0, 7);
+          voices[6].note = -1;
+          voiceOn[6] = false;
+          break;
+        case 8:
+          MIDI6.sendNoteOn(voices[7].note, 0, 8);
+          voices[7].note = -1;
+          voiceOn[7] = false;
+          break;
+      }
+      break;
+
+    case 2:
+      noteMsg = note;
+
+      if (velocity == 0 || velocity == 64) {
+        notes[noteMsg] = false;
+      } else {
+        notes[noteMsg] = true;
+      }
+
+      // Pins NP_SEL1 and NP_SEL2 indictate note priority
+      // velmV = ((unsigned int)((float)velocity) * VEL_SF);
+      // sample_data = (channel_a & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+      // outputDAC(DAC_NOTE2, sample_data);
+      if (panelData[P_NotePriority] == 0) {  // Highest note priority
+        commandTopNote();
+      } else if (panelData[P_NotePriority] == 1) {  // Lowest note priority
+        commandBottomNote();
+      } else {                 // Last note priority
+        if (notes[noteMsg]) {  // If note is on and using last note priority, add to ordered list
+          orderIndx = (orderIndx + 1) % 40;
+          noteOrder[orderIndx] = noteMsg;
+        }
+        commandLastNote();
+      }
+      break;
+
+    case 3:
+      noteMsg = note;
+
+      if (velocity == 0 || velocity == 64) {
+        notes[noteMsg] = false;
+      } else {
+        notes[noteMsg] = true;
+      }
+
+      // velmV = ((unsigned int)((float)velocity) * VEL_SF);
+      // sample_data = (channel_a & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+      // outputDAC(DAC_NOTE2, sample_data);
+      // sample_data = (channel_b & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+      // outputDAC(DAC_NOTE2, sample_data);
+      // sample_data = (channel_c & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+      // outputDAC(DAC_NOTE2, sample_data);
+      // sample_data = (channel_d & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+      // outputDAC(DAC_NOTE2, sample_data);
+      // sample_data = (channel_e & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+      // outputDAC(DAC_NOTE2, sample_data);
+      // sample_data = (channel_f & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+      // outputDAC(DAC_NOTE2, sample_data);
+      // sample_data = (channel_g & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+      // outputDAC(DAC_NOTE2, sample_data);
+      // sample_data = (channel_h & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+      // outputDAC(DAC_NOTE2, sample_data);
+      if (panelData[P_NotePriority] == 0) {  // Highest note priority
+        commandTopNoteUni();
+      } else if (panelData[P_NotePriority] == 1) {  // Lowest note priority
+        commandBottomNoteUni();
+      } else {                 // Last note priority
+        if (notes[noteMsg]) {  // If note is on and using last note priority, add to ordered list
+          orderIndx = (orderIndx + 1) % 40;
+          noteOrder[orderIndx] = noteMsg;
+        }
+        commandLastNoteUni();
+      }
+      break;
+  }
+}
+
+int getVoiceNoPoly2(int note) {
+  voiceToReturn = -1;       // Initialize to 'null'
+  earliestTime = millis();  // Initialize to now
+
+  if (note == -1) {
+    // NoteOn() - Get the oldest free voice (recent voices may still be on the release stage)
+    if (voices[lastUsedVoice].note == -1) {
+      return lastUsedVoice + 1;
+    }
+
+    // If the last used voice is not free or doesn't exist, check if the first voice is free
+    if (voices[0].note == -1) {
+      return 1;
+    }
+
+    // Find the lowest available voice for the new note
+    for (int i = 0; i < NO_OF_VOICES; i++) {
+      if (voices[i].note == -1) {
+        return i + 1;
+      }
+    }
+
+    // If no voice is available, release the oldest note
+    int oldestVoice = 0;
+    for (int i = 1; i < NO_OF_VOICES; i++) {
+      if (voices[i].timeOn < voices[oldestVoice].timeOn) {
+        oldestVoice = i;
+      }
+    }
+    return oldestVoice + 1;
+  } else {
+    // NoteOff() - Get the voice number from the note
+    for (int i = 0; i < NO_OF_VOICES; i++) {
+      if (voices[i].note == note) {
+        return i + 1;
+      }
+    }
+  }
+
+  // Shouldn't get here, return voice 1
+  return 1;
+}
+
 
 int getVoiceNo(int note) {
   voiceToReturn = -1;       //Initialise to 'null'
@@ -488,18 +916,276 @@ int getVoiceNo(int note) {
   return 1;
 }
 
+void updateVoice1() {
+  // unsigned int mV = (unsigned int)((float)(voices[0].note + realoctave) * NOTE_SF * sfAdj[0] + 0.5);
+  // mV = mV * keyTrackMult;
+  // sample_data = (channel_a & 0xFFF0000F) | (((int(mV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE1, sample_data);
+  // velmV = ((unsigned int)((float)voices[0].velocity) * VEL_SF);
+  // sample_data = (channel_a & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE2, sample_data);
+}
+
+void updateVoice2() {
+  // unsigned int mV = (unsigned int)((float)(voices[1].note + realoctave) * NOTE_SF * sfAdj[1] + 0.5);
+  // mV = mV * keyTrackMult;
+  // sample_data = (channel_b & 0xFFF0000F) | (((int(mV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE1, sample_data);
+  // velmV = ((unsigned int)((float)voices[1].velocity) * VEL_SF);
+  // sample_data = (channel_b & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE2, sample_data);
+}
+
+void updateVoice3() {
+  // unsigned int mV = (unsigned int)((float)(voices[2].note + realoctave) * NOTE_SF * sfAdj[2] + 0.5);
+  // mV = mV * keyTrackMult;
+  // sample_data = (channel_c & 0xFFF0000F) | (((int(mV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE1, sample_data);
+  // velmV = ((unsigned int)((float)voices[2].velocity) * VEL_SF);
+  // sample_data = (channel_c & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE2, sample_data);
+}
+
+void updateVoice4() {
+  // unsigned int mV = (unsigned int)((float)(voices[3].note + realoctave) * NOTE_SF * sfAdj[3] + 0.5);
+  // mV = mV * keyTrackMult;
+  // sample_data = (channel_d & 0xFFF0000F) | (((int(mV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE1, sample_data);
+  // velmV = ((unsigned int)((float)voices[3].velocity) * VEL_SF);
+  // sample_data = (channel_d & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE2, sample_data);
+}
+
+void updateVoice5() {
+  // unsigned int mV = (unsigned int)((float)(voices[4].note + realoctave) * NOTE_SF * sfAdj[4] + 0.5);
+  // mV = mV * keyTrackMult;
+  // sample_data = (channel_e & 0xFFF0000F) | (((int(mV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE1, sample_data);
+  // velmV = ((unsigned int)((float)voices[4].velocity) * VEL_SF);
+  // sample_data = (channel_e & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE2, sample_data);
+}
+
+void updateVoice6() {
+  // unsigned int mV = (unsigned int)((float)(voices[5].note + realoctave) * NOTE_SF * sfAdj[5] + 0.5);
+  // mV = mV * keyTrackMult;
+  // sample_data = (channel_f & 0xFFF0000F) | (((int(mV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE1, sample_data);
+  // velmV = ((unsigned int)((float)voices[5].velocity) * VEL_SF);
+  // sample_data = (channel_f & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE2, sample_data);
+}
+
+void updateVoice7() {
+  // unsigned int mV = (unsigned int)((float)(voices[6].note + realoctave) * NOTE_SF * sfAdj[6] + 0.5);
+  // mV = mV * keyTrackMult;
+  // sample_data = (channel_g & 0xFFF0000F) | (((int(mV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE1, sample_data);
+  // velmV = ((unsigned int)((float)voices[6].velocity) * VEL_SF);
+  // sample_data = (channel_g & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE2, sample_data);
+}
+
+void updateVoice8() {
+  // unsigned int mV = (unsigned int)((float)(voices[7].note + realoctave) * NOTE_SF * sfAdj[7] + 0.5);
+  // mV = mV * keyTrackMult;
+  // sample_data = (channel_h & 0xFFF0000F) | (((int(mV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE1, sample_data);
+  // velmV = ((unsigned int)((float)voices[7].velocity) * VEL_SF);
+  // sample_data = (channel_h & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
+  // outputDAC(DAC_NOTE2, sample_data);
+}
+
+
+// void DinHandleNoteOn(byte channel, byte note, byte velocity) {
+//   numberOfNotesU = numberOfNotesU + 1;
+//   numberOfNotesL = numberOfNotesL + 1;
+
+//   if (wholemode) {
+//     if (note < 0 || note > 127) return;
+//     switch (getVoiceNo(-1)) {
+//       case 1:
+//         voices[0].note = note;
+//         voices[0].velocity = velocity;
+//         voices[0].timeOn = millis();
+//         MIDI.sendNoteOn(note, velocity, 1);
+//         voiceOn[0] = true;
+//         break;
+//       case 2:
+//         voices[1].note = note;
+//         voices[1].velocity = velocity;
+//         voices[1].timeOn = millis();
+//         MIDI.sendNoteOn(note, velocity, 2);
+//         voiceOn[1] = true;
+//         break;
+//       case 3:
+//         voices[2].note = note;
+//         voices[2].velocity = velocity;
+//         voices[2].timeOn = millis();
+//         MIDI.sendNoteOn(note, velocity, 1);
+//         voiceOn[2] = true;
+//         break;
+//       case 4:
+//         voices[3].note = note;
+//         voices[3].velocity = velocity;
+//         voices[3].timeOn = millis();
+//         MIDI.sendNoteOn(note, velocity, 2);
+//         voiceOn[3] = true;
+//         break;
+//       case 5:
+//         voices[4].note = note;
+//         voices[4].velocity = velocity;
+//         voices[4].timeOn = millis();
+//         MIDI.sendNoteOn(note, velocity, 1);
+//         voiceOn[4] = true;
+//         break;
+//       case 6:
+//         voices[5].note = note;
+//         voices[5].velocity = velocity;
+//         voices[5].timeOn = millis();
+//         MIDI.sendNoteOn(note, velocity, 2);
+//         voiceOn[5] = true;
+//         break;
+//       case 7:
+//         voices[6].note = note;
+//         voices[6].velocity = velocity;
+//         voices[6].timeOn = millis();
+//         MIDI.sendNoteOn(note, velocity, 1);
+//         voiceOn[6] = true;
+//         break;
+//       case 8:
+//         voices[7].note = note;
+//         voices[7].velocity = velocity;
+//         voices[7].timeOn = millis();
+//         MIDI.sendNoteOn(note, velocity, 2);
+//         voiceOn[7] = true;
+//         break;
+//     }
+//   }
+//   if (dualmode) {
+//     MIDI.sendNoteOn(note, velocity, 1);
+//     MIDI.sendNoteOn(note, velocity, 2);
+//   }
+//   if (splitmode) {
+//     if (note < (newsplitPoint + 36)) {
+//       MIDI.sendNoteOn((note + lowerTranspose), velocity, 1);
+//     } else {
+//       MIDI.sendNoteOn(note, velocity, 2);
+//     }
+//   }
+// }
+
+// void DinHandleNoteOff(byte channel, byte note, byte velocity) {
+//   numberOfNotesU = numberOfNotesU - 1;
+//   oldnumberOfNotesU = oldnumberOfNotesU - 1;
+//   numberOfNotesL = numberOfNotesL - 1;
+//   oldnumberOfNotesL = oldnumberOfNotesL - 1;
+
+//   if (wholemode) {
+//     switch (getVoiceNo(note)) {
+//       case 1:
+//         MIDI.sendNoteOff(note, velocity, 1);
+//         voices[0].note = -1;
+//         voiceOn[0] = false;
+//         break;
+//       case 2:
+//         MIDI.sendNoteOff(note, velocity, 2);
+//         voices[1].note = -1;
+//         voiceOn[1] = false;
+//         break;
+//       case 3:
+//         MIDI.sendNoteOff(note, velocity, 1);
+//         voices[2].note = -1;
+//         voiceOn[2] = false;
+//         break;
+//       case 4:
+//         MIDI.sendNoteOff(note, velocity, 2);
+//         voices[3].note = -1;
+//         voiceOn[3] = false;
+//         break;
+//       case 5:
+//         MIDI.sendNoteOff(note, velocity, 1);
+//         voices[4].note = -1;
+//         voiceOn[4] = false;
+//         break;
+//       case 6:
+//         MIDI.sendNoteOff(note, velocity, 2);
+//         voices[5].note = -1;
+//         voiceOn[5] = false;
+//         break;
+//       case 7:
+//         MIDI.sendNoteOff(note, velocity, 1);
+//         voices[6].note = -1;
+//         voiceOn[6] = false;
+//         break;
+//       case 8:
+//         MIDI.sendNoteOff(note, velocity, 2);
+//         voices[7].note = -1;
+//         voiceOn[7] = false;
+//         break;
+//     }
+//   }
+//   if (dualmode) {
+//     MIDI.sendNoteOff(note, velocity, 1);
+//     MIDI.sendNoteOff(note, velocity, 2);
+//   }
+//   if (splitmode) {
+//     if (note < (newsplitPoint + 36)) {
+//       MIDI.sendNoteOff((note + lowerTranspose), velocity, 1);
+//     } else {
+//       MIDI.sendNoteOff(note, velocity, 2);
+//     }
+//   }
+// }
+
+// int getVoiceNo(int note) {
+//   voiceToReturn = -1;       //Initialise to 'null'
+//   earliestTime = millis();  //Initialise to now
+//   if (note == -1) {
+//     //NoteOn() - Get the oldest free voice (recent voices may be still on release stage)
+//     for (int i = 0; i < NO_OF_VOICES; i++) {
+//       if (voices[i].note == -1) {
+//         if (voices[i].timeOn < earliestTime) {
+//           earliestTime = voices[i].timeOn;
+//           voiceToReturn = i;
+//         }
+//       }
+//     }
+//     if (voiceToReturn == -1) {
+//       //No free voices, need to steal oldest sounding voice
+//       earliestTime = millis();  //Reinitialise
+//       for (int i = 0; i < NO_OF_VOICES; i++) {
+//         if (voices[i].timeOn < earliestTime) {
+//           earliestTime = voices[i].timeOn;
+//           voiceToReturn = i;
+//         }
+//       }
+//     }
+//     return voiceToReturn + 1;
+//   } else {
+//     //NoteOff() - Get voice number from note
+//     for (int i = 0; i < NO_OF_VOICES; i++) {
+//       if (voices[i].note == note) {
+//         return i + 1;
+//       }
+//     }
+//   }
+//   //Shouldn't get here, return voice 1
+//   return 1;
+// }
+
 void DinHandlePitchBend(byte channel, int pitch) {
   if (wholemode) {
-    MIDI.sendPitchBend(pitch, 1);
-    MIDI.sendPitchBend(pitch, 2);
+    MIDI6.sendPitchBend(pitch, 1);
+    MIDI6.sendPitchBend(pitch, 2);
   }
   if (dualmode) {
-    MIDI.sendPitchBend(pitch, 1);
-    MIDI.sendPitchBend(pitch, 2);
+    MIDI6.sendPitchBend(pitch, 1);
+    MIDI6.sendPitchBend(pitch, 2);
   }
   if (splitmode) {
-    MIDI.sendPitchBend(pitch, 1);
-    MIDI.sendPitchBend(pitch, 2);
+    MIDI6.sendPitchBend(pitch, 1);
+    MIDI6.sendPitchBend(pitch, 2);
   }
 }
 
@@ -552,11 +1238,16 @@ void updateosc2PW(boolean announce) {
     showCurrentParameterPage("OSC2 PW", String(osc2PWstr) + " %");
   }
   if (upperSW) {
+    midiCCOut62(WSosc2PW, upperData[P_osc2PW] >> midioutfrig);
     midiCCOut(CCosc2PW, upperData[P_osc2PW] >> midioutfrig);
     midiCCOut71(CCosc2PW, upperData[P_osc2PW] >> midioutfrig);
   } else {
+    midiCCOut61(WSosc2PW, lowerData[P_osc2PW] >> midioutfrig);
     midiCCOut(CCosc2PW, lowerData[P_osc2PW] >> midioutfrig);
     midiCCOut71(CCosc2PW, lowerData[P_osc2PW] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSosc2PW, upperData[P_osc2PW] >> midioutfrig);
+    }
   }
 }
 
@@ -565,11 +1256,16 @@ void updateosc2PWM(boolean announce) {
     showCurrentParameterPage("OSC2 PWM", int(osc2PWMstr));
   }
   if (upperSW) {
+    midiCCOut62(WSosc2PWM, upperData[P_osc2PWM] >> midioutfrig);
     midiCCOut(CCosc2PWM, upperData[P_osc2PWM] >> midioutfrig);
     midiCCOut71(CCosc2PWM, upperData[P_osc2PWM] >> midioutfrig);
   } else {
+    midiCCOut61(WSosc2PWM, lowerData[P_osc2PWM] >> midioutfrig);
     midiCCOut(CCosc2PWM, lowerData[P_osc2PWM] >> midioutfrig);
     midiCCOut71(CCosc2PWM, lowerData[P_osc2PWM] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSosc2PWM, upperData[P_osc2PWM] >> midioutfrig);
+    }
   }
 }
 
@@ -578,11 +1274,16 @@ void updateosc1PW(boolean announce) {
     showCurrentParameterPage("OSC1 PW", String(osc1PWstr) + " %");
   }
   if (upperSW) {
+    midiCCOut62(WSosc1PW, upperData[P_osc1PW] >> midioutfrig);
     midiCCOut(CCosc1PW, upperData[P_osc1PW] >> midioutfrig);
     midiCCOut71(CCosc1PW, upperData[P_osc1PW] >> midioutfrig);
   } else {
+    midiCCOut61(WSosc1PW, lowerData[P_osc1PW] >> midioutfrig);
     midiCCOut(CCosc1PW, lowerData[P_osc1PW] >> midioutfrig);
     midiCCOut71(CCosc1PW, lowerData[P_osc1PW] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSosc1PW, upperData[P_osc1PW] >> midioutfrig);
+    }
   }
 }
 
@@ -591,11 +1292,16 @@ void updateosc1PWM(boolean announce) {
     showCurrentParameterPage("OSC1 PWM", int(osc1PWMstr));
   }
   if (upperSW) {
+    midiCCOut62(WSosc1PWM, upperData[P_osc1PWM] >> midioutfrig);
     midiCCOut(CCosc1PWM, upperData[P_osc1PWM] >> midioutfrig);
     midiCCOut71(CCosc1PWM, upperData[P_osc1PWM] >> midioutfrig);
   } else {
+    midiCCOut61(WSosc1PWM, upperData[P_osc1PWM] >> midioutfrig);
     midiCCOut(CCosc1PWM, lowerData[P_osc1PWM] >> midioutfrig);
     midiCCOut71(CCosc1PWM, lowerData[P_osc1PWM] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSosc1PWM, upperData[P_osc1PWM] >> midioutfrig);
+    }
   }
 }
 
@@ -606,21 +1312,21 @@ void updateosc1Range(boolean announce) {
         showCurrentParameterPage("Osc1 Range", String("8"));
       }
       midiCCOut(CCosc1Oct, 2);
-      midiCCOut61(CCosc1Oct, 127);
+      midiCCOut61(WSosc1oct, 127);
       midiCCOut72(CCosc1Oct, 2);
     } else if (upperData[P_osc1Range] == 1) {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("16"));
       }
       midiCCOut(CCosc1Oct, 1);
-      midiCCOut61(CCosc1Oct, 64);
+      midiCCOut61(WSosc1oct, 63);
       midiCCOut72(CCosc1Oct, 1);
     } else {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("32"));
       }
       midiCCOut(CCosc1Oct, 0);
-      midiCCOut61(CCosc1Oct, 0);
+      midiCCOut61(WSosc1oct, 0);
       midiCCOut72(CCosc1Oct, 0);
     }
   } else {
@@ -629,33 +1335,30 @@ void updateosc1Range(boolean announce) {
         showCurrentParameterPage("Osc1 Range", String("8"));
       }
       midiCCOut(CCosc1Oct, 2);
-      midiCCOut62(CCosc1Oct, 127);
+      midiCCOut62(WSosc1oct, 127);
       midiCCOut72(CCosc1Oct, 2);
       if (wholemode) {
-        midiCCOut61(CCosc1Oct, 127);
-        midiCCOut72(CCosc1Oct, 2);
+        midiCCOut61(WSosc1oct, 127);
       }
     } else if (lowerData[P_osc1Range] == 1) {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("16"));
       }
       midiCCOut(CCosc1Oct, 1);
-      midiCCOut62(CCosc1Oct, 64);
+      midiCCOut62(WSosc1oct, 63);
       midiCCOut72(CCosc1Oct, 1);
       if (wholemode) {
-        midiCCOut61(CCosc1Oct, 64);
-        midiCCOut72(CCosc1Oct, 1);
+        midiCCOut61(WSosc1oct, 63);
       }
     } else {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("32"));
       }
       midiCCOut(CCosc1Oct, 0);
-      midiCCOut62(CCosc1Oct, 0);
+      midiCCOut62(WSosc1oct, 0);
       midiCCOut72(CCosc1Oct, 0);
       if (wholemode) {
-        midiCCOut61(CCosc1Oct, 0);
-        midiCCOut72(CCosc1Oct, 0);
+        midiCCOut61(WSosc1oct, 0);
       }
     }
   }
@@ -667,14 +1370,14 @@ void updateosc2Range(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Osc2 Range", String("8"));
       }
-      midiCCOut61(CCosc2Oct, 127);
+      midiCCOut61(WSosc2oct, 127);
       midiCCOut72(CCosc2Oct, 2);
       midiCCOut(CCosc2Oct, 2);
     } else if (upperData[P_osc2Range] == 1) {
       if (announce) {
         showCurrentParameterPage("Osc2 Range", String("16"));
       }
-      midiCCOut61(CCosc2Oct, 64);
+      midiCCOut61(WSosc2oct, 63);
       midiCCOut72(CCosc2Oct, 1);
       midiCCOut(CCosc2Oct, 1);
     } else {
@@ -682,7 +1385,7 @@ void updateosc2Range(boolean announce) {
         showCurrentParameterPage("Osc2 Range", String("32"));
       }
       midiCCOut(CCosc2Oct, 0);
-      midiCCOut61(CCosc2Oct, 0);
+      midiCCOut61(WSosc2oct, 0);
       midiCCOut72(CCosc2Oct, 0);
     }
   } else {
@@ -691,33 +1394,33 @@ void updateosc2Range(boolean announce) {
         showCurrentParameterPage("Osc2 Range", String("8"));
       }
       midiCCOut(CCosc2Oct, 2);
-      midiCCOut62(CCosc2Oct, 127);
+      midiCCOut62(WSosc2oct, 127);
       midiCCOut72(CCosc2Oct, 2);
       if (wholemode) {
-        midiCCOut61(CCosc2Oct, 127);
-        midiCCOut72(CCosc2Oct, 2);
+        midiCCOut61(WSosc2oct, 127);
+        //midiCCOut72(CCosc2Oct, 2);
       }
     } else if (lowerData[P_osc2Range] == 1) {
       if (announce) {
         showCurrentParameterPage("Osc2 Range", String("16"));
       }
       midiCCOut(CCosc2Oct, 1);
-      midiCCOut62(CCosc2Oct, 64);
+      midiCCOut62(WSosc2oct, 63);
       midiCCOut72(CCosc2Oct, 1);
       if (wholemode) {
-        midiCCOut61(CCosc2Oct, 64);
-        midiCCOut72(CCosc2Oct, 1);
+        midiCCOut61(WSosc2oct, 63);
+        //midiCCOut72(CCosc2Oct, 1);
       }
     } else {
       if (announce) {
         showCurrentParameterPage("Osc2 Range", String("32"));
       }
       midiCCOut(CCosc2Oct, 0);
-      midiCCOut62(CCosc2Oct, 0);
+      midiCCOut62(WSosc2oct, 0);
       midiCCOut72(CCosc2Oct, 0);
       if (wholemode) {
-        midiCCOut61(CCosc2Oct, 0);
-        midiCCOut72(CCosc2Oct, 0);
+        midiCCOut61(WSosc2oct, 0);
+        //midiCCOut72(CCosc2Oct, 0);
       }
     }
   }
@@ -728,11 +1431,17 @@ void updateglideTime(boolean announce) {
     showCurrentParameterPage("Glide Time", String(glideTimestr * 10) + " Seconds");
   }
   if (upperSW) {
+    midiCCOut62(WSglideTime, upperData[P_glideTime] >> midioutfrig);
     midiCCOut(CCglideTime, upperData[P_glideTime] >> midioutfrig);
     midiCCOut71(CCglideTime, upperData[P_glideTime] >> midioutfrig);
   } else {
+    midiCCOut61(WSglideTime, upperData[P_glideTime] >> midioutfrig);
     midiCCOut(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
     midiCCOut71(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSglideTime, upperData[P_glideTime] >> midioutfrig);
+      //midiCCOut71(CCglideTime, upperData[P_glideTime] >> midioutfrig);
+    }
   }
 }
 
@@ -741,11 +1450,16 @@ void updateosc2Detune(boolean announce) {
     showCurrentParameterPage("OSC2 Detune", String(osc2Detunestr));
   }
   if (upperSW) {
+    midiCCOut62(WSdetune, upperData[P_osc2Detune] >> midioutfrig);
     midiCCOut(CCosc2Detune, upperData[P_osc2Detune] >> midioutfrig);
     midiCCOut71(CCosc2Detune, upperData[P_osc2Detune] >> midioutfrig);
   } else {
+    midiCCOut61(WSdetune, lowerData[P_osc2Detune] >> midioutfrig);
     midiCCOut(CCosc2Detune, lowerData[P_osc2Detune] >> midioutfrig);
     midiCCOut71(CCosc2Detune, lowerData[P_osc2Detune] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSdetune, upperData[P_osc2Detune] >> midioutfrig);
+    }
   }
 }
 
@@ -754,11 +1468,16 @@ void updateosc2Interval(boolean announce) {
     showCurrentParameterPage("OSC2 Interval", String(osc2Intervalstr));
   }
   if (upperSW) {
-    midiCCOut(CCosc2Interval, upperData[P_osc2Interval] >> midioutfrig);
-    midiCCOut71(CCosc2Interval, upperData[P_osc2Interval] >> midioutfrig);
+    midiCCOut62(WSinterval, upperData[P_osc2Interval]);
+    midiCCOut(CCosc2Interval, upperData[P_osc2Interval]);
+    midiCCOut71(CCosc2Interval, map(upperData[P_osc2Interval], 0, 12, 0, 127));
   } else {
+    midiCCOut61(WSinterval, lowerData[P_osc2Interval]);
     midiCCOut(CCosc2Interval, lowerData[P_osc2Interval] >> midioutfrig);
-    midiCCOut71(CCosc2Interval, lowerData[P_osc2Interval] >> midioutfrig);
+    midiCCOut71(CCosc2Interval, map(lowerData[P_osc2Interval], 0, 12, 0, 127));
+    if (wholemode) {
+      midiCCOut62(WSinterval, upperData[P_osc2Interval]);
+    }
   }
 }
 
@@ -1244,11 +1963,16 @@ void updatekeytrack(boolean announce) {
     showCurrentParameterPage("Keytrack", int(keytrackstr));
   }
   if (upperSW) {
+    midiCCOut62(WSkeytrack, upperData[P_keytrack] >> midioutfrig);
     midiCCOut(CCkeyTrack, upperData[P_keytrack] >> midioutfrig);
     midiCCOut71(CCkeyTrack, upperData[P_keytrack] >> midioutfrig);
   } else {
+    midiCCOut61(WSkeytrack, lowerData[P_keytrack] >> midioutfrig);
     midiCCOut(CCkeyTrack, lowerData[P_keytrack] >> midioutfrig);
     midiCCOut71(CCkeyTrack, lowerData[P_keytrack] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSkeytrack, upperData[P_keytrack] >> midioutfrig);
+    }
   }
 }
 
@@ -2174,17 +2898,15 @@ void updateglideSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Glide", "Off");
       }
+      midiCCOut62(CCglideSW, 0);
       midiCCOut72(CCglideSW, 0);
-      delay(1);
-      midiCCOut(CCglideTime, upperData[P_glideTime] >> midioutfrig);
-      midiCCOut71(CCglideTime, upperData[P_glideTime] >> midioutfrig);
     } else {
       if (announce) {
         showCurrentParameterPage("Glide", "On");
       }
-      midiCCOut(CCglideTime, upperData[P_glideTime] >> midioutfrig);
+      midiCCOut62(CCglideTime, upperData[P_glideTime] >> midioutfrig);
+      midiCCOut62(CCglideSW, 127);
       midiCCOut71(CCglideTime, upperData[P_glideTime] >> midioutfrig);
-      delay(1);
       midiCCOut72(CCglideSW, 1);
     }
   } else {
@@ -2192,18 +2914,23 @@ void updateglideSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Glide", "Off");
       }
+      midiCCOut61(CCglideSW, 0);
       midiCCOut72(CCglideSW, 0);
-      delay(1);
-      midiCCOut(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
-      midiCCOut71(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
+      if (wholemode) {
+        midiCCOut62(CCglideSW, 0);
+      }
     } else {
       if (announce) {
         showCurrentParameterPage("Glide", "On");
       }
-      midiCCOut(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
+      midiCCOut61(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
+      midiCCOut61(CCglideSW, 127);
       midiCCOut71(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
-      delay(1);
       midiCCOut72(CCglideSW, 1);
+      if (wholemode) {
+        midiCCOut62(CCglideTime, upperData[P_glideTime] >> midioutfrig);
+        midiCCOut62(CCglideSW, 1);
+      }
     }
   }
 }
@@ -2467,6 +3194,7 @@ void updatesyncSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Sync", "Off");
       }
+      midiCCOut62(WSsyncW, 0);
       midiCCOut(CCsyncSW, 0);
       midiCCOut72(CCsyncSW, 0);
       srp.writePin(SYNC_UPPER, LOW);
@@ -2474,6 +3202,7 @@ void updatesyncSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Sync", "On");
       }
+      midiCCOut62(WSsyncW, 127);
       midiCCOut(CCsyncSW, 127);
       midiCCOut72(CCsyncSW, 1);
       srp.writePin(SYNC_UPPER, HIGH);
@@ -2483,20 +3212,24 @@ void updatesyncSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Sync", "Off");
       }
+      midiCCOut61(WSsyncW, 0);
       midiCCOut(CCsyncSW, 0);
       midiCCOut72(CCsyncSW, 0);
       srp.writePin(SYNC_LOWER, LOW);
       if (wholemode) {
+        midiCCOut62(WSsyncW, 0);
         srp.writePin(SYNC_UPPER, LOW);
       }
     } else {
       if (announce) {
         showCurrentParameterPage("Sync", "On");
       }
+      midiCCOut61(WSsyncW, 127);
       midiCCOut(CCsyncSW, 127);
       midiCCOut72(CCsyncSW, 1);
       srp.writePin(SYNC_LOWER, HIGH);
       if (wholemode) {
+        midiCCOut62(WSsyncW, 127);
         srp.writePin(SYNC_UPPER, HIGH);
       }
     }
@@ -4308,6 +5041,7 @@ void checkMux() {
         myControlChange(midiChannel, CCosc2Detune, mux1Read);
         break;
       case MUX1_osc2interval:
+        mux1Read = map(mux1Read, 0, 1023, 0, 12);
         myControlChange(midiChannel, CCosc2Interval, mux1Read);
         break;
       case MUX1_fmDepth:

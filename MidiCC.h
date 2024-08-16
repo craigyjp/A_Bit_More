@@ -98,3 +98,20 @@
 #define   CCosc2PulseLevel 102
 #define   CCosc2SawLevel 103
 #define   CCallnotesoff 123//Panic button
+
+// CC values used in the WAVEshare to control params
+
+#define   WSglideTime 5 // 0-127
+#define   WSglideSW 65  // > 63
+#define   WSdetune 18   // 0-127
+#define   WSosc1oct 17  // 0, 63, 127
+#define   WSosc2oct 18  // 0, 63, 127
+#define   WSbendRange 19  // 0-12
+#define   WSinterval 20 // 0-12
+#define   WSkeytrack 21 // 0-127
+#define   WSkeytrackSW 22 // > 63
+#define   WSsyncW 23 // > 63
+#define   WSosc1PW 24 // 0-127
+#define   WSosc2PW 25 // 0-127
+#define   WSosc1PWM 26 // 0-127
+#define   WSosc2PWM 27 // 0-127
