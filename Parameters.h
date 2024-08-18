@@ -99,6 +99,7 @@ byte sysexData[sysexDataLength];
 #define P_pmDestFilter 70
 #define P_lfoMultiplier 71
 #define P_NotePriority 72
+#define P_keytrackSW 73
 
 int playMode = 0;
 
@@ -126,9 +127,7 @@ int oldfilterCutoff = 0;
 int oldfilterCutoffU = 0;
 int oldfilterCutoffL = 0;
 
-int pitchBendRange = 0;
-int PitchBendLevel = 0;
-int PitchBendLevelstr = 0; // for display
+
 
 int upperSW = 0;
 int oldupperSW = 0;
@@ -152,7 +151,7 @@ float osc1PWstr = 0;
 float osc1PWMstr = 0;
 float glideTimestr = 0;
 float osc2Detunestr = 0;
-float osc2Intervalstr = 0;
+int osc2Intervalstr = 0;
 float noiseLevelstr = 0;
 float osc2SawLevelstr = 0;
 float osc1SawLevelstr = 0;
@@ -186,6 +185,7 @@ float pmFilterEnvstr = 0;
 float keytrackstr = 0;
 float modWheelDepthstr = 0;
 int modWheelLevelstr = 0;
+int PitchBendLevelstr = 0; // for display
 
 int wholemode = 1;
 int dualmode = 0;

@@ -76,7 +76,7 @@ ADC *adc = new ADC();
 
 //Mux 3 Connections
 
-#define MUX3_spare0 0
+#define MUX3_pitchBendDepth 0
 #define MUX3_effectMix 1
 #define MUX3_volumeControl 2
 #define MUX3_amplifierLFO 3
@@ -182,7 +182,7 @@ ADC *adc = new ADC();
 #define PRIORITY_SW 9
 #define DCO1_OCT_SW 10
 #define DCO2_OCT_SW 11
-#define SPARE_SYNC_SW 12
+#define KEYTRACK_SW 12
 #define FILTER_TYPE_SW 13
 #define FILTER_POLE_SW 14
 #define EG_INVERT_SW 15

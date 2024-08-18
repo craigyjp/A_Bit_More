@@ -69,16 +69,6 @@ void storeAfterTouchL(byte AfterTouchDestL) {
   EEPROM.update(EEPROM_AFTERTOUCH_L, AfterTouchDestL);
 }
 
-int getPitchBendRange() {
-  byte pitchBendRange = EEPROM.read(EEPROM_PITCHBEND);
-  if (pitchBendRange < 1 || pitchBendRange > 12) pitchBendRange = 12;  //If EEPROM has no pitchbend stored
-  return pitchBendRange;
-}
-
-void storePitchBendRange(byte pitchBendRange) {
-  EEPROM.update(EEPROM_PITCHBEND, pitchBendRange);
-}
-
 boolean getEncoderDir() {
   byte ed = EEPROM.read(EEPROM_ENCODER_DIR);
   if (ed < 0 || ed > 1) return true;  //If EEPROM has no encoder direction stored

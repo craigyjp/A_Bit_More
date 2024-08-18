@@ -203,9 +203,6 @@ void setup() {
   splitTrans = getSplitTrans();
   setTranspose(splitTrans);
 
-  //Read Pitch Bend Range from EEPROM
-  pitchBendRange = getPitchBendRange();
-
   //Read Encoder Direction from EEPROM
   encCW = getEncoderDir();
 
@@ -2015,6 +2012,21 @@ void updatemodWheelDepth(boolean announce) {
   }
 }
 
+void updatePitchBendDepth(boolean announce) {
+  if (announce) {
+    showCurrentParameterPage("Pitch Bend Depth", String(PitchBendLevelstr));
+  }
+  if (upperSW) {
+    midiCCOut62(WSbendRange, upperData[P_PitchBendLevel]);
+    midiCCOut(CCPitchBend, upperData[P_PitchBendLevel] >> midioutfrig);
+    midiCCOut71(CCPitchBend, map(upperData[P_PitchBendLevel], 0, 12, 0, 127));
+  } else {
+    midiCCOut61(WSbendRange, lowerData[P_PitchBendLevel]);
+    midiCCOut(CCPitchBend, lowerData[P_PitchBendLevel] >> midioutfrig);
+    midiCCOut71(CCPitchBend, map(upperData[P_PitchBendLevel], 0, 12, 0, 127));
+  }
+}
+
 void updateeffectPot1(boolean announce) {
   if (announce) {
     showCurrentParameterPage("Effect Pot 1", String(effectPot1str));
@@ -3188,6 +3200,48 @@ void updatepmDestFilter(boolean announce) {
   }
 }
 
+void updatekeytrackSW(boolean announce) {
+  if (upperSW) {
+    if (!upperData[P_keytrackSW]) {
+      if (announce) {
+        showCurrentParameterPage("Keytrack", "Off");
+      }
+      midiCCOut62(WSkeytrackSW, 0);
+      midiCCOut(CCkeyTrackSW, 0);
+      midiCCOut72(CCkeyTrackSW, 0);
+    } else {
+      if (announce) {
+        showCurrentParameterPage("Keytrack", "On");
+      }
+      midiCCOut62(WSkeytrackSW, 127);
+      midiCCOut(CCkeyTrackSW, 127);
+      midiCCOut72(CCkeyTrackSW, 1);
+    }
+  } else {
+    if (!lowerData[P_keytrackSW]) {
+      if (announce) {
+        showCurrentParameterPage("Keytrack", "Off");
+      }
+      midiCCOut61(WSkeytrackSW, 0);
+      midiCCOut(CCkeyTrackSW, 0);
+      midiCCOut72(CCkeyTrackSW, 0);
+      if (wholemode) {
+        midiCCOut62(WSkeytrackSW, 0);
+      }
+    } else {
+      if (announce) {
+        showCurrentParameterPage("Keytrack", "On");
+      }
+      midiCCOut61(WSkeytrackSW, 127);
+      midiCCOut(CCkeyTrackSW, 127);
+      midiCCOut72(CCkeyTrackSW, 1);
+      if (wholemode) {
+        midiCCOut62(WSkeytrackSW, 127);
+      }
+    }
+  }
+}
+
 void updatesyncSW(boolean announce) {
   if (upperSW) {
     if (!upperData[P_sync]) {
@@ -3687,14 +3741,6 @@ void updateMonoMulti(boolean announce) {
   }
 }
 
-void updatePitchBend() {
-  showCurrentParameterPage("Bender Range", int(PitchBendLevelstr));
-}
-
-void updatemodWheel() {
-  showCurrentParameterPage("ModWheel Range", int(modWheelLevelstr));
-}
-
 void updatePatchname() {
   showPatchPage(String(patchNoU), patchNameU, String(patchNoL), patchNameL);
 }
@@ -3839,7 +3885,7 @@ void myControlChange(byte channel, byte control, int value) {
           upperData[P_osc2Interval] = value;
         }
       }
-      osc2Intervalstr = value >> midioutfrig;
+      osc2Intervalstr = value;
       updateosc2Interval(1);
       break;
 
@@ -4038,6 +4084,20 @@ void myControlChange(byte channel, byte control, int value) {
       }
       modWheelDepthstr = value >> midioutfrig;  // for display
       updatemodWheelDepth(1);
+      break;
+
+    case CCPitchBend:
+      Serial.println(value);
+      if (upperSW) {
+        upperData[P_PitchBendLevel] = value;
+      } else {
+        lowerData[P_PitchBendLevel] = value;
+        if (wholemode) {
+          upperData[P_PitchBendLevel] = value;
+        }
+      }
+      PitchBendLevelstr = value;  // for display
+      updatePitchBendDepth(1);
       break;
 
     case CCeffectPot1:
@@ -4355,6 +4415,15 @@ void myControlChange(byte channel, byte control, int value) {
       updatesyncSW(1);
       break;
 
+    case CCkeyTrackSW:
+      if (upperSW) {
+        upperData[P_keytrackSW] = !upperData[P_keytrackSW];
+      } else {
+        lowerData[P_keytrackSW] = !lowerData[P_keytrackSW];
+      }
+      updatekeytrackSW(1);
+      break;
+
     case CCpmDestDCO1SW:
       if (upperSW) {
         upperData[P_pmDestDCO1] = !upperData[P_pmDestDCO1];
@@ -4471,12 +4540,6 @@ void myControlChange(byte channel, byte control, int value) {
       }
       updateMonoMulti(1);
       break;
-
-      //   // case CCPBDepth:
-      //   //   PitchBendLevel = value;
-      //   //   PitchBendLevelstr = PITCHBEND[value / midioutfrig];  // for display
-      //   //   updatePitchBend();
-      //   //   break;
 
     case CClfoAlt:
       if (upperSW) {
@@ -4717,6 +4780,7 @@ void setCurrentPatchData(String data[]) {
     upperData[P_pmDestFilter] = data[70].toInt();       // pmDestFilterU
     upperData[P_lfoMultiplier] = data[71].toInt();      // lfoMultiplierU
     upperData[P_NotePriority] = data[72].toInt();       // NotePriorityU
+    upperData[P_keytrackSW] = data[73].toInt();         // keyTrackSWU
 
     oldfilterCutoffU = upperData[P_filterCutoff];
 
@@ -4795,6 +4859,7 @@ void setCurrentPatchData(String data[]) {
     lowerData[P_pmDestFilter] = data[70].toInt();       // pmDestFilterL
     lowerData[P_lfoMultiplier] = data[71].toInt();      // lfoMultiplierL
     lowerData[P_NotePriority] = data[72].toInt();       // NotePriorityL
+    lowerData[P_keytrackSW] = data[73].toInt();         // keyTrackSWL
 
     oldfilterCutoffL = lowerData[P_filterCutoff];
 
@@ -4873,6 +4938,7 @@ void setCurrentPatchData(String data[]) {
       upperData[P_pmDestFilter] = data[70].toInt();       // pmDestFilterU
       upperData[P_lfoMultiplier] = data[71].toInt();      // lfoMultiplierU
       upperData[P_NotePriority] = data[72].toInt();       // NotePriorityU
+      upperData[P_keytrackSW] = data[73].toInt();         // keyTrackSWU
 
       oldfilterCutoffU = upperData[P_filterCutoff];
     }
@@ -4991,7 +5057,7 @@ String getCurrentPatchData() {
            + "," + String(upperData[P_oldampAttack]) + "," + String(upperData[P_oldampDecay]) + "," + String(upperData[P_oldampSustain]) + "," + String(upperData[P_oldampRelease])
            + "," + String(upperData[P_AfterTouchDest]) + "," + String(upperData[P_filterLogLin]) + "," + String(upperData[P_ampLogLin]) + "," + String(upperData[P_osc2TriangleLevel])
            + "," + String(upperData[P_osc1SubLevel]) + "," + String(upperData[P_keyboardMode]) + "," + String(upperData[P_LFODelay]) + "," + String(upperData[P_effectNum]) + "," + String(upperData[P_effectBank])
-           + "," + String(upperData[P_pmDestDCO1]) + "," + String(upperData[P_pmDestFilter]) + "," + String(upperData[P_lfoMultiplier]) + "," + String(upperData[P_NotePriority]);
+           + "," + String(upperData[P_pmDestDCO1]) + "," + String(upperData[P_pmDestFilter]) + "," + String(upperData[P_lfoMultiplier]) + "," + String(upperData[P_NotePriority]) + "," + String(upperData[P_keytrackSW]);
   } else {
     return patchNameL + "," + String(upperData[P_pwLFO]) + "," + String(lowerData[P_fmDepth]) + "," + String(lowerData[P_osc2PW]) + "," + String(lowerData[P_osc2PWM])
            + "," + String(lowerData[P_osc1PW]) + "," + String(lowerData[P_osc1PWM]) + "," + String(lowerData[P_osc1Range]) + "," + String(lowerData[P_osc2Range]) + "," + String(lowerData[P_osc2Interval])
@@ -5009,7 +5075,7 @@ String getCurrentPatchData() {
            + "," + String(lowerData[P_oldampAttack]) + "," + String(lowerData[P_oldampDecay]) + "," + String(lowerData[P_oldampSustain]) + "," + String(lowerData[P_oldampRelease])
            + "," + String(lowerData[P_AfterTouchDest]) + "," + String(lowerData[P_filterLogLin]) + "," + String(lowerData[P_ampLogLin]) + "," + String(lowerData[P_osc2TriangleLevel])
            + "," + String(lowerData[P_osc1SubLevel]) + "," + String(lowerData[P_keyboardMode]) + "," + String(lowerData[P_LFODelay]) + "," + String(lowerData[P_effectNum]) + "," + String(lowerData[P_effectBank])
-           + "," + String(lowerData[P_pmDestDCO1]) + "," + String(lowerData[P_pmDestFilter]) + "," + String(lowerData[P_lfoMultiplier]) + "," + String(lowerData[P_NotePriority]);
+           + "," + String(lowerData[P_pmDestDCO1]) + "," + String(lowerData[P_pmDestFilter]) + "," + String(lowerData[P_lfoMultiplier]) + "," + String(lowerData[P_NotePriority]) + "," + String(lowerData[P_keytrackSW]);
   }
 }
 
@@ -5116,7 +5182,9 @@ void checkMux() {
   if (mux3Read > (mux3ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux3Read < (mux3ValuesPrev[muxInput] - QUANTISE_FACTOR)) {
     mux3ValuesPrev[muxInput] = mux3Read;
     switch (muxInput) {
-      case MUX3_spare0:
+      case MUX3_pitchBendDepth:
+        mux3Read = map(mux3Read, 0, 1023, 0, 12);
+        myControlChange(midiChannel, CCPitchBend, mux3Read);
         break;
       case MUX3_effectMix:
         myControlChange(midiChannel, CCeffectsMix, mux3Read);
@@ -5898,6 +5966,11 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
   if (btnIndex == SYNC_SW && btnType == ROX_PRESSED) {
     panelData[P_sync] = !panelData[P_sync];
     myControlChange(midiChannel, CCsyncSW, panelData[P_sync]);
+  }
+
+  if (btnIndex == KEYTRACK_SW && btnType == ROX_PRESSED) {
+    panelData[P_keytrackSW] = !panelData[P_keytrackSW];
+    myControlChange(midiChannel, CCkeyTrackSW, panelData[P_keytrackSW]);
   }
 
   if (btnIndex == LOWER_SW && btnType == ROX_PRESSED) {

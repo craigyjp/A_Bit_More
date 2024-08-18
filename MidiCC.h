@@ -27,7 +27,7 @@
 #define   CCAmpLoop 28
 
 #define   CCkeyTrack 30
-
+#define   CCkeyTrackSW 31
 #define   CCwholemode 32
 #define   CCdualmode 33
 #define   CCsplitmode 34
