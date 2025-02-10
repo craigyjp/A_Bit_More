@@ -1,4 +1,11 @@
-## Based on the the original Crumar Bit series synthesizers I have created an RP2040 based DCO synthesizer.
-This is an 8 voice bi-timbral polyphonic dual DCO based synthesizer that uses a very similar technology to the original Crumar Bit series synths. An RP2040 is used to create each clock output that if fed to the 4520 counters and resistor ladders to create the sawtooth waveforms.
-The RP2040 also generates a sub oscillator, two PWM waves which can be modulated to create PWM. The triangle output is derived from the second sawtooth. I have also added portamento, octave switching, oscillator sync etc.
+## Based on the the original Crumar Bit series synthesizers I have created an RP2040 based DCO synthesizer. 
+
+## Unfortunately the project did not work out too well as the DCO's were noisy and the PWM and triangle sound atrocious.
+
+## So a new synth is born with the same controller, new displays and the same filters, but now each RP2040 autotunes a pair of AS3340 VCO's
+
+This is an 8 voice bi-timbral polyphonic dual VCO based synthesizer that uses an RP2040 to autotune and control a pair of AS3340 VCO chips.
+
+I have also added portamento, octave switching, oscillator sync etc.
+
 Filters are based on the Matrix 12 pole switching filters with 16 filter types available, dual LFO's are vailable for modulation and PWM, plus a white/pink noise source.
