@@ -73,168 +73,181 @@ void renderBootUpPage() {
   tft.println(VERSION);
 }
 
+
 void renderCurrentPatchPage() {
+
+  tft.fillScreen(ST7735_BLACK);
+  tft.drawFastHLine(0, 40, tft.width(), ST7735_RED);
+  tft.drawFastHLine(0, 140, tft.width(), ST7735_RED);
+
+  tft.setTextColor(ST7735_YELLOW);
+  tft.setFont(&FreeSans12pt7b);
+  tft.setTextSize(1);
+  tft.setCursor(5, 10);
+  tft.println("Number");
+  tft.setCursor(100, 10);
+  tft.println("Patchname");
+  switch (playMode) {
+    case 0:
+      tft.setCursor(240, 10);
+      tft.println("Whole");
+      break;
+
+    case 1:
+      tft.setCursor(240, 10);
+      tft.println("Dual");
+      break;
+
+    case 2:
+      tft.setCursor(240, 10);
+      tft.println("Split");
+      break;
+  }
   if (wholemode) {
-    tft.fillScreen(ST7735_BLACK);
-    tft.setFont(&FreeSansBold18pt7b);
-    tft.setCursor(5, 29);
+
+    tft.setFont(&FreeSans12pt7b);
+    tft.setCursor(0, 70);
+    tft.setTextSize(3);
     tft.setTextColor(ST7735_YELLOW);
-    tft.setTextSize(1);
     tft.println(currentPgmNumL);
 
-    tft.setCursor(80, 19);
-    tft.setFont(&FreeSans12pt7b);
-    tft.setTextSize(1);
-    tft.println("Whole");
-
-    tft.setTextColor(ST7735_BLACK);
-    tft.setFont(&Org_01);
-    tft.drawFastHLine(10, 63, tft.width() - 20, ST7735_RED);
-
-    tft.setFont(&FreeSans12pt7b);
-    tft.setTextColor(ST7735_YELLOW);
-    tft.setCursor(1, 55);
+    tft.setCursor(100, 75);
+    tft.setFont(&FreeSans9pt7b);
+    tft.setTextSize(2);
     tft.setTextColor(ST7735_WHITE);
     tft.println(currentPatchNameL);
 
   } else {
 
-    tft.fillScreen(ST7735_BLACK);
-    tft.setFont(&FreeSansBold18pt7b);
-    tft.setCursor(5, 29);
+    tft.setFont(&FreeSans12pt7b);
+    tft.setCursor(0, 70);
+    tft.setTextSize(3);
     tft.setTextColor(ST7735_YELLOW);
-    tft.setTextSize(1);
     tft.println(currentPgmNumU);
 
-    tft.setCursor(80, 19);
-    tft.setFont(&FreeSans12pt7b);
-    tft.setTextSize(1);
-    tft.println("Upper");
-
-    tft.setTextColor(ST7735_BLACK);
-    tft.setFont(&Org_01);
-    tft.drawFastHLine(10, 63, tft.width() - 20, ST7735_RED);
-
-    tft.setFont(&FreeSans12pt7b);
-    tft.setTextColor(ST7735_YELLOW);
-    tft.setCursor(1, 55);
+    tft.setCursor(100, 75);
+    tft.setFont(&FreeSans9pt7b);
+    tft.setTextSize(2);
     tft.setTextColor(ST7735_WHITE);
     tft.println(currentPatchNameU);
 
-    tft.setFont(&FreeSansBold18pt7b);
-    tft.setCursor(5, 97);
+    tft.setFont(&FreeSans12pt7b);
+    tft.setCursor(0, 170);
+    tft.setTextSize(3);
     tft.setTextColor(ST7735_YELLOW);
-    tft.setTextSize(1);
     tft.println(currentPgmNumL);
 
-    tft.setCursor(80, 87);
-    tft.setFont(&FreeSans12pt7b);
-    tft.setTextSize(1);
-    tft.println("Lower");
-
-    tft.setTextColor(ST7735_BLACK);
-    tft.setFont(&Org_01);
-    tft.drawFastHLine(10, 63, tft.width() - 20, ST7735_RED);
-
-    tft.setFont(&FreeSans12pt7b);
-    tft.setTextColor(ST7735_YELLOW);
-    tft.setCursor(1, 122);
+    tft.setCursor(100, 175);
+    tft.setFont(&FreeSans9pt7b);
+    tft.setTextSize(2);
     tft.setTextColor(ST7735_WHITE);
     tft.println(currentPatchNameL);
   }
 }
 
 void renderCurrentParameterPage() {
+
+  tft.fillScreen(ST7735_BLACK);
+  tft.drawFastHLine(0, 40, tft.width(), ST7735_RED);
+  tft.drawFastHLine(0, 140, tft.width(), ST7735_RED);
+
+  tft.setTextColor(ST7735_YELLOW);
+  tft.setFont(&FreeSans12pt7b);
+  tft.setTextSize(1);
+  tft.setCursor(5, 10);
+  tft.println("Number");
+  tft.setCursor(100, 10);
+  tft.println("Patchname");
+  switch (playMode) {
+    case 0:
+      tft.setCursor(240, 10);
+      tft.println("Whole");
+      break;
+
+    case 1:
+      tft.setCursor(240, 10);
+      tft.println("Dual");
+      break;
+
+    case 2:
+      tft.setCursor(240, 10);
+      tft.println("Split");
+      break;
+  }
+
   switch (state) {
     case PARAMETER:
       if (upperSW) {
-        tft.fillScreen(ST7735_BLACK);
         tft.setFont(&FreeSans12pt7b);
-        tft.setCursor(0, 29);
+        tft.setCursor(0, 70);
+        tft.setTextSize(3);
         tft.setTextColor(ST7735_YELLOW);
-        tft.setTextSize(1);
+        tft.println(currentPgmNumU);
+
+        tft.setCursor(100, 75);
+        tft.setFont(&FreeSans9pt7b);
+        tft.setTextSize(2);
+        tft.setTextColor(ST7735_WHITE);
+        tft.println(currentPatchNameU);
+
+        // parameter in lower section
+        tft.setCursor(0, 165);
+        tft.setTextColor(ST7735_YELLOW);
+        tft.setTextSize(2);
         tft.println(currentParameter);
-        tft.drawFastHLine(10, 63, tft.width() - 20, ST7735_RED);
-        tft.setCursor(1, 55);
+
+        tft.setCursor(0, 205);
         tft.setTextColor(ST7735_WHITE);
         tft.println(currentValue);
-        // lower patch
-        tft.setFont(&FreeSansBold18pt7b);
-        tft.setCursor(5, 97);
-        tft.setTextColor(ST7735_YELLOW);
-        tft.setTextSize(1);
-        tft.println(currentPgmNumL);
-        tft.setCursor(80, 87);
-        tft.setFont(&FreeSans12pt7b);
-        tft.setTextSize(1);
-        tft.println("Lower");
-        tft.setFont(&FreeSans12pt7b);
-        tft.setTextColor(ST7735_YELLOW);
-        tft.setCursor(1, 122);
-        tft.setTextColor(ST7735_WHITE);
-        tft.println(currentPatchNameL);
+
       } else {
         if (wholemode) {
           //upper whole mode patch
-          tft.fillScreen(ST7735_BLACK);
-          tft.setFont(&FreeSansBold18pt7b);
-          tft.setCursor(5, 29);
+          tft.setFont(&FreeSans12pt7b);
+          tft.setCursor(0, 70);
+          tft.setTextSize(3);
           tft.setTextColor(ST7735_YELLOW);
-          tft.setTextSize(1);
           tft.println(currentPgmNumL);
 
-          tft.setCursor(80, 19);
-          tft.setFont(&FreeSans12pt7b);
-          tft.setTextSize(1);
-          tft.println("Whole");
-
-          tft.setTextColor(ST7735_BLACK);
-          tft.setFont(&Org_01);
-          tft.drawFastHLine(10, 63, tft.width() - 20, ST7735_RED);
-
-          tft.setFont(&FreeSans12pt7b);
-          tft.setTextColor(ST7735_YELLOW);
-          tft.setCursor(1, 55);
+          tft.setCursor(100, 75);
+          tft.setFont(&FreeSans9pt7b);
+          tft.setTextSize(2);
           tft.setTextColor(ST7735_WHITE);
           tft.println(currentPatchNameL);
-          
+
           // parameter in lower section
-          tft.setFont(&FreeSans12pt7b);
-          tft.setCursor(0, 97);
+          tft.setCursor(0, 165);
           tft.setTextColor(ST7735_YELLOW);
-          tft.setTextSize(1);
+          tft.setTextSize(2);
           tft.println(currentParameter);
-          tft.drawFastHLine(10, 63, tft.width() - 20, ST7735_RED);
-          tft.setCursor(1, 122);
+
+          tft.setCursor(0, 205);
           tft.setTextColor(ST7735_WHITE);
           tft.println(currentValue);
 
         } else {
-          tft.fillScreen(ST7735_BLACK);
+
+          // lower patch
           tft.setFont(&FreeSans12pt7b);
-          tft.setCursor(0, 97);
+          tft.setCursor(0, 170);
+          tft.setTextSize(3);
           tft.setTextColor(ST7735_YELLOW);
-          tft.setTextSize(1);
+          tft.println(currentPgmNumL);
+
+          tft.setCursor(100, 175);
+          tft.setFont(&FreeSans9pt7b);
+          tft.setTextSize(2);
+          tft.setTextColor(ST7735_WHITE);
+          tft.println(currentPatchNameL);
+
+          tft.setCursor(0, 65);
+          tft.setTextColor(ST7735_YELLOW);
+          tft.setTextSize(2);
           tft.println(currentParameter);
-          tft.drawFastHLine(10, 63, tft.width() - 20, ST7735_RED);
-          tft.setCursor(1, 122);
+
+          tft.setCursor(0, 105);
           tft.setTextColor(ST7735_WHITE);
           tft.println(currentValue);
-          // upper patch
-          tft.setFont(&FreeSansBold18pt7b);
-          tft.setCursor(5, 29);
-          tft.setTextColor(ST7735_YELLOW);
-          tft.setTextSize(1);
-          tft.println(currentPgmNumU);
-          tft.setCursor(80, 19);
-          tft.setFont(&FreeSans12pt7b);
-          tft.setTextSize(1);
-          tft.println("Upper");
-          tft.setFont(&FreeSans12pt7b);
-          tft.setTextColor(ST7735_YELLOW);
-          tft.setCursor(1, 55);
-          tft.setTextColor(ST7735_WHITE);
-          tft.println(currentPatchNameU);
         }
       }
       break;
@@ -244,23 +257,27 @@ void renderCurrentParameterPage() {
 void renderDeletePatchPage() {
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSansBold18pt7b);
-  tft.setCursor(5, 53);
+  tft.setCursor(10, 20);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
   tft.println("Delete?");
-  tft.drawFastHLine(10, 60, tft.width() - 20, ST7735_RED);
+  tft.drawFastHLine(10, 50, tft.width() - 20, ST7735_RED);
+
+  tft.setTextSize(2);
   tft.setFont(&FreeSans9pt7b);
-  tft.setCursor(0, 78);
+  tft.setCursor(10, 80);
   tft.setTextColor(ST7735_YELLOW);
   tft.println(patches.last().patchNo);
-  tft.setCursor(35, 78);
+  tft.setCursor(100, 80);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches.last().patchName);
-  tft.fillRect(0, 85, tft.width(), 23, ST7735_RED);
-  tft.setCursor(0, 98);
+
+  tft.fillRect(10, 120, tft.width() - 20, 44, ST77XX_RED);
+
+  tft.setCursor(10, 130);
   tft.setTextColor(ST7735_YELLOW);
   tft.println(patches.first().patchNo);
-  tft.setCursor(35, 98);
+  tft.setCursor(100, 130);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches.first().patchName);
 }
@@ -268,34 +285,38 @@ void renderDeletePatchPage() {
 void renderDeleteMessagePage() {
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSans12pt7b);
-  tft.setCursor(2, 53);
+  tft.setCursor(10, 20);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
   tft.println("Renumbering");
-  tft.setCursor(10, 90);
+  tft.setCursor(10, 80);
   tft.println("SD Card");
 }
 
 void renderSavePage() {
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSansBold18pt7b);
-  tft.setCursor(5, 53);
+  tft.setCursor(10, 20);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
   tft.println("Save?");
-  tft.drawFastHLine(10, 60, tft.width() - 20, ST7735_RED);
+  tft.drawFastHLine(10, 50, tft.width() - 20, ST7735_RED);
+
+  tft.setTextSize(2);
   tft.setFont(&FreeSans9pt7b);
-  tft.setCursor(0, 78);
+  tft.setCursor(10, 80);
   tft.setTextColor(ST7735_YELLOW);
   tft.println(patches[patches.size() - 2].patchNo);
-  tft.setCursor(35, 78);
+  tft.setCursor(100, 80);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches[patches.size() - 2].patchName);
-  tft.fillRect(0, 85, tft.width(), 23, ST7735_RED);
-  tft.setCursor(0, 98);
+
+  tft.fillRect(10, 120, tft.width() - 20, 44, ST77XX_RED);
+
+  tft.setCursor(10, 130);
   tft.setTextColor(ST7735_YELLOW);
   tft.println(patches.last().patchNo);
-  tft.setCursor(35, 98);
+  tft.setCursor(100, 130);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches.last().patchName);
 }
@@ -326,26 +347,36 @@ void renderPatchNamingPage() {
 
 void renderRecallPage() {
   tft.fillScreen(ST7735_BLACK);
+  tft.setFont(&FreeSansBold18pt7b);
+  tft.setCursor(10, 20);
+  tft.setTextColor(ST7735_YELLOW);
+  tft.setTextSize(1);
+  tft.println("Recall?");
+  tft.drawFastHLine(10, 50, tft.width() - 20, ST7735_RED);
+
+
+  tft.setTextSize(2);
   tft.setFont(&FreeSans9pt7b);
-  tft.setCursor(0, 45);
+  tft.setCursor(10, 80);
   tft.setTextColor(ST7735_YELLOW);
   tft.println(patches.last().patchNo);
-  tft.setCursor(35, 45);
+  tft.setCursor(100, 80);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches.last().patchName);
 
-  tft.fillRect(0, 56, tft.width(), 23, 0xA000);
-  tft.setCursor(0, 72);
+  tft.fillRect(10, 120, tft.width() - 20, 44, ST77XX_RED);
+
+  tft.setCursor(10, 130);
   tft.setTextColor(ST7735_YELLOW);
   tft.println(patches.first().patchNo);
-  tft.setCursor(35, 72);
+  tft.setCursor(100, 130);
   tft.setTextColor(ST7735_WHITE);
   tft.println(patches.first().patchName);
 
-  tft.setCursor(0, 98);
+  tft.setCursor(10, 180);
   tft.setTextColor(ST7735_YELLOW);
   patches.size() > 1 ? tft.println(patches[1].patchNo) : tft.println(patches.last().patchNo);
-  tft.setCursor(35, 98);
+  tft.setCursor(100, 180);
   tft.setTextColor(ST7735_WHITE);
   patches.size() > 1 ? tft.println(patches[1].patchName) : tft.println(patches.last().patchName);
 }
@@ -457,7 +488,7 @@ void displayThread() {
 void setupDisplay() {
   tft.init(240, 320);
   tft.useFrameBuffer(true);
-  
+
   //tft.initR(INITR_BLACKTAB);
   tft.setRotation(3);
   tft.invertDisplay(true);

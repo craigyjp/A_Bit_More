@@ -3419,9 +3419,9 @@ void updatelfoAlt(boolean announce) {
 void updateupperSW(boolean announce) {
   if (!wholemode) {
     if (upperSW) {
-      if (announce) {
-        showCurrentParameterPage("Upper", "On");
-      }
+      // if (announce) {
+      //   showCurrentParameterPage("Upper", "On");
+      // }
       upperParamsToDisplay();
       setAllButtons();
       midiCCOut72(CCupperSW, 1);
@@ -3431,9 +3431,9 @@ void updateupperSW(boolean announce) {
 
 void updatelowerSW(boolean announce) {
   if (lowerSW) {
-    if (announce) {
-      showCurrentParameterPage("Lower", "On");
-    }
+    // if (announce) {
+    //   showCurrentParameterPage("Lower", "On");
+    // }
     lowerParamsToDisplay();
     setAllButtons();
     midiCCOut72(CClowerSW, 1);
