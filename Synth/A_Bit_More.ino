@@ -2097,7 +2097,7 @@ void updateplayMode(boolean announce) {
     splitmode = false;
     lowerSW = true;
     upperSW = false;
-    updatelowerSW();
+    updatelowerSW(0);
   } else if (playMode == 1) {
     if (announce) {
       showCurrentParameterPage("Key Mode", "Dual");
@@ -3416,10 +3416,12 @@ void updatelfoAlt(boolean announce) {
 //   }
 // }
 
-void updateupperSW() {
+void updateupperSW(boolean announce) {
   if (!wholemode) {
     if (upperSW) {
-      showCurrentParameterPage("Upper", "On");
+      if (announce) {
+        showCurrentParameterPage("Upper", "On");
+      }
       upperParamsToDisplay();
       setAllButtons();
       midiCCOut72(CCupperSW, 1);
@@ -3427,9 +3429,11 @@ void updateupperSW() {
   }
 }
 
-void updatelowerSW() {
+void updatelowerSW(boolean announce) {
   if (lowerSW) {
-    showCurrentParameterPage("Lower", "On");
+    if (announce) {
+      showCurrentParameterPage("Lower", "On");
+    }
     lowerParamsToDisplay();
     setAllButtons();
     midiCCOut72(CClowerSW, 1);
@@ -3478,15 +3482,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCglideTime:
       if (upperSW) {
-        if (pickUpActive && P_glideTimepickUp_U && ((P_glideTimePrevValue_U + TOLERANCE) < (value) || (P_glideTimePrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_glideTimepickUp_U = false;
+        if (pickUpActive && upperPickUp[P_glideTime] && ((prevUpperData[P_glideTime] + TOLERANCE) < (value) || (prevUpperData[P_glideTime] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_glideTime] = false;
         upperData[P_glideTime] = value;
-        P_glideTimePrevValue_U = upperData[P_glideTime];  //PICK-UP
+        prevUpperData[P_glideTime] = upperData[P_glideTime];  //PICK-UP
       } else {
-        if (pickUpActive && P_glideTimepickUp_L && ((P_glideTimePrevValue_L + TOLERANCE) < (value) || (P_glideTimePrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_glideTimepickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_glideTime] && ((prevLowerData[P_glideTime] + TOLERANCE) < (value) || (prevLowerData[P_glideTime] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_glideTime] = false;
         lowerData[P_glideTime] = value;
-        P_glideTimePrevValue_L = lowerData[P_glideTime];  //PICK-UP
+        prevLowerData[P_glideTime] = lowerData[P_glideTime];  //PICK-UP
         if (wholemode) {
           upperData[P_glideTime] = value;
         }
@@ -3497,15 +3501,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCpwLFO:
       if (upperSW) {
-        if (pickUpActive && P_pwLFOpickUp_U && ((P_pwLFOPrevValue_U + TOLERANCE) < (value) || (P_pwLFOPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_pwLFOpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_pwLFO] && ((prevUpperData[P_pwLFO] + TOLERANCE) < (value) || (prevUpperData[P_pwLFO] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_pwLFO] = false;
         upperData[P_pwLFO] = value;
-        P_pwLFOPrevValue_U = upperData[P_pwLFO];  //PICK-UP
+        prevUpperData[P_pwLFO] = upperData[P_pwLFO];  //PICK-UP
       } else {
-        if (pickUpActive && P_pwLFOpickUp_L && ((P_pwLFOPrevValue_L + TOLERANCE) < (value) || (P_pwLFOPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_pwLFOpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_pwLFO] && ((prevLowerData[P_pwLFO] + TOLERANCE) < (value) || (prevLowerData[P_pwLFO] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_pwLFO] = false;
         lowerData[P_pwLFO] = value;
-        P_pwLFOPrevValue_L = lowerData[P_pwLFO];  //PICK-UP
+        prevLowerData[P_pwLFO] = lowerData[P_pwLFO];  //PICK-UP
         if (wholemode) {
           upperData[P_pwLFO] = value;
         }
@@ -3516,15 +3520,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfmDepth:
       if (upperSW) {
-        if (pickUpActive && P_fmDepthpickUp_U && ((P_fmDepthPrevValue_U + TOLERANCE) < (value) || (P_fmDepthPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_fmDepthpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_fmDepth] && ((prevUpperData[P_fmDepth] + TOLERANCE) < (value) || (prevUpperData[P_fmDepth] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_fmDepth] = false;
         upperData[P_fmDepth] = value;
-        P_fmDepthPrevValue_U = upperData[P_fmDepth];  //PICK-UP
+        prevUpperData[P_fmDepth] = upperData[P_fmDepth];  //PICK-UP
       } else {
-        if (pickUpActive && P_fmDepthpickUp_L && ((P_fmDepthPrevValue_L + TOLERANCE) < (value) || (P_fmDepthPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_fmDepthpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_fmDepth] && ((prevLowerData[P_fmDepth] + TOLERANCE) < (value) || (prevLowerData[P_fmDepth] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_fmDepth] = false;
         lowerData[P_fmDepth] = value;
-        P_fmDepthPrevValue_L = lowerData[P_fmDepth];  //PICK-UP
+        prevLowerData[P_fmDepth] = lowerData[P_fmDepth];  //PICK-UP
         if (wholemode) {
           upperData[P_fmDepth] = value;
         }
@@ -3535,15 +3539,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc2PW:
       if (upperSW) {
-        if (pickUpActive && P_osc2PWpickUp_U && ((P_osc2PWPrevValue_U + TOLERANCE) < (value) || (P_osc2PWPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2PWpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc2PW] && ((prevUpperData[P_osc2PW] + TOLERANCE) < (value) || (prevUpperData[P_osc2PW] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc2PW] = false;
         upperData[P_osc2PW] = value;
-        P_osc2PWPrevValue_U = upperData[P_osc2PW];  //PICK-UP
+        prevUpperData[P_osc2PW] = upperData[P_osc2PW];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc2PWpickUp_L && ((P_osc2PWPrevValue_L + TOLERANCE) < (value) || (P_osc2PWPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2PWpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc2PW] && ((prevLowerData[P_osc2PW] + TOLERANCE) < (value) || (prevLowerData[P_osc2PW] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc2PW] = false;
         lowerData[P_osc2PW] = value;
-        P_osc2PWPrevValue_L = lowerData[P_osc2PW];  //PICK-UP
+        prevLowerData[P_osc2PW] = lowerData[P_osc2PW];  //PICK-UP
         if (wholemode) {
           upperData[P_osc2PW] = value;
         }
@@ -3554,15 +3558,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc2PWM:
       if (upperSW) {
-        if (pickUpActive && P_osc2PWMpickUp_U && ((P_osc2PWMPrevValue_U + TOLERANCE) < (value) || (P_osc2PWMPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2PWMpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc2PWM] && ((prevUpperData[P_osc2PWM] + TOLERANCE) < (value) || (prevUpperData[P_osc2PWM] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc2PWM] = false;
         upperData[P_osc2PWM] = value;
-        P_osc2PWMPrevValue_U = upperData[P_osc2PWM];  //PICK-UP
+        prevUpperData[P_osc2PWM] = upperData[P_osc2PWM];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc2PWMpickUp_L && ((P_osc2PWMPrevValue_L + TOLERANCE) < (value) || (P_osc2PWMPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2PWMpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc2PWM] && ((prevLowerData[P_osc2PWM] + TOLERANCE) < (value) || (prevLowerData[P_osc2PWM] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc2PWM] = false;
         lowerData[P_osc2PWM] = value;
-        P_osc2PWMPrevValue_L = lowerData[P_osc2PWM];  //PICK-UP
+        prevLowerData[P_osc2PWM] = lowerData[P_osc2PWM];  //PICK-UP
         if (wholemode) {
           upperData[P_osc2PWM] = value;
         }
@@ -3573,15 +3577,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc1PW:
       if (upperSW) {
-        if (pickUpActive && P_osc1PWpickUp_U && ((P_osc1PWPrevValue_U + TOLERANCE) < (value) || (P_osc1PWPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1PWpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc1PW] && ((prevUpperData[P_osc1PW] + TOLERANCE) < (value) || (prevUpperData[P_osc1PW] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc1PW] = false;
         upperData[P_osc1PW] = value;
-        P_osc1PWPrevValue_U = upperData[P_osc1PW];  //PICK-UP
+        prevUpperData[P_osc1PW] = upperData[P_osc1PW];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc1PWpickUp_L && ((P_osc1PWPrevValue_L + TOLERANCE) < (value) || (P_osc1PWPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1PWpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc1PW] && ((prevLowerData[P_osc1PW] + TOLERANCE) < (value) || (prevLowerData[P_osc1PW] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc1PW] = false;
         lowerData[P_osc1PW] = value;
-        P_osc1PWPrevValue_L = lowerData[P_osc1PW];  //PICK-UP
+        prevLowerData[P_osc1PW] = lowerData[P_osc1PW];  //PICK-UP
         if (wholemode) {
           upperData[P_osc1PW] = value;
         }
@@ -3592,15 +3596,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc1PWM:
       if (upperSW) {
-        if (pickUpActive && P_osc1PWMpickUp_U && ((P_osc1PWMPrevValue_U + TOLERANCE) < (value) || (P_osc1PWMPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1PWMpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc1PWM] && ((prevUpperData[P_osc1PWM] + TOLERANCE) < (value) || (prevUpperData[P_osc1PWM] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc1PWM] = false;
         upperData[P_osc1PWM] = value;
-        P_osc1PWMPrevValue_U = upperData[P_osc1PWM];  //PICK-UP
+        prevUpperData[P_osc1PWM] = upperData[P_osc1PWM];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc1PWMpickUp_L && ((P_osc1PWMPrevValue_L + TOLERANCE) < (value) || (P_osc1PWMPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1PWMpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc1PWM] && ((prevLowerData[P_osc1PWM] + TOLERANCE) < (value) || (prevLowerData[P_osc1PWM] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc1PWM] = false;
         lowerData[P_osc1PWM] = value;
-        P_osc1PWMPrevValue_L = lowerData[P_osc1PWM];  //PICK-UP
+        prevLowerData[P_osc1PWM] = lowerData[P_osc1PWM];  //PICK-UP
         if (wholemode) {
           upperData[P_osc1PWM] = value;
         }
@@ -3635,15 +3639,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc2Detune:
       if (upperSW) {
-        if (pickUpActive && P_osc2DetunepickUp_U && ((P_osc2DetunePrevValue_U + TOLERANCE) < (value) || (P_osc2DetunePrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2DetunepickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc2Detune] && ((prevUpperData[P_osc2Detune] + TOLERANCE) < (value) || (prevUpperData[P_osc2Detune] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc2Detune] = false;
         upperData[P_osc2Detune] = value;
-        P_osc2DetunePrevValue_U = upperData[P_osc2Detune];  //PICK-UP
+        prevUpperData[P_osc2Detune] = upperData[P_osc2Detune];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc2DetunepickUp_L && ((P_osc2DetunePrevValue_L + TOLERANCE) < (value) || (P_osc2DetunePrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2DetunepickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc2Detune] && ((prevLowerData[P_osc2Detune] + TOLERANCE) < (value) || (prevLowerData[P_osc2Detune] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc2Detune] = false;
         lowerData[P_osc2Detune] = value;
-        P_osc2DetunePrevValue_L = lowerData[P_osc2Detune];  //PICK-UP
+        prevLowerData[P_osc2Detune] = lowerData[P_osc2Detune];  //PICK-UP
         if (wholemode) {
           upperData[P_osc2Detune] = value;
         }
@@ -3654,15 +3658,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc2Interval:
       if (upperSW) {
-        if (pickUpActive && P_osc2IntervalpickUp_U && ((P_osc2IntervalPrevValue_U + TOLERANCE) < (value) || (P_osc2IntervalPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2IntervalpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc2Interval] && ((prevUpperData[P_osc2Interval] + TOLERANCE) < (value) || (prevUpperData[P_osc2Interval] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc2Interval] = false;
         upperData[P_osc2Interval] = value;
-        P_osc2IntervalPrevValue_U = upperData[P_osc2Interval];  //PICK-UP
+        prevUpperData[P_osc2Interval] = upperData[P_osc2Interval];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc2IntervalpickUp_L && ((P_osc2IntervalPrevValue_L + TOLERANCE) < (value) || (P_osc2IntervalPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2IntervalpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc2Interval] && ((prevLowerData[P_osc2Interval] + TOLERANCE) < (value) || (prevLowerData[P_osc2Interval] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc2Interval] = false;
         lowerData[P_osc2Interval] = value;
-        P_osc2IntervalPrevValue_L = lowerData[P_osc2Interval];  //PICK-UP
+        prevLowerData[P_osc2Interval] = lowerData[P_osc2Interval];  //PICK-UP
         if (wholemode) {
           upperData[P_osc2Interval] = value;
         }
@@ -3673,15 +3677,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCnoiseLevel:
       if (upperSW) {
-        if (pickUpActive && P_noiseLevelpickUp_U && ((P_noiseLevelPrevValue_U + TOLERANCE) < (value) || (P_noiseLevelPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_noiseLevelpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_noiseLevel] && ((prevUpperData[P_noiseLevel] + TOLERANCE) < (value) || (prevUpperData[P_noiseLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_noiseLevel] = false;
         upperData[P_noiseLevel] = value;
-        P_noiseLevelPrevValue_U = upperData[P_noiseLevel];  //PICK-UP
+        prevUpperData[P_noiseLevel] = upperData[P_noiseLevel];  //PICK-UP
       } else {
-        if (pickUpActive && P_noiseLevelpickUp_L && ((P_noiseLevelPrevValue_L + TOLERANCE) < (value) || (P_noiseLevelPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_noiseLevelpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_noiseLevel] && ((prevLowerData[P_noiseLevel] + TOLERANCE) < (value) || (prevLowerData[P_noiseLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_noiseLevel] = false;
         lowerData[P_noiseLevel] = value;
-        P_noiseLevelPrevValue_L = lowerData[P_noiseLevel];  //PICK-UP
+        prevLowerData[P_noiseLevel] = lowerData[P_noiseLevel];  //PICK-UP
         if (wholemode) {
           upperData[P_noiseLevel] = value;
         }
@@ -3692,15 +3696,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc2SawLevel:
       if (upperSW) {
-        if (pickUpActive && P_osc2SawLevelpickUp_U && ((P_osc2SawLevelPrevValue_U + TOLERANCE) < (value) || (P_osc2SawLevelPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2SawLevelpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc2SawLevel] && ((prevUpperData[P_osc2SawLevel] + TOLERANCE) < (value) || (prevUpperData[P_osc2SawLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc2SawLevel] = false;
         upperData[P_osc2SawLevel] = value;
-        P_osc2SawLevelPrevValue_U = upperData[P_osc2SawLevel];  //PICK-UP
+        prevUpperData[P_osc2SawLevel] = upperData[P_osc2SawLevel];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc2SawLevelpickUp_L && ((P_osc2SawLevelPrevValue_L + TOLERANCE) < (value) || (P_osc2SawLevelPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2SawLevelpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc2SawLevel] && ((prevLowerData[P_osc2SawLevel] + TOLERANCE) < (value) || (prevLowerData[P_osc2SawLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc2SawLevel] = false;
         lowerData[P_osc2SawLevel] = value;
-        P_osc2SawLevelPrevValue_L = lowerData[P_osc2SawLevel];  //PICK-UP
+        prevLowerData[P_osc2SawLevel] = lowerData[P_osc2SawLevel];  //PICK-UP
         if (wholemode) {
           upperData[P_osc2SawLevel] = value;
         }
@@ -3711,15 +3715,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc1SawLevel:
       if (upperSW) {
-        if (pickUpActive && P_osc1SawLevelpickUp_U && ((P_osc1SawLevelPrevValue_U + TOLERANCE) < (value) || (P_osc1SawLevelPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1SawLevelpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc1SawLevel] && ((prevUpperData[P_osc1SawLevel] + TOLERANCE) < (value) || (prevUpperData[P_osc1SawLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc1SawLevel] = false;
         upperData[P_osc1SawLevel] = value;
-        P_osc1SawLevelPrevValue_U = upperData[P_osc1SawLevel];  //PICK-UP
+        prevUpperData[P_osc1SawLevel] = upperData[P_osc1SawLevel];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc1SawLevelpickUp_L && ((P_osc1SawLevelPrevValue_L + TOLERANCE) < (value) || (P_osc1SawLevelPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1SawLevelpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc1SawLevel] && ((prevLowerData[P_osc1SawLevel] + TOLERANCE) < (value) || (prevLowerData[P_osc1SawLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc1SawLevel] = false;
         lowerData[P_osc1SawLevel] = value;
-        P_osc1SawLevelPrevValue_L = lowerData[P_osc1SawLevel];  //PICK-UP
+        prevLowerData[P_osc1SawLevel] = lowerData[P_osc1SawLevel];  //PICK-UP
         if (wholemode) {
           upperData[P_osc1SawLevel] = value;
         }
@@ -3730,15 +3734,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc2PulseLevel:
       if (upperSW) {
-        if (pickUpActive && P_osc2PulseLevelpickUp_U && ((P_osc2PulseLevelPrevValue_U + TOLERANCE) < (value) || (P_osc2PulseLevelPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2PulseLevelpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc2PulseLevel] && ((prevUpperData[P_osc2PulseLevel] + TOLERANCE) < (value) || (prevUpperData[P_osc2PulseLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc2PulseLevel] = false;
         upperData[P_osc2PulseLevel] = value;
-        P_osc2PulseLevelPrevValue_U = upperData[P_osc2PulseLevel];  //PICK-UP
+        prevUpperData[P_osc2PulseLevel] = upperData[P_osc2PulseLevel];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc2PulseLevelpickUp_L && ((P_osc2PulseLevelPrevValue_L + TOLERANCE) < (value) || (P_osc2PulseLevelPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2PulseLevelpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc2PulseLevel] && ((prevLowerData[P_osc2PulseLevel] + TOLERANCE) < (value) || (prevLowerData[P_osc2PulseLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc2PulseLevel] = false;
         lowerData[P_osc2PulseLevel] = value;
-        P_osc2PulseLevelPrevValue_L = lowerData[P_osc2PulseLevel];  //PICK-UP
+        prevLowerData[P_osc2PulseLevel] = lowerData[P_osc2PulseLevel];  //PICK-UP
         if (wholemode) {
           upperData[P_osc2PulseLevel] = value;
         }
@@ -3749,15 +3753,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc1PulseLevel:
       if (upperSW) {
-        if (pickUpActive && P_osc1PulseLevelpickUp_U && ((P_osc1PulseLevelPrevValue_U + TOLERANCE) < (value) || (P_osc1PulseLevelPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1PulseLevelpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc1PulseLevel] && ((prevUpperData[P_osc1PulseLevel] + TOLERANCE) < (value) || (prevUpperData[P_osc1PulseLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc1PulseLevel] = false;
         upperData[P_osc1PulseLevel] = value;
-        P_osc1PulseLevelPrevValue_U = upperData[P_osc1PulseLevel];  //PICK-UP
+        prevUpperData[P_osc1PulseLevel] = upperData[P_osc1PulseLevel];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc1PulseLevelpickUp_L && ((P_osc1PulseLevelPrevValue_L + TOLERANCE) < (value) || (P_osc1PulseLevelPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1PulseLevelpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc1PulseLevel] && ((prevLowerData[P_osc1PulseLevel] + TOLERANCE) < (value) || (prevLowerData[P_osc1PulseLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc1PulseLevel] = false;
         lowerData[P_osc1PulseLevel] = value;
-        P_osc1PulseLevelPrevValue_L = lowerData[P_osc1PulseLevel];  //PICK-UP
+        prevLowerData[P_osc1PulseLevel] = lowerData[P_osc1PulseLevel];  //PICK-UP
         if (wholemode) {
           upperData[P_osc1PulseLevel] = value;
         }
@@ -3768,15 +3772,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc2TriangleLevel:
       if (upperSW) {
-        if (pickUpActive && P_osc2TriangleLevelpickUp_U && ((P_osc2TriangleLevelPrevValue_U + TOLERANCE) < (value) || (P_osc2TriangleLevelPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2TriangleLevelpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc2TriangleLevel] && ((prevUpperData[P_osc2TriangleLevel] + TOLERANCE) < (value) || (prevUpperData[P_osc2TriangleLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc2TriangleLevel] = false;
         upperData[P_osc2TriangleLevel] = value;
-        P_osc2TriangleLevelPrevValue_U = upperData[P_osc2TriangleLevel];  //PICK-UP
+        prevUpperData[P_osc2TriangleLevel] = upperData[P_osc2TriangleLevel];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc2TriangleLevelpickUp_L && ((P_osc2TriangleLevelPrevValue_L + TOLERANCE) < (value) || (P_osc2TriangleLevelPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc2TriangleLevelpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc2TriangleLevel] && ((prevLowerData[P_osc2TriangleLevel] + TOLERANCE) < (value) || (prevLowerData[P_osc2TriangleLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc2TriangleLevel] = false;
         lowerData[P_osc2TriangleLevel] = value;
-        P_osc2TriangleLevelPrevValue_L = lowerData[P_osc2TriangleLevel];  //PICK-UP
+        prevLowerData[P_osc2TriangleLevel] = lowerData[P_osc2TriangleLevel];  //PICK-UP
         if (wholemode) {
           upperData[P_osc2TriangleLevel] = value;
         }
@@ -3787,15 +3791,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc1SubLevel:
       if (upperSW) {
-        if (pickUpActive && P_osc1SubLevelpickUp_U && ((P_osc1SubLevelPrevValue_U + TOLERANCE) < (value) || (P_osc1SubLevelPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1SubLevelpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_osc1SubLevel] && ((prevUpperData[P_osc1SubLevel] + TOLERANCE) < (value) || (prevUpperData[P_osc1SubLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_osc1SubLevel] = false;
         upperData[P_osc1SubLevel] = value;
-        P_osc1SubLevelPrevValue_U = upperData[P_osc1SubLevel];  //PICK-UP
+        prevUpperData[P_osc1SubLevel] = upperData[P_osc1SubLevel];  //PICK-UP
       } else {
-        if (pickUpActive && P_osc1SubLevelpickUp_L && ((P_osc1SubLevelPrevValue_L + TOLERANCE) < (value) || (P_osc1SubLevelPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_osc1SubLevelpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_osc1SubLevel] && ((prevLowerData[P_osc1SubLevel] + TOLERANCE) < (value) || (prevLowerData[P_osc1SubLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_osc1SubLevel] = false;
         lowerData[P_osc1SubLevel] = value;
-        P_osc1SubLevelPrevValue_L = lowerData[P_osc1SubLevel];  //PICK-UP
+        prevLowerData[P_osc1SubLevel] = lowerData[P_osc1SubLevel];  //PICK-UP
         if (wholemode) {
           upperData[P_osc1SubLevel] = value;
         }
@@ -3806,15 +3810,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCLFODelay:
       if (upperSW) {
-        if (pickUpActive && P_LFODelaypickUp_U && ((P_LFODelayPrevValue_U + TOLERANCE) < (value) || (P_LFODelayPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_LFODelaypickUp_U = false;
+        if (pickUpActive && upperPickUp[P_LFODelay] && ((prevUpperData[P_LFODelay] + TOLERANCE) < (value) || (prevUpperData[P_LFODelay] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_LFODelay] = false;
         upperData[P_LFODelay] = value;
-        P_LFODelayPrevValue_U = upperData[P_LFODelay];  //PICK-UP
+        prevUpperData[P_LFODelay] = upperData[P_LFODelay];  //PICK-UP
       } else {
-        if (pickUpActive && P_LFODelaypickUp_L && ((P_LFODelayPrevValue_L + TOLERANCE) < (value) || (P_LFODelayPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_LFODelaypickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_LFODelay] && ((prevLowerData[P_LFODelay] + TOLERANCE) < (value) || (prevLowerData[P_LFODelay] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_LFODelay] = false;
         lowerData[P_LFODelay] = value;
-        P_LFODelayPrevValue_L = lowerData[P_LFODelay];  //PICK-UP
+        prevLowerData[P_LFODelay] = lowerData[P_LFODelay];  //PICK-UP
         if (wholemode) {
           upperData[P_LFODelay] = value;
         }
@@ -3825,15 +3829,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterCutoff:
       if (upperSW) {
-        if (pickUpActive && P_filterCutoffpickUp_U && ((P_filterCutoffPrevValue_U + TOLERANCE) < (value) || (P_filterCutoffPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterCutoffpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_filterCutoff] && ((prevUpperData[P_filterCutoff] + TOLERANCE) < (value) || (prevUpperData[P_filterCutoff] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_filterCutoff] = false;
         upperData[P_filterCutoff] = value;
-        P_filterCutoffPrevValue_U = upperData[P_filterCutoff];  //PICK-UP
+        prevUpperData[P_filterCutoff] = upperData[P_filterCutoff];  //PICK-UP
       } else {
-        if (pickUpActive && P_filterCutoffpickUp_L && ((P_filterCutoffPrevValue_L + TOLERANCE) < (value) || (P_filterCutoffPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterCutoffpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_filterCutoff] && ((prevLowerData[P_filterCutoff] + TOLERANCE) < (value) || (prevLowerData[P_filterCutoff] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_filterCutoff] = false;
         lowerData[P_filterCutoff] = value;
-        P_filterCutoffPrevValue_L = lowerData[P_filterCutoff];  //PICK-UP
+        prevLowerData[P_filterCutoff] = lowerData[P_filterCutoff];  //PICK-UP
         if (wholemode) {
           upperData[P_filterCutoff] = value;
           oldfilterCutoffU = value;
@@ -3845,15 +3849,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterLFO:
       if (upperSW) {
-        if (pickUpActive && P_filterLFOpickUp_U && ((P_filterLFOPrevValue_U + TOLERANCE) < (value) || (P_filterLFOPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterLFOpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_filterLFO] && ((prevUpperData[P_filterLFO] + TOLERANCE) < (value) || (prevUpperData[P_filterLFO] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_filterLFO] = false;
         upperData[P_filterLFO] = value;
-        P_filterLFOPrevValue_U = upperData[P_filterLFO];  //PICK-UP
+        prevUpperData[P_filterLFO] = upperData[P_filterLFO];  //PICK-UP
       } else {
-        if (pickUpActive && P_filterLFOpickUp_L && ((P_filterLFOPrevValue_L + TOLERANCE) < (value) || (P_filterLFOPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterLFOpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_filterLFO] && ((prevLowerData[P_filterLFO] + TOLERANCE) < (value) || (prevLowerData[P_filterLFO] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_filterLFO] = false;
         lowerData[P_filterLFO] = value;
-        P_filterLFOPrevValue_L = lowerData[P_filterLFO];  //PICK-UP
+        prevLowerData[P_filterLFO] = lowerData[P_filterLFO];  //PICK-UP
         if (wholemode) {
           upperData[P_filterLFO] = value;
         }
@@ -3864,15 +3868,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterRes:
       if (upperSW) {
-        if (pickUpActive && P_filterRespickUp_U && ((P_filterResPrevValue_U + TOLERANCE) < (value) || (P_filterResPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterRespickUp_U = false;
+        if (pickUpActive && upperPickUp[P_filterRes] && ((prevUpperData[P_filterRes] + TOLERANCE) < (value) || (prevUpperData[P_filterRes] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_filterRes] = false;
         upperData[P_filterRes] = value;
-        P_filterResPrevValue_U = upperData[P_filterRes];  //PICK-UP
+        prevUpperData[P_filterRes] = upperData[P_filterRes];  //PICK-UP
       } else {
-        if (pickUpActive && P_filterRespickUp_L && ((P_filterResPrevValue_L + TOLERANCE) < (value) || (P_filterResPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterRespickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_filterRes] && ((prevLowerData[P_filterRes] + TOLERANCE) < (value) || (prevLowerData[P_filterRes] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_filterRes] = false;
         lowerData[P_filterRes] = value;
-        P_filterResPrevValue_L = lowerData[P_filterRes];  //PICK-UP
+        prevLowerData[P_filterRes] = lowerData[P_filterRes];  //PICK-UP
         if (wholemode) {
           upperData[P_filterRes] = value;
         }
@@ -3895,15 +3899,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterEGlevel:
       if (upperSW) {
-        if (pickUpActive && P_filterEGlevelpickUp_U && ((P_filterEGlevelPrevValue_U + TOLERANCE) < (value) || (P_filterEGlevelPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterEGlevelpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_filterEGlevel] && ((prevUpperData[P_filterEGlevel] + TOLERANCE) < (value) || (prevUpperData[P_filterEGlevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_filterEGlevel] = false;
         upperData[P_filterEGlevel] = value;
-        P_filterEGlevelPrevValue_U = upperData[P_filterEGlevel];  //PICK-UP
+        prevUpperData[P_filterEGlevel] = upperData[P_filterEGlevel];  //PICK-UP
       } else {
-        if (pickUpActive && P_filterEGlevelpickUp_L && ((P_filterEGlevelPrevValue_L + TOLERANCE) < (value) || (P_filterEGlevelPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterEGlevelpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_filterEGlevel] && ((prevLowerData[P_filterEGlevel] + TOLERANCE) < (value) || (prevLowerData[P_filterEGlevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_filterEGlevel] = false;
         lowerData[P_filterEGlevel] = value;
-        P_filterEGlevelPrevValue_L = lowerData[P_filterEGlevel];  //PICK-UP
+        prevLowerData[P_filterEGlevel] = lowerData[P_filterEGlevel];  //PICK-UP
         if (wholemode) {
           upperData[P_filterEGlevel] = value;
         }
@@ -3914,15 +3918,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCLFORate:
       if (upperSW) {
-        if (pickUpActive && P_LFORatepickUp_U && ((P_LFORatePrevValue_U + TOLERANCE) < (value) || (P_LFORatePrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_LFORatepickUp_U = false;
+        if (pickUpActive && upperPickUp[P_LFORate] && ((prevUpperData[P_LFORate] + TOLERANCE) < (value) || (prevUpperData[P_LFORate] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_LFORate] = false;
         upperData[P_LFORate] = value;
-        P_LFORatePrevValue_U = upperData[P_LFORate];  //PICK-UP
+        prevUpperData[P_LFORate] = upperData[P_LFORate];  //PICK-UP
       } else {
-        if (pickUpActive && P_LFORatepickUp_L && ((P_LFORatePrevValue_L + TOLERANCE) < (value) || (P_LFORatePrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_LFORatepickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_LFORate] && ((prevLowerData[P_LFORate] + TOLERANCE) < (value) || (prevLowerData[P_LFORate] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_LFORate] = false;
         lowerData[P_LFORate] = value;
-        P_LFORatePrevValue_L = lowerData[P_LFORate];  //PICK-UP
+        prevLowerData[P_LFORate] = lowerData[P_LFORate];  //PICK-UP
         if (wholemode) {
           upperData[P_LFORate] = value;
         }
@@ -3933,15 +3937,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCmodWheelDepth:
       if (upperSW) {
-        if (pickUpActive && P_modWheelDepthpickUp_U && ((P_modWheelDepthPrevValue_U + TOLERANCE) < (value) || (P_modWheelDepthPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_modWheelDepthpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_modWheelDepth] && ((prevUpperData[P_modWheelDepth] + TOLERANCE) < (value) || (prevUpperData[P_modWheelDepth] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_modWheelDepth] = false;
         upperData[P_modWheelDepth] = value;
-        P_modWheelDepthPrevValue_U = upperData[P_modWheelDepth];  //PICK-UP
+        prevUpperData[P_modWheelDepth] = upperData[P_modWheelDepth];  //PICK-UP
       } else {
-        if (pickUpActive && P_modWheelDepthpickUp_L && ((P_modWheelDepthPrevValue_L + TOLERANCE) < (value) || (P_modWheelDepthPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_modWheelDepthpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_modWheelDepth] && ((prevLowerData[P_modWheelDepth] + TOLERANCE) < (value) || (prevLowerData[P_modWheelDepth] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_modWheelDepth] = false;
         lowerData[P_modWheelDepth] = value;
-        P_modWheelDepthPrevValue_L = lowerData[P_modWheelDepth];  //PICK-UP
+        prevLowerData[P_modWheelDepth] = lowerData[P_modWheelDepth];  //PICK-UP
         if (wholemode) {
           upperData[P_modWheelDepth] = value;
         }
@@ -3952,15 +3956,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCPitchBend:
       if (upperSW) {
-        if (pickUpActive && P_PitchBendLevelpickUp_U && ((P_PitchBendLevelPrevValue_U + TOLERANCE) < (value) || (P_PitchBendLevelPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_PitchBendLevelpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_PitchBendLevel] && ((prevUpperData[P_PitchBendLevel] + TOLERANCE) < (value) || (prevUpperData[P_PitchBendLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_PitchBendLevel] = false;
         upperData[P_PitchBendLevel] = value;
-        P_PitchBendLevelPrevValue_U = upperData[P_PitchBendLevel];  //PICK-UP
+        prevUpperData[P_PitchBendLevel] = upperData[P_PitchBendLevel];  //PICK-UP
       } else {
-        if (pickUpActive && P_PitchBendLevelpickUp_L && ((P_PitchBendLevelPrevValue_L + TOLERANCE) < (value) || (P_PitchBendLevelPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_PitchBendLevelpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_PitchBendLevel] && ((prevLowerData[P_PitchBendLevel] + TOLERANCE) < (value) || (prevLowerData[P_PitchBendLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_PitchBendLevel] = false;
         lowerData[P_PitchBendLevel] = value;
-        P_PitchBendLevelPrevValue_L = lowerData[P_PitchBendLevel];  //PICK-UP
+        prevLowerData[P_PitchBendLevel] = lowerData[P_PitchBendLevel];  //PICK-UP
         if (wholemode) {
           upperData[P_PitchBendLevel] = value;
         }
@@ -3971,15 +3975,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCeffectPot1:
       if (upperSW) {
-        if (pickUpActive && P_effectPot1pickUp_U && ((P_effectPot1PrevValue_U + TOLERANCE) < (value) || (P_effectPot1PrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_effectPot1pickUp_U = false;
+        if (pickUpActive && upperPickUp[P_effectPot1] && ((prevUpperData[P_effectPot1] + TOLERANCE) < (value) || (prevUpperData[P_effectPot1] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_effectPot1] = false;
         upperData[P_effectPot1] = value;
-        P_effectPot1PrevValue_U = upperData[P_effectPot1];  //PICK-UP
+        prevUpperData[P_effectPot1] = upperData[P_effectPot1];  //PICK-UP
       } else {
-        if (pickUpActive && P_effectPot1pickUp_L && ((P_effectPot1PrevValue_L + TOLERANCE) < (value) || (P_effectPot1PrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_effectPot1pickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_effectPot1] && ((prevLowerData[P_effectPot1] + TOLERANCE) < (value) || (prevLowerData[P_effectPot1] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_effectPot1] = false;
         lowerData[P_effectPot1] = value;
-        P_effectPot1PrevValue_L = lowerData[P_effectPot1];  //PICK-UP
+        prevLowerData[P_effectPot1] = lowerData[P_effectPot1];  //PICK-UP
         if (wholemode) {
           upperData[P_effectPot1] = value;
         }
@@ -3990,15 +3994,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCeffectPot2:
       if (upperSW) {
-        if (pickUpActive && P_effectPot2pickUp_U && ((P_effectPot2PrevValue_U + TOLERANCE) < (value) || (P_effectPot2PrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_effectPot2pickUp_U = false;
+        if (pickUpActive && upperPickUp[P_effectPot2] && ((prevUpperData[P_effectPot2] + TOLERANCE) < (value) || (prevUpperData[P_effectPot2] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_effectPot2] = false;
         upperData[P_effectPot2] = value;
-        P_effectPot2PrevValue_U = upperData[P_effectPot2];  //PICK-UP
+        prevUpperData[P_effectPot2] = upperData[P_effectPot2];  //PICK-UP
       } else {
-        if (pickUpActive && P_effectPot2pickUp_L && ((P_effectPot2PrevValue_L + TOLERANCE) < (value) || (P_effectPot2PrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_effectPot2pickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_effectPot2] && ((prevLowerData[P_effectPot2] + TOLERANCE) < (value) || (prevLowerData[P_effectPot2] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_effectPot2] = false;
         lowerData[P_effectPot2] = value;
-        P_effectPot2PrevValue_L = lowerData[P_effectPot2];  //PICK-UP
+        prevLowerData[P_effectPot2] = lowerData[P_effectPot2];  //PICK-UP
         if (wholemode) {
           upperData[P_effectPot2] = value;
         }
@@ -4009,15 +4013,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCeffectPot3:
       if (upperSW) {
-        if (pickUpActive && P_effectPot3pickUp_U && ((P_effectPot3PrevValue_U + TOLERANCE) < (value) || (P_effectPot3PrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_effectPot3pickUp_U = false;
+        if (pickUpActive && upperPickUp[P_effectPot3] && ((prevUpperData[P_effectPot3] + TOLERANCE) < (value) || (prevUpperData[P_effectPot3] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_effectPot3] = false;
         upperData[P_effectPot3] = value;
-        P_effectPot3PrevValue_U = upperData[P_effectPot3];  //PICK-UP
+        prevUpperData[P_effectPot3] = upperData[P_effectPot3];  //PICK-UP
       } else {
-        if (pickUpActive && P_effectPot3pickUp_L && ((P_effectPot3PrevValue_L + TOLERANCE) < (value) || (P_effectPot3PrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_effectPot3pickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_effectPot3] && ((prevLowerData[P_effectPot3] + TOLERANCE) < (value) || (prevLowerData[P_effectPot3] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_effectPot3] = false;
         lowerData[P_effectPot3] = value;
-        P_effectPot3PrevValue_L = lowerData[P_effectPot3];  //PICK-UP
+        prevLowerData[P_effectPot3] = lowerData[P_effectPot3];  //PICK-UP
         if (wholemode) {
           upperData[P_effectPot3] = value;
         }
@@ -4028,15 +4032,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCeffectsMix:
       if (upperSW) {
-        if (pickUpActive && P_effectsMixpickUp_U && ((P_effectsMixPrevValue_U + TOLERANCE) < (value) || (P_effectsMixPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_effectsMixpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_effectsMix] && ((prevUpperData[P_effectsMix] + TOLERANCE) < (value) || (prevUpperData[P_effectsMix] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_effectsMix] = false;
         upperData[P_effectsMix] = value;
-        P_effectsMixPrevValue_U = upperData[P_effectsMix];  //PICK-UP
+        prevUpperData[P_effectsMix] = upperData[P_effectsMix];  //PICK-UP
       } else {
-        if (pickUpActive && P_effectsMixpickUp_L && ((P_effectsMixPrevValue_L + TOLERANCE) < (value) || (P_effectsMixPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_effectsMixpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_effectsMix] && ((prevLowerData[P_effectsMix] + TOLERANCE) < (value) || (prevLowerData[P_effectsMix] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_effectsMix] = false;
         lowerData[P_effectsMix] = value;
-        P_effectsMixPrevValue_L = lowerData[P_effectsMix];  //PICK-UP
+        prevLowerData[P_effectsMix] = lowerData[P_effectsMix];  //PICK-UP
         if (wholemode) {
           upperData[P_effectsMix] = value;
         }
@@ -4059,15 +4063,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterAttack:
       if (upperSW) {
-        if (pickUpActive && P_filterAttackpickUp_U && ((P_filterAttackPrevValue_U + TOLERANCE) < (value) || (P_filterAttackPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterAttackpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_filterAttack] && ((prevUpperData[P_filterAttack] + TOLERANCE) < (value) || (prevUpperData[P_filterAttack] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_filterAttack] = false;
         upperData[P_filterAttack] = value;
-        P_filterAttackPrevValue_U = upperData[P_filterAttack];  //PICK-UP
+        prevUpperData[P_filterAttack] = upperData[P_filterAttack];  //PICK-UP
       } else {
-        if (pickUpActive && P_filterAttackpickUp_L && ((P_filterAttackPrevValue_L + TOLERANCE) < (value) || (P_filterAttackPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterAttackpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_filterAttack] && ((prevLowerData[P_filterAttack] + TOLERANCE) < (value) || (prevLowerData[P_filterAttack] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_filterAttack] = false;
         lowerData[P_filterAttack] = value;
-        P_filterAttackPrevValue_L = lowerData[P_filterAttack];  //PICK-UP
+        prevLowerData[P_filterAttack] = lowerData[P_filterAttack];  //PICK-UP
         if (wholemode) {
           upperData[P_filterAttack] = value;
         }
@@ -4078,15 +4082,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterDecay:
       if (upperSW) {
-        if (pickUpActive && P_filterDecaypickUp_U && ((P_filterDecayPrevValue_U + TOLERANCE) < (value) || (P_filterDecayPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterDecaypickUp_U = false;
+        if (pickUpActive && upperPickUp[P_filterDecay] && ((prevUpperData[P_filterDecay] + TOLERANCE) < (value) || (prevUpperData[P_filterDecay] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_filterDecay] = false;
         upperData[P_filterDecay] = value;
-        P_filterDecayPrevValue_U = upperData[P_filterDecay];  //PICK-UP
+        prevUpperData[P_filterDecay] = upperData[P_filterDecay];  //PICK-UP
       } else {
-        if (pickUpActive && P_filterDecaypickUp_L && ((P_filterDecayPrevValue_L + TOLERANCE) < (value) || (P_filterDecayPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterDecaypickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_filterDecay] && ((prevLowerData[P_filterDecay] + TOLERANCE) < (value) || (prevLowerData[P_filterDecay] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_filterDecay] = false;
         lowerData[P_filterDecay] = value;
-        P_filterDecayPrevValue_L = lowerData[P_filterDecay];  //PICK-UP
+        prevLowerData[P_filterDecay] = lowerData[P_filterDecay];  //PICK-UP
         if (wholemode) {
           upperData[P_filterDecay] = value;
         }
@@ -4097,15 +4101,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterSustain:
       if (upperSW) {
-        if (pickUpActive && P_filterSustainpickUp_U && ((P_filterSustainPrevValue_U + TOLERANCE) < (value) || (P_filterSustainPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterSustainpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_filterSustain] && ((prevUpperData[P_filterSustain] + TOLERANCE) < (value) || (prevUpperData[P_filterSustain] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_filterSustain] = false;
         upperData[P_filterSustain] = value;
-        P_filterSustainPrevValue_U = upperData[P_filterSustain];  //PICK-UP
+        prevUpperData[P_filterSustain] = upperData[P_filterSustain];  //PICK-UP
       } else {
-        if (pickUpActive && P_filterSustainpickUp_L && ((P_filterSustainPrevValue_L + TOLERANCE) < (value) || (P_filterSustainPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterSustainpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_filterSustain] && ((prevLowerData[P_filterSustain] + TOLERANCE) < (value) || (prevLowerData[P_filterSustain] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_filterSustain] = false;
         lowerData[P_filterSustain] = value;
-        P_filterSustainPrevValue_L = lowerData[P_filterSustain];  //PICK-UP
+        prevLowerData[P_filterSustain] = lowerData[P_filterSustain];  //PICK-UP
         if (wholemode) {
           upperData[P_filterSustain] = value;
         }
@@ -4116,15 +4120,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterRelease:
       if (upperSW) {
-        if (pickUpActive && P_filterReleasepickUp_U && ((P_filterReleasePrevValue_U + TOLERANCE) < (value) || (P_filterReleasePrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterReleasepickUp_U = false;
+        if (pickUpActive && upperPickUp[P_filterRelease] && ((prevUpperData[P_filterRelease] + TOLERANCE) < (value) || (prevUpperData[P_filterRelease] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_filterRelease] = false;
         upperData[P_filterRelease] = value;
-        P_filterReleasePrevValue_U = upperData[P_filterRelease];  //PICK-UP
+        prevUpperData[P_filterRelease] = upperData[P_filterRelease];  //PICK-UP
       } else {
-        if (pickUpActive && P_filterReleasepickUp_L && ((P_filterReleasePrevValue_L + TOLERANCE) < (value) || (P_filterReleasePrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_filterReleasepickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_filterRelease] && ((prevLowerData[P_filterRelease] + TOLERANCE) < (value) || (prevLowerData[P_filterRelease] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_filterRelease] = false;
         lowerData[P_filterRelease] = value;
-        P_filterReleasePrevValue_L = lowerData[P_filterRelease];  //PICK-UP
+        prevLowerData[P_filterRelease] = lowerData[P_filterRelease];  //PICK-UP
         if (wholemode) {
           upperData[P_filterRelease] = value;
         }
@@ -4135,17 +4139,17 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCampAttack:
       if (upperSW) {
-        if (pickUpActive && P_ampAttackpickUp_U && ((P_ampAttackPrevValue_U + TOLERANCE) < (value) || (P_ampAttackPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_ampAttackpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_ampAttack] && ((prevUpperData[P_ampAttack] + TOLERANCE) < (value) || (prevUpperData[P_ampAttack] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_ampAttack] = false;
         upperData[P_ampAttack] = value;
         upperData[P_oldampAttack] = value;
-        P_ampAttackPrevValue_U = upperData[P_ampAttack];  //PICK-UP
+        prevUpperData[P_ampAttack] = upperData[P_ampAttack];  //PICK-UP
       } else {
-        if (pickUpActive && P_ampAttackpickUp_L && ((P_ampAttackPrevValue_L + TOLERANCE) < (value) || (P_ampAttackPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_ampAttackpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_ampAttack] && ((prevLowerData[P_ampAttack] + TOLERANCE) < (value) || (prevLowerData[P_ampAttack] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_ampAttack] = false;
         lowerData[P_ampAttack] = value;
         lowerData[P_oldampAttack] = value;
-        P_ampAttackPrevValue_L = lowerData[P_ampAttack];  //PICK-UP
+        prevLowerData[P_ampAttack] = lowerData[P_ampAttack];  //PICK-UP
         if (wholemode) {
           upperData[P_ampAttack] = value;
           upperData[P_oldampAttack] = value;
@@ -4157,17 +4161,17 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCampDecay:
       if (upperSW) {
-        if (pickUpActive && P_ampDecaypickUp_U && ((P_ampDecayPrevValue_U + TOLERANCE) < (value) || (P_ampDecayPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_ampDecaypickUp_U = false;
+        if (pickUpActive && upperPickUp[P_ampDecay] && ((prevUpperData[P_ampDecay] + TOLERANCE) < (value) || (prevUpperData[P_ampDecay] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_ampDecay] = false;
         upperData[P_ampDecay] = value;
         upperData[P_oldampDecay] = value;
-        P_ampDecayPrevValue_U = upperData[P_ampDecay];  //PICK-UP
+        prevUpperData[P_ampDecay] = upperData[P_ampDecay];  //PICK-UP
       } else {
-        if (pickUpActive && P_ampDecaypickUp_L && ((P_ampDecayPrevValue_L + TOLERANCE) < (value) || (P_ampDecayPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_ampDecaypickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_ampDecay] && ((prevLowerData[P_ampDecay] + TOLERANCE) < (value) || (prevLowerData[P_ampDecay] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_ampDecay] = false;
         lowerData[P_ampDecay] = value;
         lowerData[P_oldampDecay] = value;
-        P_ampDecayPrevValue_L = lowerData[P_ampDecay];  //PICK-UP
+        prevLowerData[P_ampDecay] = lowerData[P_ampDecay];  //PICK-UP
         if (wholemode) {
           upperData[P_ampDecay] = value;
           upperData[P_oldampDecay] = value;
@@ -4179,17 +4183,17 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCampSustain:
       if (upperSW) {
-        if (pickUpActive && P_ampSustainpickUp_U && ((P_ampSustainPrevValue_U + TOLERANCE) < (value) || (P_ampSustainPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_ampSustainpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_ampSustain] && ((prevUpperData[P_ampSustain] + TOLERANCE) < (value) || (prevUpperData[P_ampSustain] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_ampSustain] = false;
         upperData[P_ampSustain] = value;
         upperData[P_oldampSustain] = value;
-        P_ampSustainPrevValue_U = upperData[P_ampSustain];  //PICK-UP
+        prevUpperData[P_ampSustain] = upperData[P_ampSustain];  //PICK-UP
       } else {
-        if (pickUpActive && P_ampSustainpickUp_L && ((P_ampSustainPrevValue_L + TOLERANCE) < (value) || (P_ampSustainPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_ampSustainpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_ampSustain] && ((prevLowerData[P_ampSustain] + TOLERANCE) < (value) || (prevLowerData[P_ampSustain] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_ampSustain] = false;
         lowerData[P_ampSustain] = value;
         lowerData[P_oldampSustain] = value;
-        P_ampSustainPrevValue_L = lowerData[P_ampSustain];  //PICK-UP
+        prevLowerData[P_ampSustain] = lowerData[P_ampSustain];  //PICK-UP
         if (wholemode) {
           upperData[P_ampSustain] = value;
           upperData[P_oldampSustain] = value;
@@ -4201,17 +4205,17 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCampRelease:
       if (upperSW) {
-        if (pickUpActive && P_ampReleasepickUp_U && ((P_ampReleasePrevValue_U + TOLERANCE) < (value) || (P_ampReleasePrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_ampReleasepickUp_U = false;
+        if (pickUpActive && upperPickUp[P_ampRelease] && ((prevUpperData[P_ampRelease] + TOLERANCE) < (value) || (prevUpperData[P_ampRelease] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_ampRelease] = false;
         upperData[P_ampRelease] = value;
         upperData[P_oldampRelease] = value;
-        P_ampReleasePrevValue_U = upperData[P_ampRelease];  //PICK-UP
+        prevUpperData[P_ampRelease] = upperData[P_ampRelease];  //PICK-UP
       } else {
-        if (pickUpActive && P_ampReleasepickUp_L && ((P_ampReleasePrevValue_L + TOLERANCE) < (value) || (P_ampReleasePrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_ampReleasepickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_ampRelease] && ((prevLowerData[P_ampRelease] + TOLERANCE) < (value) || (prevLowerData[P_ampRelease] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_ampRelease] = false;
         lowerData[P_ampRelease] = value;
         lowerData[P_oldampRelease] = value;
-        P_ampReleasePrevValue_L = lowerData[P_ampRelease];  //PICK-UP
+        prevLowerData[P_ampRelease] = lowerData[P_ampRelease];  //PICK-UP
         if (wholemode) {
           upperData[P_ampRelease] = value;
           upperData[P_oldampRelease] = value;
@@ -4223,15 +4227,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCvolumeControl:
       if (upperSW) {
-        if (pickUpActive && P_volumeControlpickUp_U && ((P_volumeControlPrevValue_U + TOLERANCE) < (value) || (P_volumeControlPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_volumeControlpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_volumeControl] && ((prevUpperData[P_volumeControl] + TOLERANCE) < (value) || (prevUpperData[P_volumeControl] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_volumeControl] = false;
         upperData[P_volumeControl] = value;
-        P_volumeControlPrevValue_U = upperData[P_volumeControl];  //PICK-UP
+        prevUpperData[P_volumeControl] = upperData[P_volumeControl];  //PICK-UP
       } else {
-        if (pickUpActive && P_volumeControlpickUp_L && ((P_volumeControlPrevValue_L + TOLERANCE) < (value) || (P_volumeControlPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_volumeControlpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_volumeControl] && ((prevLowerData[P_volumeControl] + TOLERANCE) < (value) || (prevLowerData[P_volumeControl] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_volumeControl] = false;
         lowerData[P_volumeControl] = value;
-        P_volumeControlPrevValue_L = lowerData[P_volumeControl];  //PICK-UP
+        prevLowerData[P_volumeControl] = lowerData[P_volumeControl];  //PICK-UP
         if (wholemode) {
           upperData[P_volumeControl] = value;
         }
@@ -4242,15 +4246,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCPM_DCO2:
       if (upperSW) {
-        if (pickUpActive && P_pmDCO2pickUp_U && ((P_pmDCO2PrevValue_U + TOLERANCE) < (value) || (P_pmDCO2PrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_pmDCO2pickUp_U = false;
+        if (pickUpActive && upperPickUp[P_pmDCO2] && ((prevUpperData[P_pmDCO2] + TOLERANCE) < (value) || (prevUpperData[P_pmDCO2] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_pmDCO2] = false;
         upperData[P_pmDCO2] = value;
-        P_pmDCO2PrevValue_U = upperData[P_pmDCO2];  //PICK-UP
+        prevUpperData[P_pmDCO2] = upperData[P_pmDCO2];  //PICK-UP
       } else {
-        if (pickUpActive && P_pmDCO2pickUp_L && ((P_pmDCO2PrevValue_L + TOLERANCE) < (value) || (P_pmDCO2PrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_pmDCO2pickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_pmDCO2] && ((prevLowerData[P_pmDCO2] + TOLERANCE) < (value) || (prevLowerData[P_pmDCO2] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_pmDCO2] = false;
         lowerData[P_pmDCO2] = value;
-        P_pmDCO2PrevValue_L = lowerData[P_pmDCO2];  //PICK-UP
+        prevLowerData[P_pmDCO2] = lowerData[P_pmDCO2];  //PICK-UP
         if (wholemode) {
           upperData[P_pmDCO2] = value;
         }
@@ -4261,15 +4265,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCPM_FilterEnv:
       if (upperSW) {
-        if (pickUpActive && P_pmFilterEnvpickUp_U && ((P_pmFilterEnvPrevValue_U + TOLERANCE) < (value) || (P_pmFilterEnvPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_pmFilterEnvpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_pmFilterEnv] && ((prevUpperData[P_pmFilterEnv] + TOLERANCE) < (value) || (prevUpperData[P_pmFilterEnv] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_pmFilterEnv] = false;
         upperData[P_pmFilterEnv] = value;
-        P_pmFilterEnvPrevValue_U = upperData[P_pmFilterEnv];  //PICK-UP
+        prevUpperData[P_pmFilterEnv] = upperData[P_pmFilterEnv];  //PICK-UP
       } else {
-        if (pickUpActive && P_pmFilterEnvpickUp_L && ((P_pmFilterEnvPrevValue_L + TOLERANCE) < (value) || (P_pmFilterEnvPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_pmFilterEnvpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_pmFilterEnv] && ((prevLowerData[P_pmFilterEnv] + TOLERANCE) < (value) || (prevLowerData[P_pmFilterEnv] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_pmFilterEnv] = false;
         lowerData[P_pmFilterEnv] = value;
-        P_pmFilterEnvPrevValue_L = lowerData[P_pmFilterEnv];  //PICK-UP
+        prevLowerData[P_pmFilterEnv] = lowerData[P_pmFilterEnv];  //PICK-UP
         if (wholemode) {
           upperData[P_pmFilterEnv] = value;
         }
@@ -4280,15 +4284,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCkeyTrack:
       if (upperSW) {
-        if (pickUpActive && P_keytrackpickUp_U && ((P_keytrackPrevValue_U + TOLERANCE) < (value) || (P_keytrackPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_keytrackpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_keytrack] && ((prevUpperData[P_keytrack] + TOLERANCE) < (value) || (prevUpperData[P_keytrack] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_keytrack] = false;
         upperData[P_keytrack] = value;
-        P_keytrackPrevValue_U = upperData[P_keytrack];  //PICK-UP
+        prevUpperData[P_keytrack] = upperData[P_keytrack];  //PICK-UP
       } else {
-        if (pickUpActive && P_keytrackpickUp_L && ((P_keytrackPrevValue_L + TOLERANCE) < (value) || (P_keytrackPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_keytrackpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_keytrack] && ((prevLowerData[P_keytrack] + TOLERANCE) < (value) || (prevLowerData[P_keytrack] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_keytrack] = false;
         lowerData[P_keytrack] = value;
-        P_keytrackPrevValue_L = lowerData[P_keytrack];  //PICK-UP
+        prevLowerData[P_keytrack] = lowerData[P_keytrack];  //PICK-UP
         if (wholemode) {
           upperData[P_keytrack] = value;
         }
@@ -4300,15 +4304,15 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCamDepth:
       if (upperSW) {
-        if (pickUpActive && P_amDepthpickUp_U && ((P_amDepthPrevValue_U + TOLERANCE) < (value) || (P_amDepthPrevValue_U - TOLERANCE) > (value))) return;  //PICK-UP
-        P_amDepthpickUp_U = false;
+        if (pickUpActive && upperPickUp[P_amDepth] && ((prevUpperData[P_amDepth] + TOLERANCE) < (value) || (prevUpperData[P_amDepth] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_amDepth] = false;
         upperData[P_amDepth] = value;
-        P_amDepthPrevValue_U = upperData[P_amDepth];  //PICK-UP
+        prevUpperData[P_amDepth] = upperData[P_amDepth];  //PICK-UP
       } else {
-        if (pickUpActive && P_amDepthpickUp_L && ((P_amDepthPrevValue_L + TOLERANCE) < (value) || (P_amDepthPrevValue_L - TOLERANCE) > (value))) return;  //PICK-UP
-        P_amDepthpickUp_L = false;
+        if (pickUpActive && lowerPickUp[P_amDepth] && ((prevLowerData[P_amDepth] + TOLERANCE) < (value) || (prevLowerData[P_amDepth] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_amDepth] = false;
         lowerData[P_amDepth] = value;
-        P_amDepthPrevValue_L = lowerData[P_amDepth];  //PICK-UP
+        prevLowerData[P_amDepth] = lowerData[P_amDepth];  //PICK-UP
         if (wholemode) {
           upperData[P_amDepth] = value;
         }
@@ -4530,13 +4534,13 @@ void myControlChange(byte channel, byte control, int value) {
     case CCupperSW:
       upperSW = true;
       lowerSW = false;
-      updateupperSW();
+      updateupperSW(1);
       break;
 
     case CClowerSW:
       lowerSW = true;
       upperSW = false;
-      updatelowerSW();
+      updatelowerSW(1);
       break;
 
       // case CCmodwheel:
@@ -4681,533 +4685,62 @@ void recallPatch(int patchNo) {
 }
 
 void setCurrentPatchData(String data[]) {
-  if (upperSW) {
-    patchNameU = data[0];
-    upperData[0] = 1;
-    upperData[P_pwLFO] = data[1].toInt();  // pwLFOU
-    P_pwLFOPrevValue_U = upperData[P_pwLFO];
-    P_pwLFOpickUp_U = true;
-    upperData[P_fmDepth] = data[2].toInt();  // fmDepthU
-    P_fmDepthPrevValue_U = upperData[P_fmDepth];
-    P_fmDepthpickUp_U = true;
-    upperData[P_osc2PW] = data[3].toInt();  // osc2PWU
-    P_osc2PWPrevValue_U = upperData[P_osc2PW];
-    P_osc2PWpickUp_U = true;
-    upperData[P_osc2PWM] = data[4].toInt();  // osc2PWMU
-    P_osc2PWMPrevValue_U = upperData[P_osc2PWM];
-    P_osc2PWMpickUp_U = true;
-    upperData[P_osc1PW] = data[5].toInt();  // osc1PWU
-    P_osc1PWPrevValue_U = upperData[P_osc1PW];
-    P_osc1PWpickUp_U = true;
-    upperData[P_osc1PWM] = data[6].toInt();  // osc1PWMU
-    P_osc1PWMPrevValue_U = upperData[P_osc1PWM];
-    P_osc1PWMpickUp_U = true;
-    upperData[P_osc1Range] = data[7].toInt();     // osc1RangeU
-    upperData[P_osc2Range] = data[8].toInt();     // osc2RangeU
-    upperData[P_osc2Interval] = data[9].toInt();  // osc2IntervalU
-    P_osc2IntervalPrevValue_U = upperData[P_osc2Interval];
-    P_osc2IntervalpickUp_U = true;
-    upperData[P_glideTime] = data[10].toInt();  // glideTimeU
-    P_glideTimePrevValue_U = upperData[P_glideTime];
-    P_glideTimepickUp_U = true;
-    upperData[P_osc2Detune] = data[11].toInt();  // osc2DetuneU
-    P_osc2DetunePrevValue_U = upperData[P_osc2Detune];
-    P_osc2DetunepickUp_U = true;
-    upperData[P_noiseLevel] = data[12].toInt();  // noiseLevelU
-    P_noiseLevelPrevValue_U = upperData[P_noiseLevel];
-    P_noiseLevelpickUp_U = true;
-    upperData[P_osc2SawLevel] = data[13].toInt();  // osc2SawLevelU
-    P_osc2SawLevelPrevValue_U = upperData[P_osc2SawLevel];
-    P_osc2SawLevelpickUp_U = true;
-    upperData[P_osc1SawLevel] = data[14].toInt();  // osc1SawLevelU
-    P_osc1SawLevelPrevValue_U = upperData[P_osc1SawLevel];
-    P_osc1SawLevelpickUp_U = true;
-    upperData[P_osc2PulseLevel] = data[15].toInt();  // osc2PulseLevelU
-    P_osc2PulseLevelPrevValue_U = upperData[P_osc2PulseLevel];
-    P_osc2PulseLevelpickUp_U = true;
-    upperData[P_osc1PulseLevel] = data[16].toInt();  // osc1PulseLevelU
-    P_osc1PulseLevelPrevValue_U = upperData[P_osc1PulseLevel];
-    P_osc1PulseLevelpickUp_U = true;
-    upperData[P_filterCutoff] = data[17].toInt();  // filterCutoffU
-    P_filterCutoffPrevValue_U = upperData[P_filterCutoff];
-    P_filterCutoffpickUp_U = true;
-    upperData[P_filterLFO] = data[18].toInt();  // filterLFOU
-    P_filterLFOPrevValue_U = upperData[P_filterLFO];
-    P_filterLFOpickUp_U = true;
-    upperData[P_filterRes] = data[19].toInt();  // filterResU
-    P_filterResPrevValue_U = upperData[P_filterRes];
-    P_filterRespickUp_U = true;
-    upperData[P_filterType] = data[20].toInt();     // filterTypeU
-    upperData[P_modWheelDepth] = data[21].toInt();  // P_modWheelDepthU
-    P_modWheelDepthPrevValue_U = upperData[P_modWheelDepth];
-    P_modWheelDepthpickUp_U = true;
-    upperData[P_effectsMix] = data[22].toInt();  // effectsMixU
-    P_effectsMixPrevValue_U = upperData[P_effectsMix];
-    P_effectsMixpickUp_U = true;
-    upperData[P_LFODelayGo] = data[23].toInt();     // LFODelayGoU
-    upperData[P_filterEGlevel] = data[24].toInt();  // filterEGlevelU
-    P_filterEGlevelPrevValue_U = upperData[P_filterEGlevel];
-    P_filterEGlevelpickUp_U = true;
-    upperData[P_LFORate] = data[25].toInt();  // LFORateU
-    P_LFORatePrevValue_U = upperData[P_LFORate];
-    P_LFORatepickUp_U = true;
-    upperData[P_LFOWaveform] = data[26].toInt();   // LFOWaveformU
-    upperData[P_filterAttack] = data[27].toInt();  // filterAttackU
-    P_filterAttackPrevValue_U = upperData[P_filterAttack];
-    P_filterAttackpickUp_U = true;
-    upperData[P_filterDecay] = data[28].toInt();  // filterDecayU
-    P_filterDecayPrevValue_U = upperData[P_filterDecay];
-    P_filterDecaypickUp_U = true;
-    upperData[P_filterSustain] = data[29].toInt();  // filterSustainU
-    P_filterSustainPrevValue_U = upperData[P_filterSustain];
-    P_filterSustainpickUp_U = true;
-    upperData[P_filterRelease] = data[30].toInt();  // filterReleaseU
-    P_filterReleasePrevValue_U = upperData[P_filterRelease];
-    P_filterReleasepickUp_U = true;
-    upperData[P_ampAttack] = data[31].toInt();  // ampAttackU
-    P_ampAttackPrevValue_U = upperData[P_ampAttack];
-    P_ampAttackpickUp_U = true;
-    upperData[P_ampDecay] = data[32].toInt();  // ampDecayU
-    P_ampDecayPrevValue_U = upperData[P_ampDecay];
-    P_ampDecaypickUp_U = true;
-    upperData[P_ampSustain] = data[33].toInt();  // ampSustainU
-    P_ampSustainPrevValue_U = upperData[P_ampSustain];
-    P_ampSustainpickUp_U = true;
-    upperData[P_ampRelease] = data[34].toInt();  // ampReleaseU
-    P_ampReleasePrevValue_U = upperData[P_ampRelease];
-    P_ampReleasepickUp_U = true;
-    upperData[P_volumeControl] = data[35].toInt();  // volumeControlU
-    P_volumeControlPrevValue_U = upperData[P_volumeControl];
-    P_volumeControlpickUp_U = true;
-    upperData[P_glideSW] = data[36].toInt();   // glideSWU
-    upperData[P_keytrack] = data[37].toInt();  // keytrackU
-    P_keytrackPrevValue_U = upperData[P_keytrack];
-    P_keytrackpickUp_U = true;
-    upperData[P_filterPoleSW] = data[38].toInt();  // filterPoleSWU
-    upperData[P_filterLoop] = data[39].toInt();    // filterLoopU
-    upperData[P_filterEGinv] = data[40].toInt();   // filterEGinvU
-    upperData[P_filterVel] = data[41].toInt();     // filterVelU
-    upperData[P_vcaLoop] = data[42].toInt();       // vcaLoopU
-    upperData[P_vcaVel] = data[43].toInt();        // vcaVelU
-    upperData[P_vcaGate] = data[44].toInt();       // vcaGateU
-    upperData[P_lfoAlt] = data[45].toInt();        // lfoAltU
-    upperData[P_pmDCO2] = data[46].toInt();        // pmDCO2U
-    P_pmDCO2PrevValue_U = upperData[P_pmDCO2];
-    P_pmDCO2pickUp_U = true;
-    upperData[P_pmFilterEnv] = data[47].toInt();  // pmFilterEnvU
-    P_pmFilterEnvPrevValue_U = upperData[P_pmFilterEnv];
-    P_pmFilterEnvpickUp_U = true;
-    upperData[P_monoMulti] = data[48].toInt();       // monoMultiU
-    upperData[P_modWheelLevel] = data[49].toInt();   // modWheelLevelU
-    upperData[P_PitchBendLevel] = data[50].toInt();  // PitchBendLevelU
-    P_PitchBendLevelPrevValue_U = upperData[P_PitchBendLevel];
-    P_PitchBendLevelpickUp_U = true;
-    upperData[P_amDepth] = data[51].toInt();  // amDepthU
-    P_amDepthPrevValue_U = upperData[P_amDepth];
-    P_amDepthpickUp_U = true;
-    upperData[P_sync] = data[52].toInt();        // syncU
-    upperData[P_effectPot1] = data[53].toInt();  // effectPot1U
-    P_effectPot1PrevValue_U = upperData[P_effectPot1];
-    P_effectPot1pickUp_U = true;
-    upperData[P_effectPot2] = data[54].toInt();  // effectPot2U
-    P_effectPot2PrevValue_U = upperData[P_effectPot2];
-    P_effectPot2pickUp_U = true;
-    upperData[P_effectPot3] = data[55].toInt();  // effectPot3U
-    P_effectPot3PrevValue_U = upperData[P_effectPot3];
-    P_effectPot3pickUp_U = true;
-    upperData[P_oldampAttack] = data[56].toInt();       // oldampAttackU
-    upperData[P_oldampDecay] = data[57].toInt();        // oldampDecayU
-    upperData[P_oldampSustain] = data[58].toInt();      // oldampSustainU
-    upperData[P_oldampRelease] = data[59].toInt();      // oldampReleaseU
-    upperData[P_AfterTouchDest] = data[60].toInt();     // AfterTouchDestU
-    upperData[P_filterLogLin] = data[61].toInt();       // filterLogLinU
-    upperData[P_ampLogLin] = data[62].toInt();          // ampLogLinU
-    upperData[P_osc2TriangleLevel] = data[63].toInt();  // osc2TriangleLevelU
-    P_osc2TriangleLevelPrevValue_U = upperData[P_osc2TriangleLevel];
-    P_osc2TriangleLevelpickUp_U = true;
-    upperData[P_osc1SubLevel] = data[64].toInt();  // osc1SubLevelU
-    P_osc1SubLevelPrevValue_U = upperData[P_osc1SubLevel];
-    P_osc1SubLevelpickUp_U = true;
-    upperData[P_keyboardMode] = data[65].toInt();  // keyTrackSWU
-    upperData[P_LFODelay] = data[66].toInt();      // LFODelayU
-    P_LFODelayPrevValue_U = upperData[P_LFODelay];
-    P_LFODelaypickUp_U = true;
-    upperData[P_effectNum] = data[67].toInt();      // effectNumU
-    upperData[P_effectBank] = data[68].toInt();     // effectBankU
-    upperData[P_pmDestDCO1] = data[69].toInt();     // pmDestDCO1U
-    upperData[P_pmDestFilter] = data[70].toInt();   // pmDestFilterU
-    upperData[P_lfoMultiplier] = data[71].toInt();  // lfoMultiplierU
-    upperData[P_NotePriority] = data[72].toInt();   // NotePriorityU
-    upperData[P_keytrackSW] = data[73].toInt();     // keyTrackSWU
+    int tempData[74];  // Temporary array for converted integers
 
-    oldfilterCutoffU = upperData[P_filterCutoff];
-
-    upperParamsToDisplay();
-    setAllButtons();
-
-  } else {
-    patchNameL = data[0];
-    lowerData[0] = 0;
-    lowerData[P_pwLFO] = data[1].toInt();  // pwLFOL
-    P_pwLFOPrevValue_L = lowerData[P_pwLFO];
-    P_pwLFOpickUp_L = true;
-    lowerData[P_fmDepth] = data[2].toInt();  // fmDepthL
-    P_fmDepthPrevValue_L = lowerData[P_fmDepth];
-    P_fmDepthpickUp_L = true;
-    lowerData[P_osc2PW] = data[3].toInt();  // osc2PWL
-    P_osc2PWPrevValue_L = lowerData[P_osc2PW];
-    P_osc2PWpickUp_L = true;
-    lowerData[P_osc2PWM] = data[4].toInt();  // osc2PWML
-    P_osc2PWMPrevValue_L = lowerData[P_osc2PWM];
-    P_osc2PWMpickUp_L = true;
-    lowerData[P_osc1PW] = data[5].toInt();  // osc1PWL
-    P_osc1PWPrevValue_L = lowerData[P_osc1PW];
-    P_osc1PWpickUp_L = true;
-    lowerData[P_osc1PWM] = data[6].toInt();  // osc1PWML
-    P_osc1PWMPrevValue_L = lowerData[P_osc1PWM];
-    P_osc1PWMpickUp_L = true;
-    lowerData[P_osc1Range] = data[7].toInt();     // osc1RangeL
-    lowerData[P_osc2Range] = data[8].toInt();     // osc2RangeL
-    lowerData[P_osc2Interval] = data[9].toInt();  // osc2IntervalL
-    P_osc2IntervalPrevValue_L = lowerData[P_osc2Interval];
-    P_osc2IntervalpickUp_L = true;
-    lowerData[P_glideTime] = data[10].toInt();  // glideTimeL
-    P_glideTimePrevValue_L = lowerData[P_glideTime];
-    P_glideTimepickUp_L = true;
-    lowerData[P_osc2Detune] = data[11].toInt();  // osc2DetuneL
-    P_osc2DetunePrevValue_L = lowerData[P_osc2Detune];
-    P_osc2DetunepickUp_L = true;
-    lowerData[P_noiseLevel] = data[12].toInt();  // noiseLevelL
-    P_noiseLevelPrevValue_L = lowerData[P_noiseLevel];
-    P_noiseLevelpickUp_L = true;
-    lowerData[P_osc2SawLevel] = data[13].toInt();  // osc2SawLevelL
-    P_osc2SawLevelPrevValue_L = lowerData[P_osc2SawLevel];
-    P_osc2SawLevelpickUp_L = true;
-    lowerData[P_osc1SawLevel] = data[14].toInt();  // osc1SawLevelL
-    P_osc1SawLevelPrevValue_L = lowerData[P_osc1SawLevel];
-    P_osc1SawLevelpickUp_L = true;
-    lowerData[P_osc2PulseLevel] = data[15].toInt();  // osc2PulseLevelL
-    P_osc2PulseLevelPrevValue_L = lowerData[P_osc2PulseLevel];
-    P_osc2PulseLevelpickUp_L = true;
-    lowerData[P_osc1PulseLevel] = data[16].toInt();  // osc1PulseLevelL
-    P_osc1PulseLevelPrevValue_L = lowerData[P_osc1PulseLevel];
-    P_osc1PulseLevelpickUp_L = true;
-    lowerData[P_filterCutoff] = data[17].toInt();  // filterCutoffL
-    P_filterCutoffPrevValue_L = lowerData[P_filterCutoff];
-    P_filterCutoffpickUp_L = true;
-    lowerData[P_filterLFO] = data[18].toInt();  // filterLFOL
-    P_filterLFOPrevValue_L = lowerData[P_filterLFO];
-    P_filterLFOpickUp_L = true;
-    lowerData[P_filterRes] = data[19].toInt();  // filterResL
-    P_filterResPrevValue_L = lowerData[P_filterRes];
-    P_filterRespickUp_L = true;
-    lowerData[P_filterType] = data[20].toInt();     // filterTypeL
-    lowerData[P_modWheelDepth] = data[21].toInt();  // modWheelDepthL
-    P_modWheelDepthPrevValue_L = lowerData[P_modWheelDepth];
-    P_modWheelDepthpickUp_L = true;
-    lowerData[P_effectsMix] = data[22].toInt();  // effectsMixL
-    P_effectsMixPrevValue_L = lowerData[P_effectsMix];
-    P_effectsMixpickUp_L = true;
-    lowerData[P_LFODelayGo] = data[23].toInt();     // LFODelayGoL
-    lowerData[P_filterEGlevel] = data[24].toInt();  // filterEGlevelL
-    P_filterEGlevelPrevValue_L = lowerData[P_filterEGlevel];
-    P_filterEGlevelpickUp_L = true;
-    lowerData[P_LFORate] = data[25].toInt();  // LFORateL
-    P_LFORatePrevValue_L = lowerData[P_LFORate];
-    P_LFORatepickUp_L = true;
-    lowerData[P_LFOWaveform] = data[26].toInt();   // LFOWaveformL
-    lowerData[P_filterAttack] = data[27].toInt();  // filterAttackL
-    P_filterAttackPrevValue_L = lowerData[P_filterAttack];
-    P_filterAttackpickUp_L = true;
-    lowerData[P_filterDecay] = data[28].toInt();  // filterDecayL
-    P_filterDecayPrevValue_L = lowerData[P_filterDecay];
-    P_filterDecaypickUp_L = true;
-    lowerData[P_filterSustain] = data[29].toInt();  // filterSustainL
-    P_filterSustainPrevValue_L = lowerData[P_filterSustain];
-    P_filterSustainpickUp_L = true;
-    lowerData[P_filterRelease] = data[30].toInt();  // filterReleaseL
-    P_filterReleasePrevValue_L = lowerData[P_filterRelease];
-    P_filterReleasepickUp_L = true;
-    lowerData[P_ampAttack] = data[31].toInt();  // ampAttackL
-    P_ampAttackPrevValue_L = lowerData[P_ampAttack];
-    P_ampAttackpickUp_L = true;
-    lowerData[P_ampDecay] = data[32].toInt();  // ampDecayL
-    P_ampDecayPrevValue_L = lowerData[P_ampDecay];
-    P_ampDecaypickUp_L = true;
-    lowerData[P_ampSustain] = data[33].toInt();  // ampSustainL
-    P_ampSustainPrevValue_L = lowerData[P_ampSustain];
-    P_ampSustainpickUp_L = true;
-    lowerData[P_ampRelease] = data[34].toInt();  // ampReleaseL
-    P_ampReleasePrevValue_L = lowerData[P_ampRelease];
-    P_ampReleasepickUp_L = true;
-    lowerData[P_volumeControl] = data[35].toInt();  // volumeControlL
-    P_volumeControlPrevValue_L = lowerData[P_volumeControl];
-    P_volumeControlpickUp_L = true;
-    lowerData[P_glideSW] = data[36].toInt();   // glideSWL
-    lowerData[P_keytrack] = data[37].toInt();  // keytrackL
-    P_keytrackPrevValue_L = lowerData[P_keytrack];
-    P_keytrackpickUp_L = true;
-    lowerData[P_filterPoleSW] = data[38].toInt();  // filterPoleSWL
-    lowerData[P_filterLoop] = data[39].toInt();    // filterLoopL
-    lowerData[P_filterEGinv] = data[40].toInt();   // filterEGinvL
-    lowerData[P_filterVel] = data[41].toInt();     // filterVelL
-    lowerData[P_vcaLoop] = data[42].toInt();       // vcaLoopL
-    lowerData[P_vcaVel] = data[43].toInt();        // vcaVelL
-    lowerData[P_vcaGate] = data[44].toInt();       // vcaGateL
-    lowerData[P_lfoAlt] = data[45].toInt();        // lfoAltL
-    lowerData[P_pmDCO2] = data[46].toInt();        // pmDCO2L
-    P_pmDCO2PrevValue_L = lowerData[P_pmDCO2];
-    P_pmDCO2pickUp_L = true;
-    lowerData[P_pmFilterEnv] = data[47].toInt();  // pmFilterEnvL
-    P_pmFilterEnvPrevValue_L = lowerData[P_pmFilterEnv];
-    P_pmFilterEnvpickUp_L = true;
-    lowerData[P_monoMulti] = data[48].toInt();       // monoMultiL
-    lowerData[P_modWheelLevel] = data[49].toInt();   // modWheelLevelL
-    lowerData[P_PitchBendLevel] = data[50].toInt();  // PitchBendLevelL
-    P_PitchBendLevelPrevValue_L = lowerData[P_PitchBendLevel];
-    P_PitchBendLevelpickUp_L = true;
-    lowerData[P_amDepth] = data[51].toInt();  // amDepthL
-    P_amDepthPrevValue_L = lowerData[P_amDepth];
-    P_amDepthpickUp_L = true;
-    lowerData[P_sync] = data[52].toInt();        // syncL
-    lowerData[P_effectPot1] = data[53].toInt();  // effectPot1L
-    P_effectPot1PrevValue_L = lowerData[P_effectPot1];
-    P_effectPot1pickUp_L = true;
-    lowerData[P_effectPot2] = data[54].toInt();  // effectPot2L
-    P_effectPot2PrevValue_L = lowerData[P_effectPot2];
-    P_effectPot2pickUp_L = true;
-    lowerData[P_effectPot3] = data[55].toInt();  // effectPot3L
-    P_effectPot3PrevValue_L = lowerData[P_effectPot3];
-    P_effectPot3pickUp_L = true;
-    lowerData[P_oldampAttack] = data[56].toInt();       // oldampAttackL
-    lowerData[P_oldampDecay] = data[57].toInt();        // oldampDecayL
-    lowerData[P_oldampSustain] = data[58].toInt();      // oldampSustainL
-    lowerData[P_oldampRelease] = data[59].toInt();      // oldampReleaseL
-    lowerData[P_AfterTouchDest] = data[60].toInt();     // AfterTouchDestL
-    lowerData[P_filterLogLin] = data[61].toInt();       // filterLogLinL
-    lowerData[P_ampLogLin] = data[62].toInt();          // ampLogLinL
-    lowerData[P_osc2TriangleLevel] = data[63].toInt();  // osc2TriangleLevelL
-    P_osc2TriangleLevelPrevValue_L = lowerData[P_osc2TriangleLevel];
-    P_osc2TriangleLevelpickUp_L = true;
-    lowerData[P_osc1SubLevel] = data[64].toInt();  // osc1SubLevelL
-    P_osc1SubLevelPrevValue_L = lowerData[P_osc1SubLevel];
-    P_osc1SubLevelpickUp_L = true;
-    lowerData[P_keyboardMode] = data[65].toInt();  // keyTrackSWL
-    lowerData[P_LFODelay] = data[66].toInt();      // LFODelayL
-    P_LFODelayPrevValue_L = lowerData[P_LFODelay];
-    P_LFODelaypickUp_L = true;
-    lowerData[P_effectNum] = data[67].toInt();      // effectNumL
-    lowerData[P_effectBank] = data[68].toInt();     // effectBankL
-    lowerData[P_pmDestDCO1] = data[69].toInt();     // pmDestDCO1L
-    lowerData[P_pmDestFilter] = data[70].toInt();   // pmDestFilterL
-    lowerData[P_lfoMultiplier] = data[71].toInt();  // lfoMultiplierL
-    lowerData[P_NotePriority] = data[72].toInt();   // NotePriorityL
-    lowerData[P_keytrackSW] = data[73].toInt();     // keyTrackSWL
-
-    oldfilterCutoffL = lowerData[P_filterCutoff];
-
-    lowerParamsToDisplay();
-    setAllButtons();
-
-    if (wholemode) {
-      patchNameU = data[0];
-      upperData[0] = 1;
-      upperData[P_pwLFO] = data[1].toInt();  // pwLFOU
-      P_pwLFOPrevValue_U = upperData[P_pwLFO];
-      P_pwLFOpickUp_U = true;
-      upperData[P_fmDepth] = data[2].toInt();  // fmDepthU
-      P_fmDepthPrevValue_U = upperData[P_fmDepth];
-      P_fmDepthpickUp_U = true;
-      upperData[P_osc2PW] = data[3].toInt();  // osc2PWU
-      P_osc2PWPrevValue_U = upperData[P_osc2PW];
-      P_osc2PWpickUp_U = true;
-      upperData[P_osc2PWM] = data[4].toInt();  // osc2PWMU
-      P_osc2PWMPrevValue_U = upperData[P_osc2PWM];
-      P_osc2PWMpickUp_U = true;
-      upperData[P_osc1PW] = data[5].toInt();  // osc1PWU
-      P_osc1PWPrevValue_U = upperData[P_osc1PW];
-      P_osc1PWpickUp_U = true;
-      upperData[P_osc1PWM] = data[6].toInt();  // osc1PWMU
-      P_osc1PWMPrevValue_U = upperData[P_osc1PWM];
-      P_osc1PWMpickUp_U = true;
-      upperData[P_osc1Range] = data[7].toInt();     // osc1RangeU
-      upperData[P_osc2Range] = data[8].toInt();     // osc2RangeU
-      upperData[P_osc2Interval] = data[9].toInt();  // osc2IntervalU
-      P_osc2IntervalPrevValue_U = upperData[P_osc2Interval];
-      P_osc2IntervalpickUp_U = true;
-      upperData[P_glideTime] = data[10].toInt();  // glideTimeU
-      P_glideTimePrevValue_U = upperData[P_glideTime];
-      P_glideTimepickUp_U = true;
-      upperData[P_osc2Detune] = data[11].toInt();  // osc2DetuneU
-      P_osc2DetunePrevValue_U = upperData[P_osc2Detune];
-      P_osc2DetunepickUp_U = true;
-      upperData[P_noiseLevel] = data[12].toInt();  // noiseLevelU
-      P_noiseLevelPrevValue_U = upperData[P_noiseLevel];
-      P_noiseLevelpickUp_U = true;
-      upperData[P_osc2SawLevel] = data[13].toInt();  // osc2SawLevelU
-      P_osc2SawLevelPrevValue_U = upperData[P_osc2SawLevel];
-      P_osc2SawLevelpickUp_U = true;
-      upperData[P_osc1SawLevel] = data[14].toInt();  // osc1SawLevelU
-      P_osc1SawLevelPrevValue_U = upperData[P_osc1SawLevel];
-      P_osc1SawLevelpickUp_U = true;
-      upperData[P_osc2PulseLevel] = data[15].toInt();  // osc2PulseLevelU
-      P_osc2PulseLevelPrevValue_U = upperData[P_osc2PulseLevel];
-      P_osc2PulseLevelpickUp_U = true;
-      upperData[P_osc1PulseLevel] = data[16].toInt();  // osc1PulseLevelU
-      P_osc1PulseLevelPrevValue_U = upperData[P_osc1PulseLevel];
-      P_osc1PulseLevelpickUp_U = true;
-      upperData[P_filterCutoff] = data[17].toInt();  // filterCutoffU
-      P_filterCutoffPrevValue_U = upperData[P_filterCutoff];
-      P_filterCutoffpickUp_U = true;
-      upperData[P_filterLFO] = data[18].toInt();  // filterLFOU
-      P_filterLFOPrevValue_U = upperData[P_filterLFO];
-      P_filterLFOpickUp_U = true;
-      upperData[P_filterRes] = data[19].toInt();  // filterResU
-      P_filterResPrevValue_U = upperData[P_filterRes];
-      P_filterRespickUp_U = true;
-      upperData[P_filterType] = data[20].toInt();     // filterTypeU
-      upperData[P_modWheelDepth] = data[21].toInt();  // P_modWheelDepthU
-      P_modWheelDepthPrevValue_U = upperData[P_modWheelDepth];
-      P_modWheelDepthpickUp_U = true;
-      upperData[P_effectsMix] = data[22].toInt();  // effectsMixU
-      P_effectsMixPrevValue_U = upperData[P_effectsMix];
-      P_effectsMixpickUp_U = true;
-      upperData[P_LFODelayGo] = data[23].toInt();     // LFODelayGoU
-      upperData[P_filterEGlevel] = data[24].toInt();  // filterEGlevelU
-      P_filterEGlevelPrevValue_U = upperData[P_filterEGlevel];
-      P_filterEGlevelpickUp_U = true;
-      upperData[P_LFORate] = data[25].toInt();  // LFORateU
-      P_LFORatePrevValue_U = upperData[P_LFORate];
-      P_LFORatepickUp_U = true;
-      upperData[P_LFOWaveform] = data[26].toInt();   // LFOWaveformU
-      upperData[P_filterAttack] = data[27].toInt();  // filterAttackU
-      P_filterAttackPrevValue_U = upperData[P_filterAttack];
-      P_filterAttackpickUp_U = true;
-      upperData[P_filterDecay] = data[28].toInt();  // filterDecayU
-      P_filterDecayPrevValue_U = upperData[P_filterDecay];
-      P_filterDecaypickUp_U = true;
-      upperData[P_filterSustain] = data[29].toInt();  // filterSustainU
-      P_filterSustainPrevValue_U = upperData[P_filterSustain];
-      P_filterSustainpickUp_U = true;
-      upperData[P_filterRelease] = data[30].toInt();  // filterReleaseU
-      P_filterReleasePrevValue_U = upperData[P_filterRelease];
-      P_filterReleasepickUp_U = true;
-      upperData[P_ampAttack] = data[31].toInt();  // ampAttackU
-      P_ampAttackPrevValue_U = upperData[P_ampAttack];
-      P_ampAttackpickUp_U = true;
-      upperData[P_ampDecay] = data[32].toInt();  // ampDecayU
-      P_ampDecayPrevValue_U = upperData[P_ampDecay];
-      P_ampDecaypickUp_U = true;
-      upperData[P_ampSustain] = data[33].toInt();  // ampSustainU
-      P_ampSustainPrevValue_U = upperData[P_ampSustain];
-      P_ampSustainpickUp_U = true;
-      upperData[P_ampRelease] = data[34].toInt();  // ampReleaseU
-      P_ampReleasePrevValue_U = upperData[P_ampRelease];
-      P_ampReleasepickUp_U = true;
-      upperData[P_volumeControl] = data[35].toInt();  // volumeControlU
-      P_volumeControlPrevValue_U = upperData[P_volumeControl];
-      P_volumeControlpickUp_U = true;
-      upperData[P_glideSW] = data[36].toInt();   // glideSWU
-      upperData[P_keytrack] = data[37].toInt();  // keytrackU
-      P_keytrackPrevValue_U = upperData[P_keytrack];
-      P_keytrackpickUp_U = true;
-      upperData[P_filterPoleSW] = data[38].toInt();  // filterPoleSWU
-      upperData[P_filterLoop] = data[39].toInt();    // filterLoopU
-      upperData[P_filterEGinv] = data[40].toInt();   // filterEGinvU
-      upperData[P_filterVel] = data[41].toInt();     // filterVelU
-      upperData[P_vcaLoop] = data[42].toInt();       // vcaLoopU
-      upperData[P_vcaVel] = data[43].toInt();        // vcaVelU
-      upperData[P_vcaGate] = data[44].toInt();       // vcaGateU
-      upperData[P_lfoAlt] = data[45].toInt();        // lfoAltU
-      upperData[P_pmDCO2] = data[46].toInt();        // pmDCO2U
-      P_pmDCO2PrevValue_U = upperData[P_pmDCO2];
-      P_pmDCO2pickUp_U = true;
-      upperData[P_pmFilterEnv] = data[47].toInt();  // pmFilterEnvU
-      P_pmFilterEnvPrevValue_U = upperData[P_pmFilterEnv];
-      P_pmFilterEnvpickUp_U = true;
-      upperData[P_monoMulti] = data[48].toInt();       // monoMultiU
-      upperData[P_modWheelLevel] = data[49].toInt();   // modWheelLevelU
-      upperData[P_PitchBendLevel] = data[50].toInt();  // PitchBendLevelU
-      P_PitchBendLevelPrevValue_U = upperData[P_PitchBendLevel];
-      P_PitchBendLevelpickUp_U = true;
-      upperData[P_amDepth] = data[51].toInt();  // amDepthU
-      P_amDepthPrevValue_U = upperData[P_amDepth];
-      P_amDepthpickUp_U = true;
-      upperData[P_sync] = data[52].toInt();        // syncU
-      upperData[P_effectPot1] = data[53].toInt();  // effectPot1U
-      P_effectPot1PrevValue_U = upperData[P_effectPot1];
-      P_effectPot1pickUp_U = true;
-      upperData[P_effectPot2] = data[54].toInt();  // effectPot2U
-      P_effectPot2PrevValue_U = upperData[P_effectPot2];
-      P_effectPot2pickUp_U = true;
-      upperData[P_effectPot3] = data[55].toInt();  // effectPot3U
-      P_effectPot3PrevValue_U = upperData[P_effectPot3];
-      P_effectPot3pickUp_U = true;
-      upperData[P_oldampAttack] = data[56].toInt();       // oldampAttackU
-      upperData[P_oldampDecay] = data[57].toInt();        // oldampDecayU
-      upperData[P_oldampSustain] = data[58].toInt();      // oldampSustainU
-      upperData[P_oldampRelease] = data[59].toInt();      // oldampReleaseU
-      upperData[P_AfterTouchDest] = data[60].toInt();     // AfterTouchDestU
-      upperData[P_filterLogLin] = data[61].toInt();       // filterLogLinU
-      upperData[P_ampLogLin] = data[62].toInt();          // ampLogLinU
-      upperData[P_osc2TriangleLevel] = data[63].toInt();  // osc2TriangleLevelU
-      P_osc2TriangleLevelPrevValue_U = upperData[P_osc2TriangleLevel];
-      P_osc2TriangleLevelpickUp_U = true;
-      upperData[P_osc1SubLevel] = data[64].toInt();  // osc1SubLevelU
-      P_osc1SubLevelPrevValue_U = upperData[P_osc1SubLevel];
-      P_osc1SubLevelpickUp_U = true;
-      upperData[P_keyboardMode] = data[65].toInt();  // keyTrackSWU
-      upperData[P_LFODelay] = data[66].toInt();      // LFODelayU
-      P_LFODelayPrevValue_U = upperData[P_LFODelay];
-      P_LFODelaypickUp_U = true;
-      upperData[P_effectNum] = data[67].toInt();      // effectNumU
-      upperData[P_effectBank] = data[68].toInt();     // effectBankU
-      upperData[P_pmDestDCO1] = data[69].toInt();     // pmDestDCO1U
-      upperData[P_pmDestFilter] = data[70].toInt();   // pmDestFilterU
-      upperData[P_lfoMultiplier] = data[71].toInt();  // lfoMultiplierU
-      upperData[P_NotePriority] = data[72].toInt();   // NotePriorityU
-      upperData[P_keytrackSW] = data[73].toInt();     // keyTrackSWU
-
-      oldfilterCutoffU = upperData[P_filterCutoff];
+    // Convert data from String to int once
+    for (int i = 1; i <= 73; i++) {
+        tempData[i] = data[i].toInt();
     }
-  }
 
-  updatePatchname();
+    if (upperSW) {
+        patchNameU = data[0];
+        tempData[0] = 1;
+        memcpy(upperData, tempData, sizeof(tempData));
+
+        // Update previous values and pick-up flags
+        for (int i = 1; i <= 73; i++) {
+            prevUpperData[i] = upperData[i];  // Store previous value
+            upperPickUp[i] = true;            // Enable pick-up flag
+        }
+
+        oldfilterCutoffU = upperData[P_filterCutoff];
+        upperParamsToDisplay();
+        setAllButtons();
+    } else {
+        patchNameL = data[0];
+        tempData[0] = 1;
+        memcpy(lowerData, tempData, sizeof(tempData));
+
+        // Update previous values and pick-up flags
+        for (int i = 1; i <= 73; i++) {
+            prevLowerData[i] = lowerData[i];  // Store previous value
+            lowerPickUp[i] = true;            // Enable pick-up flag
+        }
+
+        oldfilterCutoffL = lowerData[P_filterCutoff];
+        lowerParamsToDisplay();
+        setAllButtons();
+
+        if (wholemode) {
+            patchNameU = data[0];
+            tempData[0] = 0;
+            memcpy(upperData, tempData, sizeof(tempData));
+
+            // Update previous values and pick-up flags
+            for (int i = 1; i <= 73; i++) {
+                prevUpperData[i] = upperData[i];  // Store previous value
+                upperPickUp[i] = true;            // Enable pick-up flag
+            }
+
+            oldfilterCutoffU = upperData[P_filterCutoff];
+        }
+    }
+
+    updatePatchname();
 }
 
-// void setCurrentPatchData(String data[]) {
-//   int tempData[74];  // Temporary array for converted integers
-
-//   // Convert data from String to int once
-//   for (int i = 1; i <= 73; i++) {
-//     tempData[i] = data[i].toInt();
-//   }
-
-//   if (upperSW) {
-//     patchNameU = data[0];
-//     tempData[0] = 1;
-//     memcpy(upperData, tempData, sizeof(tempData));
-//     oldfilterCutoffU = upperData[P_filterCutoff];
-//     upperParamsToDisplay();
-//   } else {
-//     patchNameL = data[0];
-//     tempData[0] = 0;
-//     memcpy(lowerData, tempData, sizeof(tempData));
-//     oldfilterCutoffL = lowerData[P_filterCutoff];
-//     lowerParamsToDisplay();
-//     if (wholemode) {
-//       patchNameU = data[0];
-//       tempData[0] = 1;
-//       memcpy(upperData, tempData, sizeof(tempData));
-//       oldfilterCutoffU = upperData[P_filterCutoff];
-//     }
-//   }
-
-//   updatePatchname();
-// }
-
 void upperParamsToDisplay() {
-  //updateupperSW();
+
   updateglideTime(0);
   updateosc1PW(0);
   updateosc1PWM(0);
@@ -5252,7 +4785,7 @@ void upperParamsToDisplay() {
 }
 
 void lowerParamsToDisplay() {
-  //updatelowerSW();
+
   updateglideTime(0);
   updateosc1PW(0);
   updateosc1PWM(0);
@@ -5516,18 +5049,18 @@ void midiCCOut(byte cc, byte value) {
 }
 
 void midiCCOut71(byte cc, byte value) {
-  Serial.print("Sent on channel 1 from the controller ");
-  Serial.print(cc);
-  Serial.print(" ");
-  Serial.println(value);
+  // Serial.print("Sent on channel 1 from the controller ");
+  // Serial.print(cc);
+  // Serial.print(" ");
+  // Serial.println(value);
   MIDI7.sendControlChange(cc, value, 1);  //MIDI DIN is set to Out
 }
 
 void midiCCOut72(byte cc, byte value) {
-  Serial.print("Sent on channel 2 from the controller ");
-  Serial.print(cc);
-  Serial.print(" ");
-  Serial.println(value);
+  // Serial.print("Sent on channel 2 from the controller ");
+  // Serial.print(cc);
+  // Serial.print(" ");
+  // Serial.println(value);
   MIDI7.sendControlChange(cc, value, 2);  //MIDI DIN is set to Out
 }
 
