@@ -66,7 +66,7 @@ void renderBootUpPage() {
   tft.setFont(&Yeysk16pt7b);
   tft.setCursor(0, 70);
   tft.setTextSize(1);
-  tft.println("POLYKIT");
+  tft.println("A Bit More");
   tft.setTextColor(ST7735_RED);
   tft.setFont(&FreeSans9pt7b);
   tft.setCursor(110, 95);
@@ -324,24 +324,27 @@ void renderSavePage() {
 void renderReinitialisePage() {
   tft.fillScreen(ST7735_BLACK);
   tft.setFont(&FreeSans12pt7b);
+  tft.setCursor(10, 20);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
-  tft.setCursor(5, 53);
   tft.println("Initialise to");
-  tft.setCursor(5, 90);
-  tft.println("panel setting");
+  tft.setCursor(10, 80);
+  tft.println("panel settings");
 }
 
 void renderPatchNamingPage() {
   tft.fillScreen(ST7735_BLACK);
-  tft.setFont(&FreeSans12pt7b);
+  tft.setFont(&FreeSansBold18pt7b);
+  tft.setCursor(10, 20);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
-  tft.setCursor(0, 53);
   tft.println("Rename Patch");
-  tft.drawFastHLine(10, 62, tft.width() - 20, ST7735_RED);
+  tft.drawFastHLine(10, 50, tft.width() - 20, ST7735_RED);
+
+  tft.setTextSize(2);
+  tft.setFont(&FreeSans9pt7b);
   tft.setTextColor(ST7735_WHITE);
-  tft.setCursor(5, 90);
+  tft.setCursor(10, 80);
   tft.println(newPatchName);
 }
 
@@ -395,17 +398,23 @@ void renderUpDown(uint16_t x, uint16_t y, uint16_t colour) {
 
 void renderSettingsPage() {
   tft.fillScreen(ST7735_BLACK);
-  tft.setFont(&FreeSans12pt7b);
+  tft.setFont(&FreeSansBold18pt7b);
+  tft.setCursor(10, 20);
   tft.setTextColor(ST7735_YELLOW);
   tft.setTextSize(1);
-  tft.setCursor(0, 53);
+  tft.println("Settings");
+  tft.drawFastHLine(10, 50, tft.width() - 20, ST7735_RED);
+  tft.setFont(&FreeSans9pt7b);
+  tft.setTextColor(ST7735_YELLOW);
+  tft.setTextSize(2);
+  tft.setCursor(10, 80);
   tft.println(currentSettingsOption);
-  if (currentSettingsPart == SETTINGS) renderUpDown(140, 42, ST7735_YELLOW);
-  tft.drawFastHLine(10, 62, tft.width() - 20, ST7735_RED);
+  if (currentSettingsPart == SETTINGS) renderUpDown(240, 90, ST7735_YELLOW);
+  tft.drawFastHLine(10, 125, tft.width() - 20, ST7735_RED);
   tft.setTextColor(ST7735_WHITE);
-  tft.setCursor(5, 90);
+  tft.setCursor(10, 150);
   tft.println(currentSettingsValue);
-  if (currentSettingsPart == SETTINGSVALUE) renderUpDown(140, 80, ST7735_WHITE);
+  if (currentSettingsPart == SETTINGSVALUE) renderUpDown(240, 160, ST7735_WHITE);
 }
 
 void showCurrentParameterPage(const char *param, float val, int pType) {
@@ -488,8 +497,6 @@ void displayThread() {
 void setupDisplay() {
   tft.init(240, 320);
   tft.useFrameBuffer(true);
-
-  //tft.initR(INITR_BLACKTAB);
   tft.setRotation(3);
   tft.invertDisplay(true);
   tft.fillScreen(ST7735_BLACK);
