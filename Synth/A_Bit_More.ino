@@ -1775,6 +1775,19 @@ void updateeffectsMix(boolean announce) {
 
 void updateStratusLFOWaveform(boolean announce) {
 
+  if (upperSW) {
+    panelData[P_LFOWaveform] = upperData[P_LFOWaveform];
+    panelData[P_lfoAlt] = upperData[P_lfoAlt];
+  } else {
+    panelData[P_LFOWaveform] = lowerData[P_LFOWaveform];
+    panelData[P_lfoAlt] = lowerData[P_lfoAlt];
+  }
+
+  // Serial.print("LFO alt ");
+  // Serial.println(panelData[P_lfoAlt]);
+  // Serial.print("LFO Wave ");
+  // Serial.println(panelData[P_LFOWaveform]);
+
   if (panelData[P_lfoAlt]) {
     switch (panelData[P_LFOWaveform]) {
       case 0:
@@ -1880,11 +1893,11 @@ void updateStratusLFOWaveform(boolean announce) {
     showCurrentParameterPage("LFO Wave", StratusLFOWaveform);
   }
   if (upperSW) {
-    upperData[P_LFOWaveform] = LFOWaveCV;
+    LFOWaveCVupper = LFOWaveCV;
   } else {
-    lowerData[P_LFOWaveform] = LFOWaveCV;
+    LFOWaveCVlower = LFOWaveCV;
     if (wholemode) {
-      upperData[P_LFOWaveform] = LFOWaveCV;
+      LFOWaveCVupper = LFOWaveCV;
     }
   }
 }
@@ -2906,7 +2919,7 @@ void updatepmDestFilter(boolean announce) {
   }
 }
 
-void updatekeytrackSW(boolean announce) {
+void updatekeyTrackSW(boolean announce) {
   if (upperSW) {
     if (!upperData[P_keytrackSW]) {
       if (announce) {
@@ -4054,18 +4067,6 @@ void myControlChange(byte channel, byte control, int value) {
       updateeffectsMix(1);
       break;
 
-    case CCLFOWaveform:
-      if (upperSW) {
-        upperData[P_LFOWaveform] = value;
-      } else {
-        lowerData[P_LFOWaveform] = value;
-        if (wholemode) {
-          upperData[P_LFOWaveform] = value;
-        }
-      }
-      updateStratusLFOWaveform(1);
-      break;
-
     case CCfilterAttack:
       if (upperSW) {
         if (pickUpActive && upperPickUp[P_filterAttack] && ((prevUpperData[P_filterAttack] + TOLERANCE) < (value) || (prevUpperData[P_filterAttack] - TOLERANCE) > (value))) return;  //PICK-UP
@@ -4407,7 +4408,7 @@ void myControlChange(byte channel, byte control, int value) {
       } else {
         lowerData[P_keytrackSW] = !lowerData[P_keytrackSW];
       }
-      updatekeytrackSW(1);
+      updatekeyTrackSW(1);
       break;
 
     case CCpmDestDCO1SW:
@@ -4534,6 +4535,18 @@ void myControlChange(byte channel, byte control, int value) {
         lowerData[P_lfoAlt] = !lowerData[P_lfoAlt];
       }
       updatelfoAlt(1);
+      break;
+
+    case CCLFOWaveform:
+      if (upperSW) {
+        upperData[P_LFOWaveform] = value;
+      } else {
+        lowerData[P_LFOWaveform] = value;
+        if (wholemode) {
+          upperData[P_LFOWaveform] = value;
+        }
+      }
+      updateStratusLFOWaveform(1);
       break;
 
     case CCupperSW:
@@ -4729,6 +4742,7 @@ void upperParamsToDisplay() {
   updateosc1Range(0);
   updateosc2Range(0);
   updateFilterType(0);
+  updatelfoAlt(0);
   updateStratusLFOWaveform(0);
   updatefilterenvLogLin(0);
   updateampenvLogLin(0);
@@ -4785,6 +4799,7 @@ void lowerParamsToDisplay() {
   updateosc1Range(0);
   updateosc2Range(0);
   updateFilterType(0);
+  updatelfoAlt(0);
   updateStratusLFOWaveform(0);
   updatefilterenvLogLin(0);
   updateampenvLogLin(0);
@@ -4806,7 +4821,7 @@ void setAllButtons() {
   updatelfoAlt(0);
   updatepmDestDCO1(0);
   updatepmDestFilter(0);
-  
+  updatekeyTrackSW(0);
 }
 
 String getCurrentPatchData() {
@@ -5218,8 +5233,8 @@ void writeDemux() {
           break;
       }
 
-      sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_LFOWaveform] * MULT5V)) & 0xFFFF) << 4);
-      sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_LFOWaveform] * MULT5V)) & 0xFFFF) << 4);
+      sample_data3 = (channel_b & 0xFFF0000F) | (((int(LFOWaveCVupper * MULT5V)) & 0xFFFF) << 4);
+      sample_data4 = (channel_d & 0xFFF0000F) | (((int(LFOWaveCVlower * MULT5V)) & 0xFFFF) << 4);
       outputDAC(DAC_CS1, sample_data1, sample_data2, sample_data3, sample_data4);
       digitalWriteFast(DEMUX_EN_1, LOW);
       break;
@@ -5801,7 +5816,6 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
     panelData[P_pmDestFilter] = !panelData[P_pmDestFilter];
     myControlChange(midiChannel, CCpmDestFilterSW, panelData[P_pmDestFilter]);
   }
-
 }
 
 void loop() {

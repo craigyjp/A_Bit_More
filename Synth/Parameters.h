@@ -191,6 +191,8 @@ boolean wholemode = true;
 boolean dualmode = false;
 boolean splitmode = false;
 int LFOWaveCV = 0;
+int LFOWaveCVupper = 0;
+int LFOWaveCVlower = 0;
 
 int returnvalue = 0;
 
