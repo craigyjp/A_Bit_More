@@ -106,6 +106,8 @@ RoxOctoswitch<OCTO_TOTAL, BTN_DEBOUNCE> octoswitch;
 #define PIN_CLK 50   // pin 2 on 74HC165 (CLK))
 #define PIN_LOAD 51  // pin 1 on 74HC165 (LOAD)
 
+RoxButton button;
+
 int count = 0;  //For MIDI Clk Sync
 int DelayForSH3 = 50;
 int midioutfrig = 5;
@@ -131,6 +133,9 @@ void setup() {
   octoswitch.setCallback(onButtonPress);
 
   srp.begin(LED_DATA, LED_LATCH, LED_CLK, LED_PWM);
+
+  button.begin();
+  button.setDoublePressThreshold(300);
 
   SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE1));
   digitalWrite(DAC_CS1, LOW);
@@ -888,7 +893,8 @@ void getDelayTime() {
 }
 
 void allNotesOff() {
-  //midiCCOut(CCallnotesoff, 127);
+  midiCCOut61(WSallNotesOff, 127);
+  midiCCOut62(WSallNotesOff, 127);
 }
 
 void updatepwLFO(boolean announce) {
@@ -909,9 +915,11 @@ void updatefmDepth(boolean announce) {
     showCurrentParameterPage("FM Depth", int(fmDepthstr));
   }
   if (upperSW) {
+    midiCCOut62(WSFMDepth, upperData[P_fmDepth] >> midioutfrig);
     midiCCOut(CCfmDepth, upperData[P_fmDepth] >> midioutfrig);
     midiCCOut71(CCfmDepth, upperData[P_fmDepth] >> midioutfrig);
   } else {
+    midiCCOut61(WSFMDepth, lowerData[P_fmDepth] >> midioutfrig);
     midiCCOut(CCfmDepth, lowerData[P_fmDepth] >> midioutfrig);
     midiCCOut71(CCfmDepth, lowerData[P_fmDepth] >> midioutfrig);
   }
@@ -980,7 +988,7 @@ void updateosc1PWM(boolean announce) {
     midiCCOut(CCosc1PWM, upperData[P_osc1PWM] >> midioutfrig);
     midiCCOut71(CCosc1PWM, upperData[P_osc1PWM] >> midioutfrig);
   } else {
-    midiCCOut61(WSosc1PWM, upperData[P_osc1PWM] >> midioutfrig);
+    midiCCOut61(WSosc1PWM, lowerData[P_osc1PWM] >> midioutfrig);
     midiCCOut(CCosc1PWM, lowerData[P_osc1PWM] >> midioutfrig);
     midiCCOut71(CCosc1PWM, lowerData[P_osc1PWM] >> midioutfrig);
     if (wholemode) {
@@ -996,21 +1004,21 @@ void updateosc1Range(boolean announce) {
         showCurrentParameterPage("Osc1 Range", String("8"));
       }
       midiCCOut(CCosc1Oct, 2);
-      midiCCOut61(WSosc1oct, 127);
+      midiCCOut62(WSosc1oct, 127);
       midiCCOut72(CCosc1Oct, 2);
     } else if (upperData[P_osc1Range] == 1) {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("16"));
       }
       midiCCOut(CCosc1Oct, 1);
-      midiCCOut61(WSosc1oct, 63);
+      midiCCOut62(WSosc1oct, 64);
       midiCCOut72(CCosc1Oct, 1);
     } else {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("32"));
       }
       midiCCOut(CCosc1Oct, 0);
-      midiCCOut61(WSosc1oct, 0);
+      midiCCOut62(WSosc1oct, 0);
       midiCCOut72(CCosc1Oct, 0);
     }
   } else {
@@ -1019,30 +1027,30 @@ void updateosc1Range(boolean announce) {
         showCurrentParameterPage("Osc1 Range", String("8"));
       }
       midiCCOut(CCosc1Oct, 2);
-      midiCCOut62(WSosc1oct, 127);
+      midiCCOut61(WSosc1oct, 127);
       midiCCOut72(CCosc1Oct, 2);
       if (wholemode) {
-        midiCCOut61(WSosc1oct, 127);
+        midiCCOut62(WSosc1oct, 127);
       }
     } else if (lowerData[P_osc1Range] == 1) {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("16"));
       }
       midiCCOut(CCosc1Oct, 1);
-      midiCCOut62(WSosc1oct, 63);
+      midiCCOut61(WSosc1oct, 64);
       midiCCOut72(CCosc1Oct, 1);
       if (wholemode) {
-        midiCCOut61(WSosc1oct, 63);
+        midiCCOut62(WSosc1oct, 63);
       }
     } else {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("32"));
       }
       midiCCOut(CCosc1Oct, 0);
-      midiCCOut62(WSosc1oct, 0);
+      midiCCOut61(WSosc1oct, 0);
       midiCCOut72(CCosc1Oct, 0);
       if (wholemode) {
-        midiCCOut61(WSosc1oct, 0);
+        midiCCOut62(WSosc1oct, 0);
       }
     }
   }
@@ -1054,14 +1062,14 @@ void updateosc2Range(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Osc2 Range", String("8"));
       }
-      midiCCOut61(WSosc2oct, 127);
+      midiCCOut62(WSosc2oct, 127);
       midiCCOut72(CCosc2Oct, 2);
       midiCCOut(CCosc2Oct, 2);
     } else if (upperData[P_osc2Range] == 1) {
       if (announce) {
         showCurrentParameterPage("Osc2 Range", String("16"));
       }
-      midiCCOut61(WSosc2oct, 63);
+      midiCCOut62(WSosc2oct, 64);
       midiCCOut72(CCosc2Oct, 1);
       midiCCOut(CCosc2Oct, 1);
     } else {
@@ -1069,7 +1077,7 @@ void updateosc2Range(boolean announce) {
         showCurrentParameterPage("Osc2 Range", String("32"));
       }
       midiCCOut(CCosc2Oct, 0);
-      midiCCOut61(WSosc2oct, 0);
+      midiCCOut62(WSosc2oct, 0);
       midiCCOut72(CCosc2Oct, 0);
     }
   } else {
@@ -1078,10 +1086,10 @@ void updateosc2Range(boolean announce) {
         showCurrentParameterPage("Osc2 Range", String("8"));
       }
       midiCCOut(CCosc2Oct, 2);
-      midiCCOut62(WSosc2oct, 127);
+      midiCCOut61(WSosc2oct, 127);
       midiCCOut72(CCosc2Oct, 2);
       if (wholemode) {
-        midiCCOut61(WSosc2oct, 127);
+        midiCCOut62(WSosc2oct, 127);
         //midiCCOut72(CCosc2Oct, 2);
       }
     } else if (lowerData[P_osc2Range] == 1) {
@@ -1089,10 +1097,10 @@ void updateosc2Range(boolean announce) {
         showCurrentParameterPage("Osc2 Range", String("16"));
       }
       midiCCOut(CCosc2Oct, 1);
-      midiCCOut62(WSosc2oct, 63);
+      midiCCOut61(WSosc2oct, 64);
       midiCCOut72(CCosc2Oct, 1);
       if (wholemode) {
-        midiCCOut61(WSosc2oct, 63);
+        midiCCOut62(WSosc2oct, 63);
         //midiCCOut72(CCosc2Oct, 1);
       }
     } else {
@@ -1100,10 +1108,10 @@ void updateosc2Range(boolean announce) {
         showCurrentParameterPage("Osc2 Range", String("32"));
       }
       midiCCOut(CCosc2Oct, 0);
-      midiCCOut62(WSosc2oct, 0);
+      midiCCOut61(WSosc2oct, 0);
       midiCCOut72(CCosc2Oct, 0);
       if (wholemode) {
-        midiCCOut61(WSosc2oct, 0);
+        midiCCOut62(WSosc2oct, 0);
         //midiCCOut72(CCosc2Oct, 0);
       }
     }
@@ -1119,7 +1127,7 @@ void updateglideTime(boolean announce) {
     midiCCOut(CCglideTime, upperData[P_glideTime] >> midioutfrig);
     midiCCOut71(CCglideTime, upperData[P_glideTime] >> midioutfrig);
   } else {
-    midiCCOut61(WSglideTime, upperData[P_glideTime] >> midioutfrig);
+    midiCCOut61(WSglideTime, lowerData[P_glideTime] >> midioutfrig);
     midiCCOut(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
     midiCCOut71(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
     if (wholemode) {
@@ -3658,12 +3666,12 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCosc2Interval:
       if (upperSW) {
-        if (pickUpActive && upperPickUp[P_osc2Interval] && ((prevUpperData[P_osc2Interval] + TOLERANCE) < (value) || (prevUpperData[P_osc2Interval] - TOLERANCE) > (value))) return;  //PICK-UP
+        if (pickUpActive && upperPickUp[P_osc2Interval] && ((prevUpperData[P_osc2Interval] + 1) < (value) || (prevUpperData[P_osc2Interval] - 1) > (value))) return;  //PICK-UP
         upperPickUp[P_osc2Interval] = false;
         upperData[P_osc2Interval] = value;
         prevUpperData[P_osc2Interval] = upperData[P_osc2Interval];  //PICK-UP
       } else {
-        if (pickUpActive && lowerPickUp[P_osc2Interval] && ((prevLowerData[P_osc2Interval] + TOLERANCE) < (value) || (prevLowerData[P_osc2Interval] - TOLERANCE) > (value))) return;  //PICK-UP
+        if (pickUpActive && lowerPickUp[P_osc2Interval] && ((prevLowerData[P_osc2Interval] + 1) < (value) || (prevLowerData[P_osc2Interval] - 1) > (value))) return;  //PICK-UP
         lowerPickUp[P_osc2Interval] = false;
         lowerData[P_osc2Interval] = value;
         prevLowerData[P_osc2Interval] = lowerData[P_osc2Interval];  //PICK-UP
@@ -3956,12 +3964,12 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCPitchBend:
       if (upperSW) {
-        if (pickUpActive && upperPickUp[P_PitchBendLevel] && ((prevUpperData[P_PitchBendLevel] + TOLERANCE) < (value) || (prevUpperData[P_PitchBendLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        if (pickUpActive && upperPickUp[P_PitchBendLevel] && ((prevUpperData[P_PitchBendLevel] + 1) < (value) || (prevUpperData[P_PitchBendLevel] - 1) > (value))) return;  //PICK-UP
         upperPickUp[P_PitchBendLevel] = false;
         upperData[P_PitchBendLevel] = value;
         prevUpperData[P_PitchBendLevel] = upperData[P_PitchBendLevel];  //PICK-UP
       } else {
-        if (pickUpActive && lowerPickUp[P_PitchBendLevel] && ((prevLowerData[P_PitchBendLevel] + TOLERANCE) < (value) || (prevLowerData[P_PitchBendLevel] - TOLERANCE) > (value))) return;  //PICK-UP
+        if (pickUpActive && lowerPickUp[P_PitchBendLevel] && ((prevLowerData[P_PitchBendLevel] + 1) < (value) || (prevLowerData[P_PitchBendLevel] - 1) > (value))) return;  //PICK-UP
         lowerPickUp[P_PitchBendLevel] = false;
         lowerData[P_PitchBendLevel] = value;
         prevLowerData[P_PitchBendLevel] = lowerData[P_PitchBendLevel];  //PICK-UP
@@ -4543,74 +4551,13 @@ void myControlChange(byte channel, byte control, int value) {
       updatelowerSW(1);
       break;
 
-      // case CCmodwheel:
-      //   value = (value * MIDICCTOPOT);
-      //   switch (modWheelDepth) {
-      //     case 1:
-      //       modWheelLevel = ((value) / 5);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
+    case CCmodwheel:
+      midiCCOut61(WSmodwheel, value / 8);
+      break;
 
-      //     case 2:
-      //       modWheelLevel = ((value) / 4);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
-
-      //     case 3:
-      //       modWheelLevel = ((value) / 3.5);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
-
-      //     case 4:
-      //       modWheelLevel = ((value) / 3);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
-
-      //     case 5:
-      //       modWheelLevel = ((value) / 2.5);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
-
-      //     case 6:
-      //       modWheelLevel = ((value) / 2);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
-
-      //     case 7:
-      //       modWheelLevel = ((value) / 1.75);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
-
-      //     case 8:
-      //       modWheelLevel = ((value) / 1.5);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
-
-      //     case 9:
-      //       modWheelLevel = ((value) / 1.25);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
-
-      //     case 10:
-      //       modWheelLevel = (value);
-      //       upperData[P_fmDepth] = int(modWheelLevel);
-      //       lowerData[P_fmDepth] = int(modWheelLevel);
-      //       break;
-      //   }
-      //   break;
-
-      // case CCallnotesoff:
-      //   allNotesOff();
-      //   break;
+    case CCallnotesoff:
+      allNotesOff();
+      break;
   }
 }
 
@@ -4685,58 +4632,58 @@ void recallPatch(int patchNo) {
 }
 
 void setCurrentPatchData(String data[]) {
-    int tempData[74];  // Temporary array for converted integers
+  int tempData[74];  // Temporary array for converted integers
 
-    // Convert data from String to int once
+  // Convert data from String to int once
+  for (int i = 1; i <= 73; i++) {
+    tempData[i] = data[i].toInt();
+  }
+
+  if (upperSW) {
+    patchNameU = data[0];
+    tempData[0] = 1;
+    memcpy(upperData, tempData, sizeof(tempData));
+
+    // Update previous values and pick-up flags
     for (int i = 1; i <= 73; i++) {
-        tempData[i] = data[i].toInt();
+      prevUpperData[i] = upperData[i];  // Store previous value
+      upperPickUp[i] = true;            // Enable pick-up flag
     }
 
-    if (upperSW) {
-        patchNameU = data[0];
-        tempData[0] = 1;
-        memcpy(upperData, tempData, sizeof(tempData));
+    oldfilterCutoffU = upperData[P_filterCutoff];
+    upperParamsToDisplay();
+    setAllButtons();
+  } else {
+    patchNameL = data[0];
+    tempData[0] = 1;
+    memcpy(lowerData, tempData, sizeof(tempData));
 
-        // Update previous values and pick-up flags
-        for (int i = 1; i <= 73; i++) {
-            prevUpperData[i] = upperData[i];  // Store previous value
-            upperPickUp[i] = true;            // Enable pick-up flag
-        }
-
-        oldfilterCutoffU = upperData[P_filterCutoff];
-        upperParamsToDisplay();
-        setAllButtons();
-    } else {
-        patchNameL = data[0];
-        tempData[0] = 1;
-        memcpy(lowerData, tempData, sizeof(tempData));
-
-        // Update previous values and pick-up flags
-        for (int i = 1; i <= 73; i++) {
-            prevLowerData[i] = lowerData[i];  // Store previous value
-            lowerPickUp[i] = true;            // Enable pick-up flag
-        }
-
-        oldfilterCutoffL = lowerData[P_filterCutoff];
-        lowerParamsToDisplay();
-        setAllButtons();
-
-        if (wholemode) {
-            patchNameU = data[0];
-            tempData[0] = 0;
-            memcpy(upperData, tempData, sizeof(tempData));
-
-            // Update previous values and pick-up flags
-            for (int i = 1; i <= 73; i++) {
-                prevUpperData[i] = upperData[i];  // Store previous value
-                upperPickUp[i] = true;            // Enable pick-up flag
-            }
-
-            oldfilterCutoffU = upperData[P_filterCutoff];
-        }
+    // Update previous values and pick-up flags
+    for (int i = 1; i <= 73; i++) {
+      prevLowerData[i] = lowerData[i];  // Store previous value
+      lowerPickUp[i] = true;            // Enable pick-up flag
     }
 
-    updatePatchname();
+    oldfilterCutoffL = lowerData[P_filterCutoff];
+    lowerParamsToDisplay();
+    setAllButtons();
+
+    if (wholemode) {
+      patchNameU = data[0];
+      tempData[0] = 0;
+      memcpy(upperData, tempData, sizeof(tempData));
+
+      // Update previous values and pick-up flags
+      for (int i = 1; i <= 73; i++) {
+        prevUpperData[i] = upperData[i];  // Store previous value
+        upperPickUp[i] = true;            // Enable pick-up flag
+      }
+
+      oldfilterCutoffU = upperData[P_filterCutoff];
+    }
+  }
+
+  updatePatchname();
 }
 
 void upperParamsToDisplay() {
@@ -4889,6 +4836,7 @@ String getCurrentPatchData() {
 
 void checkMux() {
 
+  adc->adc1->analogRead(MUX1_S);  // discard first read
   mux1Read = adc->adc1->analogRead(MUX1_S);
   if (mux1Read > (mux1ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux1Read < (mux1ValuesPrev[muxInput] - QUANTISE_FACTOR)) {
     mux1ValuesPrev[muxInput] = mux1Read;
@@ -4938,6 +4886,7 @@ void checkMux() {
         break;
     }
   }
+  adc->adc1->analogRead(MUX2_S);  // discard first read
   mux2Read = adc->adc1->analogRead(MUX2_S);
   if (mux2Read > (mux2ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux2Read < (mux2ValuesPrev[muxInput] - QUANTISE_FACTOR)) {
     mux2ValuesPrev[muxInput] = mux2Read;
@@ -4983,6 +4932,7 @@ void checkMux() {
         break;
     }
   }
+  adc->adc1->analogRead(MUX3_S);  // discard first read
   mux3Read = adc->adc1->analogRead(MUX3_S);
   if (mux3Read > (mux3ValuesPrev[muxInput] + QUANTISE_FACTOR) || mux3Read < (mux3ValuesPrev[muxInput] - QUANTISE_FACTOR)) {
     mux3ValuesPrev[muxInput] = mux3Read;
@@ -5042,6 +4992,7 @@ void checkMux() {
   digitalWrite(MUX_1, muxInput & B0010);
   digitalWrite(MUX_2, muxInput & B0100);
   digitalWrite(MUX_3, muxInput & B1000);
+  delayMicroseconds(20);  // allow mux line to settle
 }
 
 void midiCCOut(byte cc, byte value) {
@@ -5198,8 +5149,8 @@ void writeDemux() {
       sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_effectsMix] * MULT2V)) & 0xFFFF) << 4);
       sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_effectsMix] * MULT2V)) & 0xFFFF) << 4);
 
-      sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_filterRes] * MULT5V)) & 0xFFFF) << 4);
-      sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_filterRes] * MULT5V)) & 0xFFFF) << 4);
+      sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_filterRes] * MULT2V)) & 0xFFFF) << 4);
+      sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_filterRes] * MULT2V)) & 0xFFFF) << 4);
       outputDAC(DAC_CS1, sample_data1, sample_data2, sample_data3, sample_data4);
       digitalWriteFast(DEMUX_EN_1, LOW);
       break;
@@ -5207,7 +5158,8 @@ void writeDemux() {
     case 11:
       switch (upperData[P_LFODelayGo]) {
         case 1:
-          sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_fmDepth] * MULT2V)) & 0xFFFF) << 4);
+          //sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_fmDepth] * MULT2V)) & 0xFFFF) << 4);
+          sample_data1 = (channel_a & 0xFFF0000F) | (((int(4095 * MULT2V)) & 0xFFFF) << 4);
           break;
 
         case 0:
@@ -5216,7 +5168,8 @@ void writeDemux() {
       }
       switch (lowerData[P_LFODelayGo]) {
         case 1:
-          sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_fmDepth] * MULT2V)) & 0xFFFF) << 4);
+          //sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_fmDepth] * MULT2V)) & 0xFFFF) << 4);
+          sample_data2 = (channel_c & 0xFFF0000F) | (((int(4095 * MULT2V)) & 0xFFFF) << 4);
           break;
 
         case 0:
@@ -5338,50 +5291,16 @@ void showSettingsPage() {
 
 void checkSwitches() {
 
-  // saveButton.update();
-  // if (saveButton.held()) {
-  //   switch (state) {
-  //     case PARAMETER:
-  //     case PATCH:
-  //       state = DELETE;
-  //       break;
-  //   }
-  // } else if (saveButton.numClicks() == 1) {
-  //   switch (state) {
-  //     case PARAMETER:
-  //       if (patches.size() < PATCHES_LIMIT) {
-  //         resetPatchesOrdering();  //Reset order of patches from first patch
-  //         patches.push({ patches.size() + 1, INITPATCHNAME });
-  //         state = SAVE;
-  //       }
-  //       break;
-  //     case SAVE:
-  //       //Save as new patch with INITIALPATCH name or overwrite existing keeping name - bypassing patch renaming
-  //       patchName = patches.last().patchName;
-  //       state = PATCH;
-  //       savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
-  //       //showPatchPage(patches.last().patchNo, patches.last().patchName);
-  //       showPatchPage(patches.last().patchNo, patches.last().patchName, "", "");
-  //       patchNo = patches.last().patchNo;
-  //       loadPatches();  //Get rid of pushed patch if it wasn't saved
-  //       setPatchesOrdering(patchNo);
-  //       renamedPatch = "";
-  //       state = PARAMETER;
-  //       break;
-  //     case PATCHNAMING:
-  //       if (renamedPatch.length() > 0) patchName = renamedPatch;  //Prevent empty strings
-  //       state = PATCH;
-  //       savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
-  //       showPatchPage(patches.last().patchNo, patches.last().patchName, "", "");
-  //       //showPatchPage(patches.last().patchNo, patchName);
-  //       patchNo = patches.last().patchNo;
-  //       loadPatches();  //Get rid of pushed patch if it wasn't saved
-  //       setPatchesOrdering(patchNo);
-  //       renamedPatch = "";
-  //       state = PARAMETER;
-  //       break;
-  //   }
-  // }
+  button.update(digitalRead(TUNE_BUTTON), 50, LOW);
+  if (button.held()) {
+    midiCCOut61(WSresetAutotune, 127);
+    showCurrentParameterPage("Autotune", String("Reset"));
+    //digitalWrite(TUNE_LED, LOW);
+  } else if (button.released(true)) {
+    midiCCOut61(WSautotune, 127);
+    showCurrentParameterPage("Autotune", String("Started"));
+    //digitalWrite(TUNE_LED, HIGH);
+  }
 
   saveButton.update();
   if (saveButton.held()) {
@@ -5867,9 +5786,23 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
     panelData[P_pmDestFilter] = !panelData[P_pmDestFilter];
     myControlChange(midiChannel, CCpmDestFilterSW, panelData[P_pmDestFilter]);
   }
+
 }
 
 void loop() {
+
+  if (digitalRead(AUTOTUNE_INPUT) == HIGH) {
+    digitalWrite(TUNE_LED, HIGH);
+
+    // Stop all tasks and wait until input goes low
+    while (digitalRead(AUTOTUNE_INPUT) == HIGH) {
+      // Optional: Add a small delay to avoid busy-wait power drain
+      writeDemux();
+    }
+
+    digitalWrite(TUNE_LED, LOW);
+  }
+
   checkSwitches();
   checkEeprom();
   writeDemux();

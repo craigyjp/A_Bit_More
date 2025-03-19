@@ -101,18 +101,31 @@
 
 // CC values used in the WAVEshare to control params
 
+#define   WSmodwheel  1 //pitch LFO amount - less from mod wheel
 #define   WSglideTime 5 // 0-127
 #define   WSglideSW 65  // > 63
-#define   WSdetune 16   // 0-127
-#define   WSosc1oct 17  // 0, 63, 127
-#define   WSosc2oct 18  // 0, 63, 127
-#define   WSbendRange 19  // 0-12
-#define   WSinterval 20 // 0-12
-#define   WSkeytrack 21 // 0-127
-#define   WSkeytrackSW 22 // > 63
-#define   WSsyncW 23 // > 63
-#define   WSosc1PW 24 // 0-127
+#define   WSinterval 14 // 0-12
+#define   WSdetune 15   // 0-127
+#define   WSbendRange 16 // 0-127
+#define   WSmodDepth 17 // 0-127
+#define   WStmDepth 18 // 0-127
+#define   WSATmodDepth 19 // 0-127
+#define   WSATtmDepth 20 // 0-127
+#define   WSosc1oct 21  // 0, 63, 127
+#define   WSosc2oct 22  // 0, 63, 127
+#define   WSosc1PW 23 // 0-127
+#define   WSosc1PWM 24 // 0-127
 #define   WSosc2PW 25 // 0-127
-#define   WSosc1PWM 26 // 0-127
-#define   WSosc2PWM 27 // 0-127
-#define   WSmodDepth 28 // 0-127
+#define   WSosc2PWM 26 // 0-127
+
+#define   WSkeytrack 27 // 0-127
+#define   WSkeytrackSW 28 // > 63
+#define   WSsyncW 29 // > 63
+#define   WSFMDepth 30 // > 63
+
+#define   WSautotune 121 // > 63
+#define   WSresetAutotune 122 // > 63
+#define   WSallNotesOff 123 // > 63
+#define   WSkeyboardMode 127 // > 63
+
+

@@ -27,6 +27,8 @@ ADC *adc = new ADC();
 
 #define DEMUX_EN_1 2
 
+#define AUTOTUNE_INPUT 54
+
 
 //Note DAC
 #define MULT2V 6.475
@@ -282,6 +284,9 @@ ADC *adc = new ADC();
 
 // System Switches etc
 
+#define TUNE_BUTTON 18
+#define TUNE_LED 19
+
 #define RECALL_SW 20
 #define SAVE_SW 23
 #define SETTINGS_SW 22
@@ -357,6 +362,12 @@ void setupHardware()
 
   digitalWrite(DEMUX_EN_1, HIGH);
 
+  pinMode(TUNE_LED, OUTPUT);
+  digitalWrite(TUNE_LED, LOW);
+
+  pinMode(TUNE_BUTTON, INPUT_PULLUP);
+
+  pinMode(AUTOTUNE_INPUT, INPUT);
 
   //Switches
 
