@@ -1040,7 +1040,7 @@ void updateosc1Range(boolean announce) {
       midiCCOut61(WSosc1oct, 64);
       midiCCOut72(CCosc1Oct, 1);
       if (wholemode) {
-        midiCCOut62(WSosc1oct, 63);
+        midiCCOut62(WSosc1oct, 64);
       }
     } else {
       if (announce) {
@@ -1090,7 +1090,6 @@ void updateosc2Range(boolean announce) {
       midiCCOut72(CCosc2Oct, 2);
       if (wholemode) {
         midiCCOut62(WSosc2oct, 127);
-        //midiCCOut72(CCosc2Oct, 2);
       }
     } else if (lowerData[P_osc2Range] == 1) {
       if (announce) {
@@ -1100,8 +1099,7 @@ void updateosc2Range(boolean announce) {
       midiCCOut61(WSosc2oct, 64);
       midiCCOut72(CCosc2Oct, 1);
       if (wholemode) {
-        midiCCOut62(WSosc2oct, 63);
-        //midiCCOut72(CCosc2Oct, 1);
+        midiCCOut62(WSosc2oct, 64);
       }
     } else {
       if (announce) {
@@ -1112,7 +1110,6 @@ void updateosc2Range(boolean announce) {
       midiCCOut72(CCosc2Oct, 0);
       if (wholemode) {
         midiCCOut62(WSosc2oct, 0);
-        //midiCCOut72(CCosc2Oct, 0);
       }
     }
   }
@@ -3324,7 +3321,7 @@ void updatevcaGate(boolean announce) {
       midiCCOut72(CCvcaGate, 1);
       upperData[P_ampAttack] = 0;
       upperData[P_ampDecay] = 0;
-      upperData[P_ampSustain] = 1023;
+      upperData[P_ampSustain] = 4095;
       upperData[P_ampRelease] = 0;
     }
   } else {
@@ -3352,12 +3349,12 @@ void updatevcaGate(boolean announce) {
       midiCCOut72(CCvcaGate, 1);
       lowerData[P_ampAttack] = 0;
       lowerData[P_ampDecay] = 0;
-      lowerData[P_ampSustain] = 1023;
+      lowerData[P_ampSustain] = 4095;
       lowerData[P_ampRelease] = 0;
       if (wholemode) {
         upperData[P_ampAttack] = 0;
         upperData[P_ampDecay] = 0;
-        upperData[P_ampSustain] = 1023;
+        upperData[P_ampSustain] = 4095;
         upperData[P_ampRelease] = 0;
       }
     }
@@ -4729,6 +4726,17 @@ void upperParamsToDisplay() {
   updatePM_DCO2(0);
   updatePM_FilterEnv(0);
   updateamDepth(0);
+  updateosc1Range(0);
+  updateosc2Range(0);
+  updateFilterType(0);
+  updateStratusLFOWaveform(0);
+  updatefilterenvLogLin(0);
+  updateampenvLogLin(0);
+  updatefilterVel(0);
+  updatevcaVel(0);
+  updatefilterLoop(0);
+  updatevcaLoop(0);
+  updatelfoMultiplier(0);
 }
 
 void lowerParamsToDisplay() {
@@ -4774,6 +4782,17 @@ void lowerParamsToDisplay() {
   updatePM_DCO2(0);
   updatePM_FilterEnv(0);
   updateamDepth(0);
+  updateosc1Range(0);
+  updateosc2Range(0);
+  updateFilterType(0);
+  updateStratusLFOWaveform(0);
+  updatefilterenvLogLin(0);
+  updateampenvLogLin(0);
+  updatefilterVel(0);
+  updatevcaVel(0);
+  updatefilterLoop(0);
+  updatevcaLoop(0);
+  updatelfoMultiplier(0);
 }
 
 void setAllButtons() {
@@ -4782,16 +4801,12 @@ void setAllButtons() {
   updateglideSW(0);
   updatesyncSW(0);
   updatefilterPoleSwitch(0);
-  updatefilterLoop(0);
   updatefilterEGinv(0);
-  updatefilterVel(0);
-  updatevcaLoop(0);
-  updatevcaVel(0);
   updatevcaGate(0);
   updatelfoAlt(0);
-  updatelfoMultiplier(0);
   updatepmDestDCO1(0);
   updatepmDestFilter(0);
+  
 }
 
 String getCurrentPatchData() {
