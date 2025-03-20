@@ -2406,36 +2406,40 @@ void updateeffectBankSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 1");
       }
-      srp.writePin(EFFECT_BANK_1_UPPER, LOW);
-      srp.writePin(EFFECT_BANK_2_UPPER, LOW);
-      srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+      srp.writePin(EFFECT_INTERNAL_UPPER, LOW); // Internal selected
+      srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
+      srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
+      srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
       midiCCOut72(CCeffectBankSW, 0);
       midiCCOut(CCeffectBankSW, 0);
     } else if (upperData[P_effectBank] == 1) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 2");
       }
-      srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_2_UPPER, LOW);
-      srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+      srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
+      srp.writePin(EFFECT_BANK_1_UPPER, LOW); // Bank 2 selected
+      srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
+      srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
       midiCCOut72(CCeffectBankSW, 1);
       midiCCOut(CCeffectBankSW, 1);
     } else if (upperData[P_effectBank] == 2) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 3");
       }
-      srp.writePin(EFFECT_BANK_1_UPPER, LOW);
-      srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+      srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
+      srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
+      srp.writePin(EFFECT_BANK_2_UPPER, LOW); // Bank 3 selected
+      srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
       midiCCOut72(CCeffectBankSW, 2);
       midiCCOut(CCeffectBankSW, 2);
     } else if (upperData[P_effectBank] == 3) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 4");
       }
+      srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
       srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
       srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+      srp.writePin(EFFECT_BANK_3_UPPER, LOW); // Bank 4 selected
       midiCCOut72(CCeffectBankSW, 3);
       midiCCOut(CCeffectBankSW, 3);
     }
@@ -2444,13 +2448,15 @@ void updateeffectBankSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 1");
       }
-      srp.writePin(EFFECT_BANK_1_LOWER, LOW);
-      srp.writePin(EFFECT_BANK_2_LOWER, LOW);
-      srp.writePin(EFFECT_BANK_3_LOWER, LOW);
+      srp.writePin(EFFECT_INTERNAL_LOWER, LOW); // Internal selected
+      srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
+      srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
+      srp.writePin(EFFECT_BANK_3_LOWER, HIGH);
       if (wholemode) {
-        srp.writePin(EFFECT_BANK_1_UPPER, LOW);
-        srp.writePin(EFFECT_BANK_2_UPPER, LOW);
-        srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+        srp.writePin(EFFECT_INTERNAL_UPPER, LOW); // Internal selected
+        srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
+        srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
+        srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
       }
       midiCCOut72(CCeffectBankSW, 0);
       midiCCOut(CCeffectBankSW, 0);
@@ -2458,13 +2464,15 @@ void updateeffectBankSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 2");
       }
-      srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_2_LOWER, LOW);
-      srp.writePin(EFFECT_BANK_3_LOWER, LOW);
+      srp.writePin(EFFECT_INTERNAL_LOWER, HIGH);
+      srp.writePin(EFFECT_BANK_1_LOWER, LOW);  // Bank 2 selected
+      srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
+      srp.writePin(EFFECT_BANK_3_LOWER, HIGH);
       if (wholemode) {
-        srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_2_UPPER, LOW);
-        srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+        srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
+        srp.writePin(EFFECT_BANK_1_UPPER, LOW);  // Bank 2 selected
+        srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
+        srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
       }
       midiCCOut72(CCeffectBankSW, 1);
       midiCCOut(CCeffectBankSW, 1);
@@ -2472,13 +2480,15 @@ void updateeffectBankSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 3");
       }
-      srp.writePin(EFFECT_BANK_1_LOWER, LOW);
-      srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_3_LOWER, LOW);
+      srp.writePin(EFFECT_INTERNAL_LOWER, HIGH);
+      srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
+      srp.writePin(EFFECT_BANK_2_LOWER, LOW);   // Bank 3 selected
+      srp.writePin(EFFECT_BANK_3_LOWER, HIGH);
       if (wholemode) {
-        srp.writePin(EFFECT_BANK_1_UPPER, LOW);
-        srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+        srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
+        srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
+        srp.writePin(EFFECT_BANK_2_UPPER, LOW);   // Bank 3 selected
+        srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
       }
       midiCCOut72(CCeffectBankSW, 2);
       midiCCOut(CCeffectBankSW, 2);
@@ -2486,13 +2496,15 @@ void updateeffectBankSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 4");
       }
+      srp.writePin(EFFECT_INTERNAL_LOWER, HIGH);
       srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
       srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_3_LOWER, LOW);
+      srp.writePin(EFFECT_BANK_3_LOWER, LOW);   // Bank 4 selected
       if (wholemode) {
+        srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+        srp.writePin(EFFECT_BANK_3_UPPER, LOW);   // Bank 4 selected
       }
       midiCCOut72(CCeffectBankSW, 3);
       midiCCOut(CCeffectBankSW, 3);
