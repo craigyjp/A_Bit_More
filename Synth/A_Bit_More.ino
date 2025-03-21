@@ -2113,6 +2113,8 @@ void updateplayMode(boolean announce) {
     }
     midiCCOut72(CCplayMode, 0);
     midiCCOut(CCplayMode, 0);
+    srp.writePin(UPPER_RELAY_1, HIGH);
+    srp.writePin(UPPER_RELAY_3, HIGH);
     wholemode = true;
     dualmode = false;
     splitmode = false;
@@ -2125,6 +2127,8 @@ void updateplayMode(boolean announce) {
     }
     midiCCOut72(CCplayMode, 1);
     midiCCOut(CCplayMode, 1);
+    srp.writePin(UPPER_RELAY_1, LOW);
+    srp.writePin(UPPER_RELAY_3, LOW);
     wholemode = false;
     dualmode = true;
     splitmode = false;
@@ -2134,6 +2138,8 @@ void updateplayMode(boolean announce) {
     }
     midiCCOut72(CCplayMode, 2);
     midiCCOut(CCplayMode, 2);
+    srp.writePin(UPPER_RELAY_1, LOW);
+    srp.writePin(UPPER_RELAY_3, LOW);
     wholemode = false;
     dualmode = false;
     splitmode = true;

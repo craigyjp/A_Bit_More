@@ -253,7 +253,7 @@ ADC *adc = new ADC();
 #define EFFECT_BANK_1_LOWER 34
 #define EFFECT_BANK_2_LOWER 35
 #define EFFECT_BANK_3_LOWER 36
-#define SPARE37 37
+#define UPPER_RELAY_3 37
 #define FILTER_LIN_LOG_LOWER 38
 #define AMP_LIN_LOG_LOWER 39
 
@@ -276,7 +276,7 @@ ADC *adc = new ADC();
 #define AMP_MODE_BIT1_LOWER 55
 
 #define UPPER_RELAY_1 56
-#define UPPER_RELAY_2 57
+#define UPPER_RELAY_2 57 // LEDs for LFO (lower Default)
 #define LFO_MULTI_BIT0_UPPER 58
 #define LFO_MULTI_BIT1_UPPER 59
 #define LFO_MULTI_BIT2_UPPER 60
