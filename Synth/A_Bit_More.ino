@@ -882,13 +882,13 @@ void DinHandlePitchBend(byte channel, int pitch) {
 }
 
 void getDelayTime() {
-  delaytimeL = lowerData[P_LFODelay];
+  delaytimeL = (lowerData[P_LFODelay] >> 2);
   if (delaytimeL <= 0) {
     delaytimeL = 0.1;
   }
   intervalL = (delaytimeL * 10);
 
-  delaytimeU = upperData[P_LFODelay];
+  delaytimeU = (upperData[P_LFODelay] >> 2);
   if (delaytimeU <= 0) {
     delaytimeU = 0.1;
   }
