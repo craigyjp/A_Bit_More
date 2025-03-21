@@ -2199,7 +2199,7 @@ void updateeffectNumSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effect", "1");
       }
-      srp.writePin(EFFECT_O_UPPER, LOW);
+      srp.writePin(EFFECT_0_UPPER, LOW);
       srp.writePin(EFFECT_1_UPPER, LOW);
       srp.writePin(EFFECT_2_UPPER, LOW);
       midiCCOut72(CCeffectNumSW, 0);
@@ -2209,7 +2209,7 @@ void updateeffectNumSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effect", "2");
       }
-      srp.writePin(EFFECT_O_UPPER, HIGH);
+      srp.writePin(EFFECT_0_UPPER, HIGH);
       srp.writePin(EFFECT_1_UPPER, LOW);
       srp.writePin(EFFECT_2_UPPER, LOW);
       midiCCOut72(CCeffectNumSW, 1);
@@ -2219,7 +2219,7 @@ void updateeffectNumSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effect", "3");
       }
-      srp.writePin(EFFECT_O_UPPER, LOW);
+      srp.writePin(EFFECT_0_UPPER, LOW);
       srp.writePin(EFFECT_1_UPPER, HIGH);
       srp.writePin(EFFECT_2_UPPER, LOW);
       midiCCOut72(CCeffectNumSW, 2);
@@ -2229,7 +2229,7 @@ void updateeffectNumSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effect", "4");
       }
-      srp.writePin(EFFECT_O_UPPER, HIGH);
+      srp.writePin(EFFECT_0_UPPER, HIGH);
       srp.writePin(EFFECT_1_UPPER, HIGH);
       srp.writePin(EFFECT_2_UPPER, LOW);
       midiCCOut72(CCeffectNumSW, 3);
@@ -2239,7 +2239,7 @@ void updateeffectNumSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effect", "5");
       }
-      srp.writePin(EFFECT_O_UPPER, LOW);
+      srp.writePin(EFFECT_0_UPPER, LOW);
       srp.writePin(EFFECT_1_UPPER, LOW);
       srp.writePin(EFFECT_2_UPPER, HIGH);
       midiCCOut72(CCeffectNumSW, 4);
@@ -2249,7 +2249,7 @@ void updateeffectNumSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effect", "6");
       }
-      srp.writePin(EFFECT_O_UPPER, HIGH);
+      srp.writePin(EFFECT_0_UPPER, HIGH);
       srp.writePin(EFFECT_1_UPPER, LOW);
       srp.writePin(EFFECT_2_UPPER, HIGH);
       midiCCOut72(CCeffectNumSW, 5);
@@ -2259,7 +2259,7 @@ void updateeffectNumSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effect", "7");
       }
-      srp.writePin(EFFECT_O_UPPER, LOW);
+      srp.writePin(EFFECT_0_UPPER, LOW);
       srp.writePin(EFFECT_1_UPPER, HIGH);
       srp.writePin(EFFECT_2_UPPER, HIGH);
       midiCCOut72(CCeffectNumSW, 6);
@@ -2269,7 +2269,7 @@ void updateeffectNumSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effect", "8");
       }
-      srp.writePin(EFFECT_O_UPPER, HIGH);
+      srp.writePin(EFFECT_0_UPPER, HIGH);
       srp.writePin(EFFECT_1_UPPER, HIGH);
       srp.writePin(EFFECT_2_UPPER, HIGH);
       midiCCOut72(CCeffectNumSW, 7);
@@ -2285,7 +2285,7 @@ void updateeffectNumSW(boolean announce) {
       srp.writePin(EFFECT_1_LOWER, LOW);
       srp.writePin(EFFECT_2_LOWER, LOW);
       if (wholemode) {
-        srp.writePin(EFFECT_O_UPPER, LOW);
+        srp.writePin(EFFECT_0_UPPER, LOW);
         srp.writePin(EFFECT_1_UPPER, LOW);
         srp.writePin(EFFECT_2_UPPER, LOW);
       }
@@ -2300,7 +2300,7 @@ void updateeffectNumSW(boolean announce) {
       srp.writePin(EFFECT_1_LOWER, LOW);
       srp.writePin(EFFECT_2_LOWER, LOW);
       if (wholemode) {
-        srp.writePin(EFFECT_O_UPPER, HIGH);
+        srp.writePin(EFFECT_0_UPPER, HIGH);
         srp.writePin(EFFECT_1_UPPER, LOW);
         srp.writePin(EFFECT_2_UPPER, LOW);
       }
@@ -2315,7 +2315,7 @@ void updateeffectNumSW(boolean announce) {
       srp.writePin(EFFECT_1_LOWER, HIGH);
       srp.writePin(EFFECT_2_LOWER, LOW);
       if (wholemode) {
-        srp.writePin(EFFECT_O_UPPER, LOW);
+        srp.writePin(EFFECT_0_UPPER, LOW);
         srp.writePin(EFFECT_1_UPPER, HIGH);
         srp.writePin(EFFECT_2_UPPER, LOW);
       }
@@ -2330,7 +2330,7 @@ void updateeffectNumSW(boolean announce) {
       srp.writePin(EFFECT_1_LOWER, HIGH);
       srp.writePin(EFFECT_2_LOWER, LOW);
       if (wholemode) {
-        srp.writePin(EFFECT_O_UPPER, HIGH);
+        srp.writePin(EFFECT_0_UPPER, HIGH);
         srp.writePin(EFFECT_1_UPPER, HIGH);
         srp.writePin(EFFECT_2_UPPER, LOW);
       }
@@ -2345,7 +2345,7 @@ void updateeffectNumSW(boolean announce) {
       srp.writePin(EFFECT_1_LOWER, LOW);
       srp.writePin(EFFECT_2_LOWER, HIGH);
       if (wholemode) {
-        srp.writePin(EFFECT_O_UPPER, LOW);
+        srp.writePin(EFFECT_0_UPPER, LOW);
         srp.writePin(EFFECT_1_UPPER, LOW);
         srp.writePin(EFFECT_2_UPPER, HIGH);
       }
@@ -2360,7 +2360,7 @@ void updateeffectNumSW(boolean announce) {
       srp.writePin(EFFECT_1_LOWER, LOW);
       srp.writePin(EFFECT_2_LOWER, HIGH);
       if (wholemode) {
-        srp.writePin(EFFECT_O_UPPER, HIGH);
+        srp.writePin(EFFECT_0_UPPER, HIGH);
         srp.writePin(EFFECT_1_UPPER, LOW);
         srp.writePin(EFFECT_2_UPPER, HIGH);
       }
@@ -2375,7 +2375,7 @@ void updateeffectNumSW(boolean announce) {
       srp.writePin(EFFECT_1_LOWER, HIGH);
       srp.writePin(EFFECT_2_LOWER, HIGH);
       if (wholemode) {
-        srp.writePin(EFFECT_O_UPPER, LOW);
+        srp.writePin(EFFECT_0_UPPER, LOW);
         srp.writePin(EFFECT_1_UPPER, HIGH);
         srp.writePin(EFFECT_2_UPPER, HIGH);
       }
@@ -2390,7 +2390,7 @@ void updateeffectNumSW(boolean announce) {
       srp.writePin(EFFECT_1_LOWER, HIGH);
       srp.writePin(EFFECT_2_LOWER, HIGH);
       if (wholemode) {
-        srp.writePin(EFFECT_O_UPPER, HIGH);
+        srp.writePin(EFFECT_0_UPPER, HIGH);
         srp.writePin(EFFECT_1_UPPER, HIGH);
         srp.writePin(EFFECT_2_UPPER, HIGH);
       }
@@ -4763,6 +4763,8 @@ void upperParamsToDisplay() {
   updatefilterLoop(0);
   updatevcaLoop(0);
   updatelfoMultiplier(0);
+  updateeffectBankSW(0);
+  updateeffectNumSW(0);
 }
 
 void lowerParamsToDisplay() {
@@ -4820,6 +4822,8 @@ void lowerParamsToDisplay() {
   updatefilterLoop(0);
   updatevcaLoop(0);
   updatelfoMultiplier(0);
+  updateeffectBankSW(0);
+  updateeffectNumSW(0);
 }
 
 void setAllButtons() {
@@ -5034,7 +5038,7 @@ void checkMux() {
   digitalWrite(MUX_1, muxInput & B0010);
   digitalWrite(MUX_2, muxInput & B0100);
   digitalWrite(MUX_3, muxInput & B1000);
-  delayMicroseconds(20);  // allow mux line to settle
+  delayMicroseconds(30);  // allow mux line to settle
 }
 
 void midiCCOut(byte cc, byte value) {
@@ -5098,8 +5102,8 @@ void writeDemux() {
       break;
 
     case 1:
-      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc1SawLevel] * MULT2V)) & 0xFFFF) << 4);
-      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc1SawLevel] * MULT2V)) & 0xFFFF) << 4);
+      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc1SawLevel] * MULT1_2V)) & 0xFFFF) << 4);
+      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc1SawLevel] * MULT1_2V)) & 0xFFFF) << 4);
 
       sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_filterDecay] * MULT5V)) & 0xFFFF) << 4);
       sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_filterDecay] * MULT5V)) & 0xFFFF) << 4);
@@ -5108,8 +5112,8 @@ void writeDemux() {
       break;
 
     case 2:
-      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc1PulseLevel] * MULT2V)) & 0xFFFF) << 4);
-      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc1PulseLevel] * MULT2V)) & 0xFFFF) << 4);
+      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc1PulseLevel] * MULT1V)) & 0xFFFF) << 4);
+      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc1PulseLevel] * MULT1V)) & 0xFFFF) << 4);
 
       sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_filterSustain] * MULT5V)) & 0xFFFF) << 4);
       sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_filterSustain] * MULT5V)) & 0xFFFF) << 4);
@@ -5118,8 +5122,8 @@ void writeDemux() {
       break;
 
     case 3:
-      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc1SubLevel] * MULT2V)) & 0xFFFF) << 4);
-      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc1SubLevel] * MULT2V)) & 0xFFFF) << 4);
+      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc1SubLevel] * MULT1V)) & 0xFFFF) << 4);
+      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc1SubLevel] * MULT1V)) & 0xFFFF) << 4);
 
       sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_filterRelease] * MULT5V)) & 0xFFFF) << 4);
       sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_filterRelease] * MULT5V)) & 0xFFFF) << 4);
@@ -5148,8 +5152,8 @@ void writeDemux() {
       break;
 
     case 6:
-      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc2SawLevel] * MULT2V)) & 0xFFFF) << 4);
-      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc2SawLevel] * MULT2V)) & 0xFFFF) << 4);
+      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc2SawLevel] * MULT1_2V)) & 0xFFFF) << 4);
+      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc2SawLevel] * MULT1_2V)) & 0xFFFF) << 4);
 
       sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_ampSustain] * MULT5V)) & 0xFFFF) << 4);
       sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_ampSustain] * MULT5V)) & 0xFFFF) << 4);
@@ -5158,8 +5162,8 @@ void writeDemux() {
       break;
 
     case 7:
-      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc2PulseLevel] * MULT2V)) & 0xFFFF) << 4);
-      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc2PulseLevel] * MULT2V)) & 0xFFFF) << 4);
+      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc2PulseLevel] * MULT1V)) & 0xFFFF) << 4);
+      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc2PulseLevel] * MULT1V)) & 0xFFFF) << 4);
 
       sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_ampRelease] * MULT5V)) & 0xFFFF) << 4);
       sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_ampRelease] * MULT5V)) & 0xFFFF) << 4);
@@ -5168,8 +5172,8 @@ void writeDemux() {
       break;
 
     case 8:
-      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc2TriangleLevel] * MULT2V)) & 0xFFFF) << 4);
-      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc2TriangleLevel] * MULT2V)) & 0xFFFF) << 4);
+      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_osc2TriangleLevel] * MULT1_2V)) & 0xFFFF) << 4);
+      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_osc2TriangleLevel] * MULT1_2V)) & 0xFFFF) << 4);
 
       sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_filterEGlevel] * MULT5V)) & 0xFFFF) << 4);
       sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_filterEGlevel] * MULT5V)) & 0xFFFF) << 4);

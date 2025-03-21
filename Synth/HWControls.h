@@ -31,6 +31,8 @@ ADC *adc = new ADC();
 
 
 //Note DAC
+#define MULT1V 3.3
+#define MULT1_2V 3.8
 #define MULT2V 6.475
 #define MULT5V 8
 #define MULT33V 5.325
@@ -228,9 +230,9 @@ ADC *adc = new ADC();
 #define FILTER_LIN_LOG_UPPER 14
 #define AMP_LIN_LOG_UPPER 15
 
-#define EFFECT_O_UPPER 16
+#define EFFECT_2_UPPER 16
 #define EFFECT_1_UPPER 17
-#define EFFECT_2_UPPER 18
+#define EFFECT_0_UPPER 18
 #define EFFECT_INTERNAL_UPPER 19
 #define FILTER_POLE_UPPER 20
 #define FILTERA_UPPER 21
@@ -255,9 +257,9 @@ ADC *adc = new ADC();
 #define FILTER_LIN_LOG_LOWER 38
 #define AMP_LIN_LOG_LOWER 39
 
-#define EFFECT_0_LOWER 40
+#define EFFECT_2_LOWER 40
 #define EFFECT_1_LOWER 41
-#define EFFECT_2_LOWER 42
+#define EFFECT_0_LOWER 42
 #define EFFECT_INTERNAL_LOWER 43
 #define FILTER_POLE_LOWER 44
 #define FILTERA_LOWER 45
