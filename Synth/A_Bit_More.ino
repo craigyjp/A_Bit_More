@@ -458,7 +458,8 @@ void commandNoteUni(int noteMsg) {
 void myNoteOn(byte channel, byte note, byte velocity) {
 
   // for lfo multi trigger
-  numberOfNotes = numberOfNotes + 1;
+  numberOfNotesU = numberOfNotesU + 1;
+  numberOfNotesL = numberOfNotesL + 1;
 
   //Check for out of range notes
   if (note >= 0 && note <= 127) {
@@ -639,8 +640,10 @@ void myNoteOn(byte channel, byte note, byte velocity) {
 
 void myNoteOff(byte channel, byte note, byte velocity) {
 
-  numberOfNotes = numberOfNotes - 1;
-  oldnumberOfNotes = oldnumberOfNotes - 1;
+  numberOfNotesU = numberOfNotesU - 1;
+  oldnumberOfNotesU = oldnumberOfNotesU - 1;
+  numberOfNotesL = numberOfNotesL - 1;
+  oldnumberOfNotesL = oldnumberOfNotesL - 1;
 
   switch (panelData[P_keyboardMode]) {
     case 0:
@@ -2406,7 +2409,7 @@ void updateeffectBankSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 1");
       }
-      srp.writePin(EFFECT_INTERNAL_UPPER, LOW); // Internal selected
+      srp.writePin(EFFECT_INTERNAL_UPPER, LOW);  // Internal selected
       srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
       srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
       srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
@@ -2417,7 +2420,7 @@ void updateeffectBankSW(boolean announce) {
         showCurrentParameterPage("Effects", "Bank 2");
       }
       srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_1_UPPER, LOW); // Bank 2 selected
+      srp.writePin(EFFECT_BANK_1_UPPER, LOW);  // Bank 2 selected
       srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
       srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
       midiCCOut72(CCeffectBankSW, 1);
@@ -2428,7 +2431,7 @@ void updateeffectBankSW(boolean announce) {
       }
       srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
       srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_2_UPPER, LOW); // Bank 3 selected
+      srp.writePin(EFFECT_BANK_2_UPPER, LOW);  // Bank 3 selected
       srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
       midiCCOut72(CCeffectBankSW, 2);
       midiCCOut(CCeffectBankSW, 2);
@@ -2439,7 +2442,7 @@ void updateeffectBankSW(boolean announce) {
       srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
       srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
       srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_3_UPPER, LOW); // Bank 4 selected
+      srp.writePin(EFFECT_BANK_3_UPPER, LOW);  // Bank 4 selected
       midiCCOut72(CCeffectBankSW, 3);
       midiCCOut(CCeffectBankSW, 3);
     }
@@ -2448,12 +2451,12 @@ void updateeffectBankSW(boolean announce) {
       if (announce) {
         showCurrentParameterPage("Effects", "Bank 1");
       }
-      srp.writePin(EFFECT_INTERNAL_LOWER, LOW); // Internal selected
+      srp.writePin(EFFECT_INTERNAL_LOWER, LOW);  // Internal selected
       srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
       srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
       srp.writePin(EFFECT_BANK_3_LOWER, HIGH);
       if (wholemode) {
-        srp.writePin(EFFECT_INTERNAL_UPPER, LOW); // Internal selected
+        srp.writePin(EFFECT_INTERNAL_UPPER, LOW);  // Internal selected
         srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
@@ -2482,12 +2485,12 @@ void updateeffectBankSW(boolean announce) {
       }
       srp.writePin(EFFECT_INTERNAL_LOWER, HIGH);
       srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_2_LOWER, LOW);   // Bank 3 selected
+      srp.writePin(EFFECT_BANK_2_LOWER, LOW);  // Bank 3 selected
       srp.writePin(EFFECT_BANK_3_LOWER, HIGH);
       if (wholemode) {
         srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_2_UPPER, LOW);   // Bank 3 selected
+        srp.writePin(EFFECT_BANK_2_UPPER, LOW);  // Bank 3 selected
         srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
       }
       midiCCOut72(CCeffectBankSW, 2);
@@ -2499,12 +2502,12 @@ void updateeffectBankSW(boolean announce) {
       srp.writePin(EFFECT_INTERNAL_LOWER, HIGH);
       srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
       srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_3_LOWER, LOW);   // Bank 4 selected
+      srp.writePin(EFFECT_BANK_3_LOWER, LOW);  // Bank 4 selected
       if (wholemode) {
         srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_3_UPPER, LOW);   // Bank 4 selected
+        srp.writePin(EFFECT_BANK_3_UPPER, LOW);  // Bank 4 selected
       }
       midiCCOut72(CCeffectBankSW, 3);
       midiCCOut(CCeffectBankSW, 3);
@@ -3492,12 +3495,18 @@ void updateMonoMulti(boolean announce) {
       }
       midiCCOut(CCmonoMulti, 0);
       midiCCOut72(CCmonoMulti, 0);
+      if (wholemode) {
+        upperData[P_monoMulti] = lowerData[P_monoMulti];
+      }
     } else {
       if (announce) {
         showCurrentParameterPage("LFO Retrigger", "On");
       }
       midiCCOut(CCmonoMulti, 127);
       midiCCOut72(CCmonoMulti, 1);
+      if (wholemode) {
+        upperData[P_monoMulti] = lowerData[P_monoMulti];
+      }
     }
   }
 }
