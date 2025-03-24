@@ -925,10 +925,15 @@ void updatefmDepth(boolean announce) {
     midiCCOut61(WSFMDepth, lowerData[P_fmDepth] >> midioutfrig);
     midiCCOut(CCfmDepth, lowerData[P_fmDepth] >> midioutfrig);
     midiCCOut71(CCfmDepth, lowerData[P_fmDepth] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSFMDepth, upperData[P_fmDepth] >> midioutfrig);
+    }
   }
 }
 
 void updateosc2PW(boolean announce) {
+
+
   if (announce) {
     showCurrentParameterPage("OSC2 PW", String(osc2PWstr) + " %");
   }
@@ -965,6 +970,14 @@ void updateosc2PWM(boolean announce) {
 }
 
 void updateosc1PW(boolean announce) {
+
+  // Serial.print("Wholemode ");
+  // Serial.println(wholemode);
+  // Serial.print("Upper PW ");
+  // Serial.println(upperData[P_osc1PW]);
+  // Serial.print("Lower PW ");
+  // Serial.println(lowerData[P_osc1PW]);
+
   if (announce) {
     showCurrentParameterPage("OSC1 PW", String(osc1PWstr) + " %");
   }
@@ -1002,6 +1015,7 @@ void updateosc1PWM(boolean announce) {
 
 void updateosc1Range(boolean announce) {
   if (upperSW) {
+    panelData[P_osc1Range] = upperData[P_osc1Range];
     if (upperData[P_osc1Range] == 2) {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("8"));
@@ -1025,6 +1039,7 @@ void updateosc1Range(boolean announce) {
       midiCCOut72(CCosc1Oct, 0);
     }
   } else {
+    panelData[P_osc1Range] = lowerData[P_osc1Range];
     if (lowerData[P_osc1Range] == 2) {
       if (announce) {
         showCurrentParameterPage("Osc1 Range", String("8"));
@@ -1061,6 +1076,7 @@ void updateosc1Range(boolean announce) {
 
 void updateosc2Range(boolean announce) {
   if (upperSW) {
+    panelData[P_osc2Range] = upperData[P_osc2Range];
     if (upperData[P_osc2Range] == 2) {
       if (announce) {
         showCurrentParameterPage("Osc2 Range", String("8"));
@@ -1084,6 +1100,7 @@ void updateosc2Range(boolean announce) {
       midiCCOut72(CCosc2Oct, 0);
     }
   } else {
+    panelData[P_osc2Range] = lowerData[P_osc2Range];
     if (lowerData[P_osc2Range] == 2) {
       if (announce) {
         showCurrentParameterPage("Osc2 Range", String("8"));
@@ -1132,7 +1149,6 @@ void updateglideTime(boolean announce) {
     midiCCOut71(CCglideTime, lowerData[P_glideTime] >> midioutfrig);
     if (wholemode) {
       midiCCOut62(WSglideTime, upperData[P_glideTime] >> midioutfrig);
-      //midiCCOut71(CCglideTime, upperData[P_glideTime] >> midioutfrig);
     }
   }
 }
@@ -1706,6 +1722,9 @@ void updatemodWheelDepth(boolean announce) {
     midiCCOut61(WSmodDepth, lowerData[P_modWheelDepth]);
     midiCCOut(CCmodWheelDepth, lowerData[P_modWheelDepth] >> midioutfrig);
     midiCCOut71(CCmodWheelDepth, lowerData[P_modWheelDepth] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSmodDepth, upperData[P_modWheelDepth]);
+    }
   }
 }
 
@@ -1721,6 +1740,9 @@ void updatePitchBendDepth(boolean announce) {
     midiCCOut61(WSbendRange, lowerData[P_PitchBendLevel]);
     midiCCOut(CCPitchBend, lowerData[P_PitchBendLevel] >> midioutfrig);
     midiCCOut71(CCPitchBend, lowerData[P_PitchBendLevel]);
+    if (wholemode) {
+      midiCCOut62(WSbendRange, upperData[P_PitchBendLevel]);
+    }
   }
 }
 
@@ -2410,115 +2432,94 @@ void updateeffectNumSW(boolean announce) {
 }
 
 void updateeffectBankSW(boolean announce) {
+  int bank = upperSW ? upperData[P_effectBank] : lowerData[P_effectBank];
+
+  if (announce) {
+    showCurrentParameterPage("Effects", "Bank " + String(bank + 1));
+  }
+
   if (upperSW) {
-    if (upperData[P_effectBank] == 0) {
-      if (announce) {
-        showCurrentParameterPage("Effects", "Bank 1");
-      }
-      srp.writePin(EFFECT_INTERNAL_UPPER, LOW);  // Internal selected
-      srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
-      midiCCOut72(CCeffectBankSW, 0);
-      midiCCOut(CCeffectBankSW, 0);
-    } else if (upperData[P_effectBank] == 1) {
-      if (announce) {
-        showCurrentParameterPage("Effects", "Bank 2");
-      }
+    // Step 1: Enter external mode
+    srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
+
+    // Step 2: Reset all CS lines
+    srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
+    srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
+    srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
+    srp.update();
+
+    if (bank == 0) {
+      // Internal ROM selected
+      srp.writePin(EFFECT_INTERNAL_UPPER, LOW);
+      srp.update();
+    } else {
+      // Select only the chosen EEPROM
+      if (bank == 1) srp.writePin(EFFECT_BANK_1_UPPER, LOW);
+      else if (bank == 2) srp.writePin(EFFECT_BANK_2_UPPER, LOW);
+      else if (bank == 3) srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+
+      srp.update();  // or srp.latch(), or whatever your library uses
+      srp.writePin(EFFECT_INTERNAL_UPPER, LOW);
+      srp.update();
       srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_1_UPPER, LOW);  // Bank 2 selected
-      srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
-      midiCCOut72(CCeffectBankSW, 1);
-      midiCCOut(CCeffectBankSW, 1);
-    } else if (upperData[P_effectBank] == 2) {
-      if (announce) {
-        showCurrentParameterPage("Effects", "Bank 3");
-      }
-      srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_2_UPPER, LOW);  // Bank 3 selected
-      srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
-      midiCCOut72(CCeffectBankSW, 2);
-      midiCCOut(CCeffectBankSW, 2);
-    } else if (upperData[P_effectBank] == 3) {
-      if (announce) {
-        showCurrentParameterPage("Effects", "Bank 4");
-      }
-      srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-      srp.writePin(EFFECT_BANK_3_UPPER, LOW);  // Bank 4 selected
-      midiCCOut72(CCeffectBankSW, 3);
-      midiCCOut(CCeffectBankSW, 3);
+      srp.update();
     }
+
   } else {
-    if (lowerData[P_effectBank] == 0) {
-      if (announce) {
-        showCurrentParameterPage("Effects", "Bank 1");
-      }
-      srp.writePin(EFFECT_INTERNAL_LOWER, LOW);  // Internal selected
-      srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_3_LOWER, HIGH);
+    // Step 1: Enter external mode
+    srp.writePin(EFFECT_INTERNAL_LOWER, HIGH);
+
+    // Step 2: Reset all CS lines
+    srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
+    srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
+    srp.writePin(EFFECT_BANK_3_LOWER, HIGH);
+    srp.update();
+
+    if (bank == 0) {
+      srp.writePin(EFFECT_INTERNAL_LOWER, LOW);
+      srp.update();
       if (wholemode) {
-        srp.writePin(EFFECT_INTERNAL_UPPER, LOW);  // Internal selected
+        srp.writePin(EFFECT_INTERNAL_UPPER, LOW);
         srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
+        srp.update();
       }
-      midiCCOut72(CCeffectBankSW, 0);
-      midiCCOut(CCeffectBankSW, 0);
-    } else if (lowerData[P_effectBank] == 1) {
-      if (announce) {
-        showCurrentParameterPage("Effects", "Bank 2");
-      }
+
+    } else {
+      if (bank == 1) srp.writePin(EFFECT_BANK_1_LOWER, LOW);
+      else if (bank == 2) srp.writePin(EFFECT_BANK_2_LOWER, LOW);
+      else if (bank == 3) srp.writePin(EFFECT_BANK_3_LOWER, LOW);
+
+      srp.update();
+      srp.writePin(EFFECT_INTERNAL_LOWER, LOW);
+      srp.update();
       srp.writePin(EFFECT_INTERNAL_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_1_LOWER, LOW);  // Bank 2 selected
-      srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_3_LOWER, HIGH);
-      if (wholemode) {
-        srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_1_UPPER, LOW);  // Bank 2 selected
-        srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
-      }
-      midiCCOut72(CCeffectBankSW, 1);
-      midiCCOut(CCeffectBankSW, 1);
-    } else if (lowerData[P_effectBank] == 2) {
-      if (announce) {
-        showCurrentParameterPage("Effects", "Bank 3");
-      }
-      srp.writePin(EFFECT_INTERNAL_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_2_LOWER, LOW);  // Bank 3 selected
-      srp.writePin(EFFECT_BANK_3_LOWER, HIGH);
-      if (wholemode) {
-        srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_2_UPPER, LOW);  // Bank 3 selected
-        srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
-      }
-      midiCCOut72(CCeffectBankSW, 2);
-      midiCCOut(CCeffectBankSW, 2);
-    } else if (lowerData[P_effectBank] == 3) {
-      if (announce) {
-        showCurrentParameterPage("Effects", "Bank 4");
-      }
-      srp.writePin(EFFECT_INTERNAL_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_1_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_2_LOWER, HIGH);
-      srp.writePin(EFFECT_BANK_3_LOWER, LOW);  // Bank 4 selected
+      srp.update();
+
       if (wholemode) {
         srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_1_UPPER, HIGH);
         srp.writePin(EFFECT_BANK_2_UPPER, HIGH);
-        srp.writePin(EFFECT_BANK_3_UPPER, LOW);  // Bank 4 selected
+        srp.writePin(EFFECT_BANK_3_UPPER, HIGH);
+        srp.update();
+
+        if (bank == 1) srp.writePin(EFFECT_BANK_1_UPPER, LOW);
+        else if (bank == 2) srp.writePin(EFFECT_BANK_2_UPPER, LOW);
+        else if (bank == 3) srp.writePin(EFFECT_BANK_3_UPPER, LOW);
+
+        srp.update();
+        srp.writePin(EFFECT_INTERNAL_UPPER, LOW);
+        srp.update();
+        srp.writePin(EFFECT_INTERNAL_UPPER, HIGH);
+        srp.update();
       }
-      midiCCOut72(CCeffectBankSW, 3);
-      midiCCOut(CCeffectBankSW, 3);
     }
   }
+
+  // Send MIDI
+  midiCCOut72(CCeffectBankSW, bank);
+  midiCCOut(CCeffectBankSW, bank);
 }
 
 void updatelfoMultiplier(boolean announce) {
@@ -4706,17 +4707,18 @@ void setCurrentPatchData(String data[]) {
     setAllButtons();
 
     if (wholemode) {
-      patchNameU = data[0];
-      tempData[0] = 0;
-      memcpy(upperData, tempData, sizeof(tempData));
+      // patchNameU = data[0];
+      // tempData[0] = 0;
+      // memcpy(upperData, tempData, sizeof(tempData));
 
       // Update previous values and pick-up flags
       for (int i = 1; i <= 73; i++) {
-        prevUpperData[i] = upperData[i];  // Store previous value
-        upperPickUp[i] = true;            // Enable pick-up flag
+        upperData[i] = lowerData[i];  // Store previous value
+        //upperPickUp[i] = true;            // Enable pick-up flag
       }
 
       oldfilterCutoffU = upperData[P_filterCutoff];
+      upperParamsToDisplay();
     }
   }
 
@@ -5355,10 +5357,12 @@ void checkSwitches() {
   button.update(digitalRead(TUNE_BUTTON), 50, LOW);
   if (button.held()) {
     midiCCOut61(WSresetAutotune, 127);
+    midiCCOut62(WSresetAutotune, 127);
     showCurrentParameterPage("Autotune", String("Reset"));
     //digitalWrite(TUNE_LED, LOW);
   } else if (button.released(true)) {
     midiCCOut61(WSautotune, 127);
+    midiCCOut62(WSautotune, 127);
     showCurrentParameterPage("Autotune", String("Started"));
     //digitalWrite(TUNE_LED, HIGH);
   }
