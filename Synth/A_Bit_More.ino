@@ -4638,49 +4638,55 @@ void myProgramChange(byte channel, byte program) {
 }
 
 void myAfterTouch(byte channel, byte value) {
+  
+  Serial.print("Upper Dest ");
+  Serial.println(upperData[P_AfterTouchDest]);
+  Serial.print("Lower Dest ");
+  Serial.println(lowerData[P_AfterTouchDest]);
+
   afterTouch = int(value * MIDICCTOPOT);
   switch (upperData[P_AfterTouchDest]) {
     case 1:
-      midiCCOut62(WSmodwheel, value);
+      MIDI6.sendAfterTouch(value, 2);
       break;
-    case 2:
-      upperData[P_filterCutoff] = (oldfilterCutoffU + afterTouch);
-      if (afterTouch < 10) {
-        upperData[P_filterCutoff] = oldfilterCutoffU;
-      }
-      if (upperData[P_filterCutoff] > 4095) {
-        upperData[P_filterCutoff] = 4095;
-      }
-      break;
-    case 3:
-      upperData[P_filterLFO] = afterTouch;
-      break;
-    case 4:
-      upperData[P_amDepth] = afterTouch;
-      break;
+    // case 2:
+    //   upperData[P_filterCutoff] = (oldfilterCutoffU + afterTouch);
+    //   if (afterTouch < 10) {
+    //     upperData[P_filterCutoff] = oldfilterCutoffU;
+    //   }
+    //   if (upperData[P_filterCutoff] > 4095) {
+    //     upperData[P_filterCutoff] = 4095;
+    //   }
+    //   break;
+    // case 3:
+    //   upperData[P_filterLFO] = afterTouch;
+    //   break;
+    // case 4:
+    //   upperData[P_amDepth] = afterTouch;
+    //   break;
   }
   switch (lowerData[P_AfterTouchDest]) {
     case 1:
-      midiCCOut61(WSmodwheel, value);
+      MIDI6.sendAfterTouch(value, 1);
       if (wholemode) {
-        midiCCOut62(WSmodwheel, value);
+        MIDI6.sendAfterTouch(value, 2);
       }
       break;
-    case 2:
-      lowerData[P_filterCutoff] = (oldfilterCutoffL + afterTouch);
-      if (afterTouch < 10) {
-        lowerData[P_filterCutoff] = oldfilterCutoffL;
-      }
-      if (lowerData[P_filterCutoff] > 4095) {
-        lowerData[P_filterCutoff] = 4095;
-      }
-      break;
-    case 3:
-      lowerData[P_filterLFO] = afterTouch;
-      break;
-    case 4:
-      lowerData[P_amDepth] = afterTouch;
-      break;
+    // case 2:
+    //   lowerData[P_filterCutoff] = (oldfilterCutoffL + afterTouch);
+    //   if (afterTouch < 10) {
+    //     lowerData[P_filterCutoff] = oldfilterCutoffL;
+    //   }
+    //   if (lowerData[P_filterCutoff] > 4095) {
+    //     lowerData[P_filterCutoff] = 4095;
+    //   }
+    //   break;
+    // case 3:
+    //   lowerData[P_filterLFO] = afterTouch;
+    //   break;
+    // case 4:
+    //   lowerData[P_amDepth] = afterTouch;
+    //   break;
   }
 }
 

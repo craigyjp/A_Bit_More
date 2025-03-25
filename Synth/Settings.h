@@ -71,16 +71,16 @@ void settingsAfterTouchU(int index, const char *value) {
   if (strcmp(value, "CutOff Freq") == 0) upperData[60] = 2;
   if (strcmp(value, "VCF Mod") == 0) upperData[60] = 3;
   if (strcmp(value, "VCA Mod") == 0) upperData[60] = 4;
-  storeAfterTouchU(AfterTouchDestU);
+  storeAfterTouchU(upperData[60]);
 }
 
 void settingsAfterTouchL(int index, const char *value) {
-  if (strcmp(value, "Off") == 0) AfterTouchDestL = 0;
-  if (strcmp(value, "DCO Mod") == 0) AfterTouchDestL = 1;
-  if (strcmp(value, "CutOff Freq") == 0) AfterTouchDestL = 2;
-  if (strcmp(value, "VCF Mod") == 0) AfterTouchDestL = 3;
-  if (strcmp(value, "VCA Mod") == 0) AfterTouchDestL = 4;
-  storeAfterTouchL(AfterTouchDestL);
+  if (strcmp(value, "Off") == 0) lowerData[60] = 0;
+  if (strcmp(value, "DCO Mod") == 0) lowerData[60] = 1;
+  if (strcmp(value, "CutOff Freq") == 0) lowerData[60] = 2;
+  if (strcmp(value, "VCF Mod") == 0) lowerData[60] = 3;
+  if (strcmp(value, "VCA Mod") == 0) lowerData[60] = 4;
+  storeAfterTouchL(lowerData[60]);
 }
 
 void settingsEncoderDir(int index, const char *value) {
