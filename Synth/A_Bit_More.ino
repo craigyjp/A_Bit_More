@@ -931,6 +931,24 @@ void updatefmDepth(boolean announce) {
   }
 }
 
+void updateATDepth(boolean announce) {
+  if (announce) {
+    showCurrentParameterPage("AT Depth", int(ATDepthstr));
+  }
+  if (upperSW) {
+    midiCCOut62(WSATmodDepth, upperData[P_ATDepth] >> midioutfrig);
+    midiCCOut(CCATDepth, upperData[P_ATDepth] >> midioutfrig);
+    midiCCOut71(CCATDepth, upperData[P_ATDepth] >> midioutfrig);
+  } else {
+    midiCCOut61(WSATmodDepth, lowerData[P_ATDepth] >> midioutfrig);
+    midiCCOut(CCATDepth, lowerData[P_ATDepth] >> midioutfrig);
+    midiCCOut71(CCATDepth, lowerData[P_ATDepth] >> midioutfrig);
+    if (wholemode) {
+      midiCCOut62(WSATmodDepth, upperData[P_ATDepth] >> midioutfrig);
+    }
+  }
+}
+
 void updateosc2PW(boolean announce) {
 
 
@@ -3462,9 +3480,11 @@ void updateupperSW(boolean announce) {
       // if (announce) {
       //   showCurrentParameterPage("Upper", "On");
       // }
+      midiCCOut72(CClowerSW, 0);
+      midiCCOut72(CCupperSW, 1);
       upperParamsToDisplay();
       setAllButtons();
-      midiCCOut72(CCupperSW, 1);
+      
     }
   }
 }
@@ -3474,9 +3494,11 @@ void updatelowerSW(boolean announce) {
     // if (announce) {
     //   showCurrentParameterPage("Lower", "On");
     // }
+    midiCCOut72(CCupperSW, 0);
+    midiCCOut72(CClowerSW, 1);
     lowerParamsToDisplay();
     setAllButtons();
-    midiCCOut72(CClowerSW, 1);
+    
   }
 }
 
@@ -3719,6 +3741,25 @@ void myControlChange(byte channel, byte control, int value) {
       }
       osc2Intervalstr = value;
       updateosc2Interval(1);
+      break;
+
+    case CCATDepth:
+      if (upperSW) {
+        if (pickUpActive && upperPickUp[P_ATDepth] && ((prevUpperData[P_ATDepth] + TOLERANCE) < (value) || (prevUpperData[P_ATDepth] - TOLERANCE) > (value))) return;  //PICK-UP
+        upperPickUp[P_ATDepth] = false;
+        upperData[P_ATDepth] = value;
+        prevUpperData[P_ATDepth] = upperData[P_ATDepth];  //PICK-UP
+      } else {
+        if (pickUpActive && lowerPickUp[P_ATDepth] && ((prevLowerData[P_ATDepth] + TOLERANCE) < (value) || (prevLowerData[P_ATDepth] - TOLERANCE) > (value))) return;  //PICK-UP
+        lowerPickUp[P_ATDepth] = false;
+        lowerData[P_ATDepth] = value;
+        prevLowerData[P_ATDepth] = lowerData[P_ATDepth];  //PICK-UP
+        if (wholemode) {
+          upperData[P_ATDepth] = value;
+        }
+      }
+      ATDepthstr = value >> midioutfrig;
+      updateATDepth(1);
       break;
 
     case CCnoiseLevel:
@@ -4670,10 +4711,10 @@ void recallPatch(int patchNo) {
 }
 
 void setCurrentPatchData(String data[]) {
-  int tempData[74];  // Temporary array for converted integers
+  int tempData[75];  // Temporary array for converted integers
 
   // Convert data from String to int once
-  for (int i = 1; i <= 73; i++) {
+  for (int i = 1; i <= 74; i++) {
     tempData[i] = data[i].toInt();
   }
 
@@ -4683,7 +4724,7 @@ void setCurrentPatchData(String data[]) {
     memcpy(upperData, tempData, sizeof(tempData));
 
     // Update previous values and pick-up flags
-    for (int i = 1; i <= 73; i++) {
+    for (int i = 1; i <= 74; i++) {
       prevUpperData[i] = upperData[i];  // Store previous value
       upperPickUp[i] = true;            // Enable pick-up flag
     }
@@ -4697,7 +4738,7 @@ void setCurrentPatchData(String data[]) {
     memcpy(lowerData, tempData, sizeof(tempData));
 
     // Update previous values and pick-up flags
-    for (int i = 1; i <= 73; i++) {
+    for (int i = 1; i <= 74; i++) {
       prevLowerData[i] = lowerData[i];  // Store previous value
       lowerPickUp[i] = true;            // Enable pick-up flag
     }
@@ -4707,12 +4748,9 @@ void setCurrentPatchData(String data[]) {
     setAllButtons();
 
     if (wholemode) {
-      // patchNameU = data[0];
-      // tempData[0] = 0;
-      // memcpy(upperData, tempData, sizeof(tempData));
 
       // Update previous values and pick-up flags
-      for (int i = 1; i <= 73; i++) {
+      for (int i = 1; i <= 74; i++) {
         upperData[i] = lowerData[i];  // Store previous value
         //upperPickUp[i] = true;            // Enable pick-up flag
       }
@@ -4767,6 +4805,7 @@ void upperParamsToDisplay() {
   updatevolumeControl(0);
   updatePM_DCO2(0);
   updatePM_FilterEnv(0);
+  updateATDepth(0);
   updateamDepth(0);
   updateosc1Range(0);
   updateosc2Range(0);
@@ -4827,6 +4866,7 @@ void lowerParamsToDisplay() {
   updatePM_DCO2(0);
   updatePM_FilterEnv(0);
   updateamDepth(0);
+  updateATDepth(0);
   updateosc1Range(0);
   updateosc2Range(0);
   updateFilterType(0);
@@ -4875,7 +4915,8 @@ String getCurrentPatchData() {
            + "," + String(upperData[P_oldampAttack]) + "," + String(upperData[P_oldampDecay]) + "," + String(upperData[P_oldampSustain]) + "," + String(upperData[P_oldampRelease])
            + "," + String(upperData[P_AfterTouchDest]) + "," + String(upperData[P_filterLogLin]) + "," + String(upperData[P_ampLogLin]) + "," + String(upperData[P_osc2TriangleLevel])
            + "," + String(upperData[P_osc1SubLevel]) + "," + String(upperData[P_keyboardMode]) + "," + String(upperData[P_LFODelay]) + "," + String(upperData[P_effectNum]) + "," + String(upperData[P_effectBank])
-           + "," + String(upperData[P_pmDestDCO1]) + "," + String(upperData[P_pmDestFilter]) + "," + String(upperData[P_lfoMultiplier]) + "," + String(upperData[P_NotePriority]) + "," + String(upperData[P_keytrackSW]);
+           + "," + String(upperData[P_pmDestDCO1]) + "," + String(upperData[P_pmDestFilter]) + "," + String(upperData[P_lfoMultiplier]) + "," + String(upperData[P_NotePriority]) + "," + String(upperData[P_keytrackSW])
+           + "," + String(upperData[P_ATDepth]);
   } else {
     return patchNameL + "," + String(upperData[P_pwLFO]) + "," + String(lowerData[P_fmDepth]) + "," + String(lowerData[P_osc2PW]) + "," + String(lowerData[P_osc2PWM])
            + "," + String(lowerData[P_osc1PW]) + "," + String(lowerData[P_osc1PWM]) + "," + String(lowerData[P_osc1Range]) + "," + String(lowerData[P_osc2Range]) + "," + String(lowerData[P_osc2Interval])
@@ -4893,7 +4934,8 @@ String getCurrentPatchData() {
            + "," + String(lowerData[P_oldampAttack]) + "," + String(lowerData[P_oldampDecay]) + "," + String(lowerData[P_oldampSustain]) + "," + String(lowerData[P_oldampRelease])
            + "," + String(lowerData[P_AfterTouchDest]) + "," + String(lowerData[P_filterLogLin]) + "," + String(lowerData[P_ampLogLin]) + "," + String(lowerData[P_osc2TriangleLevel])
            + "," + String(lowerData[P_osc1SubLevel]) + "," + String(lowerData[P_keyboardMode]) + "," + String(lowerData[P_LFODelay]) + "," + String(lowerData[P_effectNum]) + "," + String(lowerData[P_effectBank])
-           + "," + String(lowerData[P_pmDestDCO1]) + "," + String(lowerData[P_pmDestFilter]) + "," + String(lowerData[P_lfoMultiplier]) + "," + String(lowerData[P_NotePriority]) + "," + String(lowerData[P_keytrackSW]);
+           + "," + String(lowerData[P_pmDestDCO1]) + "," + String(lowerData[P_pmDestFilter]) + "," + String(lowerData[P_lfoMultiplier]) + "," + String(lowerData[P_NotePriority]) + "," + String(lowerData[P_keytrackSW])
+           + "," + String(lowerData[P_ATDepth]);
   }
 }
 
@@ -5012,6 +5054,9 @@ void checkMux() {
         break;
       case MUX3_amplifierLFO:
         myControlChange(midiChannel, CCamDepth, mux3Read);
+        break;
+      case MUX3_ATDepth:
+        myControlChange(midiChannel, CCATDepth, mux3Read);
         break;
       case MUX3_noiseLevel:
         myControlChange(midiChannel, CCnoiseLevel, mux3Read);

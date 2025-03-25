@@ -18,13 +18,13 @@ int lastPlayedNote = -1;  // Track the last note played
 int lastPlayedVoice = 0;  // Track the voice of the last note played
 int lastUsedVoice = 0;    // Global variable to store the last used voice
 
-int upperData[76];
-int lowerData[76];
-int panelData[76];
-int prevUpperData[76];
-bool upperPickUp[76];
-int prevLowerData[76];
-bool lowerPickUp[76];
+int upperData[77];
+int lowerData[77];
+int panelData[77];
+int prevUpperData[77];
+bool upperPickUp[77];
+int prevLowerData[77];
+bool lowerPickUp[77];
 
 #define P_sysex 0
 #define P_pwLFO 1
@@ -100,6 +100,7 @@ bool lowerPickUp[76];
 #define P_lfoMultiplier 71
 #define P_NotePriority 72
 #define P_keytrackSW 73
+#define P_ATDepth 74
 
 int playMode = 0;
 
@@ -145,6 +146,7 @@ int oldAfterTouchDestU = 0;
 int oldAfterTouchDestL = 0;
 float pwLFOstr = 0;
 float fmDepthstr = 0;
+float ATDepthstr = 0;
 float osc2PWstr = 0;
 float osc2PWMstr = 0;
 float osc1PWstr = 0;

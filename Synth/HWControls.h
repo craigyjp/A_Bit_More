@@ -85,8 +85,8 @@ ADC *adc = new ADC();
 #define MUX3_effectMix 1
 #define MUX3_volumeControl 2
 #define MUX3_amplifierLFO 3
-#define MUX3_spare4 4
-#define MUX3_spare5 5
+#define MUX3_spare4 5
+#define MUX3_ATDepth 4
 #define MUX3_noiseLevel 6 
 #define MUX3_pwLFO 7
 #define MUX3_LFORate 8
