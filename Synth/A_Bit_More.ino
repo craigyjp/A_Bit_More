@@ -901,6 +901,17 @@ void allNotesOff() {
 }
 
 void updatepwLFO(boolean announce) {
+  // Serial.print("Upper SW ");
+  // Serial.println(upperSW);
+  // Serial.print("Lower SW ");
+  // Serial.println(lowerSW);
+  // Serial.print("WholeMode ");
+  // Serial.println(wholemode);
+  // Serial.print("Upper PW LFO Rate ");
+  // Serial.println(upperData[P_pwLFO]);
+  // Serial.print("Lower PW LFO Rate ");
+  // Serial.println(lowerData[P_pwLFO]);
+
   if (announce) {
     showCurrentParameterPage("PWM Rate", int(pwLFOstr));
   }
@@ -1703,6 +1714,17 @@ void updatekeytrack(boolean announce) {
 }
 
 void updateLFORate(boolean announce) {
+  // Serial.print("Upper SW ");
+  // Serial.println(upperSW);
+  // Serial.print("Lower SW ");
+  // Serial.println(lowerSW);
+  // Serial.print("WholeMode ");
+  // Serial.println(wholemode);
+  // Serial.print("Upper LFO Rate ");
+  // Serial.println(upperData[P_LFORate]);
+  // Serial.print("Lower LFO Rate ");
+  // Serial.println(lowerData[P_LFORate]);
+  
   if (announce) {
     showCurrentParameterPage("LFO Rate", String(LFORatestr) + " Hz");
   }
@@ -2153,7 +2175,7 @@ void updateplayMode(boolean announce) {
     }
     midiCCOut72(CCplayMode, 0);
     midiCCOut(CCplayMode, 0);
-    srp.writePin(UPPER_RELAY_1, HIGH);
+    srp.writePin(UPPER_RELAY_2, HIGH);
     srp.writePin(UPPER_RELAY_3, HIGH);
     wholemode = true;
     dualmode = false;
@@ -2167,7 +2189,7 @@ void updateplayMode(boolean announce) {
     }
     midiCCOut72(CCplayMode, 1);
     midiCCOut(CCplayMode, 1);
-    srp.writePin(UPPER_RELAY_1, LOW);
+    srp.writePin(UPPER_RELAY_2, LOW);
     srp.writePin(UPPER_RELAY_3, LOW);
     wholemode = false;
     dualmode = true;
@@ -2178,7 +2200,7 @@ void updateplayMode(boolean announce) {
     }
     midiCCOut72(CCplayMode, 2);
     midiCCOut(CCplayMode, 2);
-    srp.writePin(UPPER_RELAY_1, LOW);
+    srp.writePin(UPPER_RELAY_2, LOW);
     srp.writePin(UPPER_RELAY_3, LOW);
     wholemode = false;
     dualmode = false;
@@ -3440,65 +3462,26 @@ void updatelfoAlt(boolean announce) {
   }
 }
 
-// void updatelfoAlt(boolean announce) {
-//   if (upperSW) {
-//     if (!upperData[P_lfoAlt]) {
-//       midiCCOut(CClfoAlt, 0);
-//       midiCCOut72(CClfoAlt, 0);
-//       updateStratusLFOWaveform(1);
-//       srp.writePin(LFO_ALT_UPPER, HIGH);
-//     } else {
-//       midiCCOut(CClfoAlt, 127);
-//       midiCCOut72(CClfoAlt, 1);
-//       updateStratusLFOWaveform(1);
-//       srp.writePin(LFO_ALT_UPPER, LOW);
-//     }
-//   } else {
-//     if (!lowerData[P_lfoAlt]) {
-//       midiCCOut(CClfoAlt, 0);
-//       midiCCOut72(CClfoAlt, 0);
-//       updateStratusLFOWaveform(1);
-//       srp.writePin(LFO_ALT_LOWER, HIGH);
-//       if (wholemode) {
-//         srp.writePin(LFO_ALT_UPPER, HIGH);
-//       }
-//     } else {
-//       midiCCOut(CClfoAlt, 127);
-//       midiCCOut72(CClfoAlt, 1);
-//       updateStratusLFOWaveform(1);
-//       srp.writePin(LFO_ALT_LOWER, LOW);
-//       if (wholemode) {
-//         srp.writePin(LFO_ALT_UPPER, LOW);
-//       }
-//     }
-//   }
-// }
-
 void updateupperSW(boolean announce) {
   if (!wholemode) {
     if (upperSW) {
-      // if (announce) {
-      //   showCurrentParameterPage("Upper", "On");
-      // }
       midiCCOut72(CClowerSW, 0);
       midiCCOut72(CCupperSW, 1);
       upperParamsToDisplay();
       setAllButtons();
-      
+      srp.writePin(UPPER_RELAY_1, HIGH);
+
     }
   }
 }
 
 void updatelowerSW(boolean announce) {
   if (lowerSW) {
-    // if (announce) {
-    //   showCurrentParameterPage("Lower", "On");
-    // }
     midiCCOut72(CCupperSW, 0);
     midiCCOut72(CClowerSW, 1);
     lowerParamsToDisplay();
     setAllButtons();
-    
+    srp.writePin(UPPER_RELAY_1, LOW);
   }
 }
 
@@ -4631,7 +4614,14 @@ void myControlChange(byte channel, byte control, int value) {
       break;
 
     case CCmodwheel:
-      midiCCOut61(WSmodwheel, value / 8);
+      if (upperSW) {
+        midiCCOut62(WSmodwheel, value / 8); // divided by 8 because the convert bumps it up to 4095
+      } else {
+        midiCCOut61(WSmodwheel, value / 8);
+        if (wholemode) {
+          midiCCOut62(WSmodwheel, value / 8);
+        }
+      }
       break;
 
     case CCallnotesoff:
@@ -4648,47 +4638,50 @@ void myProgramChange(byte channel, byte program) {
 }
 
 void myAfterTouch(byte channel, byte value) {
-  // afterTouch = int(value * MIDICCTOPOT);
-  // switch (upperData[P_AfterTouchDest]) {
-  //   case 1:
-  //     upperData[P_fmDepth] = afterTouch;
-  //     break;
-  //   case 2:
-  //     upperData[P_filterCutoff] = (oldfilterCutoffU + afterTouch);
-  //     if (afterTouch < 10) {
-  //       upperData[P_filterCutoff] = oldfilterCutoffU;
-  //     }
-  //     if (upperData[P_filterCutoff] > 1023) {
-  //       upperData[P_filterCutoff] = 1023;
-  //     }
-  //     break;
-  //   case 3:
-  //     upperData[P_filterLFO] = afterTouch;
-  //     break;
-  //   case 4:
-  //     upperData[P_amDepth] = afterTouch;
-  //     break;
-  // }
-  // switch (lowerData[P_AfterTouchDest]) {
-  //   case 1:
-  //     lowerData[P_fmDepth] = afterTouch;
-  //     break;
-  //   case 2:
-  //     lowerData[P_filterCutoff] = (oldfilterCutoffL + afterTouch);
-  //     if (afterTouch < 10) {
-  //       lowerData[P_filterCutoff] = oldfilterCutoffL;
-  //     }
-  //     if (lowerData[P_filterCutoff] > 1023) {
-  //       lowerData[P_filterCutoff] = 1023;
-  //     }
-  //     break;
-  //   case 3:
-  //     lowerData[P_filterLFO] = afterTouch;
-  //     break;
-  //   case 4:
-  //     lowerData[P_amDepth] = afterTouch;
-  //     break;
-  // }
+  afterTouch = int(value * MIDICCTOPOT);
+  switch (upperData[P_AfterTouchDest]) {
+    case 1:
+      midiCCOut62(WSmodwheel, value);
+      break;
+    case 2:
+      upperData[P_filterCutoff] = (oldfilterCutoffU + afterTouch);
+      if (afterTouch < 10) {
+        upperData[P_filterCutoff] = oldfilterCutoffU;
+      }
+      if (upperData[P_filterCutoff] > 4095) {
+        upperData[P_filterCutoff] = 4095;
+      }
+      break;
+    case 3:
+      upperData[P_filterLFO] = afterTouch;
+      break;
+    case 4:
+      upperData[P_amDepth] = afterTouch;
+      break;
+  }
+  switch (lowerData[P_AfterTouchDest]) {
+    case 1:
+      midiCCOut61(WSmodwheel, value);
+      if (wholemode) {
+        midiCCOut62(WSmodwheel, value);
+      }
+      break;
+    case 2:
+      lowerData[P_filterCutoff] = (oldfilterCutoffL + afterTouch);
+      if (afterTouch < 10) {
+        lowerData[P_filterCutoff] = oldfilterCutoffL;
+      }
+      if (lowerData[P_filterCutoff] > 4095) {
+        lowerData[P_filterCutoff] = 4095;
+      }
+      break;
+    case 3:
+      lowerData[P_filterLFO] = afterTouch;
+      break;
+    case 4:
+      lowerData[P_amDepth] = afterTouch;
+      break;
+  }
 }
 
 void recallPatch(int patchNo) {
@@ -5355,7 +5348,7 @@ void writeDemux() {
 
     case 15:
       sample_data1 = (channel_a & 0xFFF0000F) | (((upperData[P_pwLFO] * MULT5V) & 0xFFFF) << 4);
-      sample_data2 = (channel_c & 0xFFF0000F) | (((upperData[P_pwLFO] * MULT5V) & 0xFFFF) << 4);
+      sample_data2 = (channel_c & 0xFFF0000F) | (((lowerData[P_pwLFO] * MULT5V) & 0xFFFF) << 4);
 
       sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_effectPot3] * MULT33V)) & 0xFFFF) << 4);
       sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_effectPot3] * MULT33V)) & 0xFFFF) << 4);
