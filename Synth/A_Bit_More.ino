@@ -52,7 +52,7 @@ boolean cardStatus = false;
 struct VoiceAndNote {
   int note;
   int velocity;
-  long timeOn;
+  unsigned long timeOn;
   bool sustained;  // Sustain flag
   bool keyDown;
   double noteFreq;  // Note frequency
@@ -71,10 +71,23 @@ struct VoiceAndNote voices[NO_OF_VOICES] = {
   { -1, -1, 0, false, false, 0, -1, false }
 };
 
+// Tracks exactly which note each voice currently plays
+int voiceToNoteLower[4] = { -1, -1, -1, -1 };
+int voiceToNoteUpper[4] = { -1, -1, -1, -1 };
+
+
 boolean voiceOn[NO_OF_VOICES] = { false, false, false, false, false, false, false, false };
 int prevNote = 0;  //Initialised to middle value
 bool notes[128] = { 0 }, initial_loop = 1;
 int8_t noteOrder[40] = { 0 }, orderIndx = { 0 };
+
+bool notesWhole[128], notesLower[128], notesUpper[128];
+byte noteOrderWhole[40], noteOrderLower[40], noteOrderUpper[40];
+int orderIndxWhole = 0, orderIndxLower = 0, orderIndxUpper = 0;
+
+int voiceAssignmentLower[128];
+int voiceAssignmentUpper[128];
+
 
 //USB HOST MIDI Class Compliant
 USBHost myusb;
@@ -114,8 +127,8 @@ int midioutfrig = 5;
 int patchNo = 0;
 int patchNoU = 0;
 int patchNoL = 0;
-int voiceToReturn = -1;        //Initialise
-long earliestTime = millis();  //For voice allocation - initialise to now
+int voiceToReturn = -1;                 //Initialise
+unsigned long earliestTime = millis();  //For voice allocation - initialise to now
 unsigned long buttonDebounce = 0;
 
 // create a global shift register object
@@ -143,6 +156,16 @@ void setup() {
   SPI.transfer32(int_ref_on_flexible_mode);
   digitalWrite(DAC_CS1, HIGH);
   SPI.endTransaction();
+
+  for (int i = 0; i < 128; i++) {
+    voiceAssignmentLower[i] = -1;
+    voiceAssignmentUpper[i] = -1;
+  }
+
+  for (int i = 0; i < 4; i++) {
+    voiceToNoteLower[i] = -1;
+    voiceToNoteUpper[i] = -1;
+  }
 
 
   cardStatus = SD.begin(BUILTIN_SDCARD);
@@ -194,11 +217,10 @@ void setup() {
 
   //Read Aftertouch from EEPROM, this can be set individually by each patch.
   upperData[P_AfterTouchDest] = getAfterTouchU();
-  oldAfterTouchDestU = upperData[P_AfterTouchDest];
   lowerData[P_AfterTouchDest] = getAfterTouchL();
-  oldAfterTouchDestL = lowerData[P_AfterTouchDest];
 
-  newsplitPoint = getSplitPoint();
+  splitPoint = getSplitPoint();
+  splitPoint = 60;
 
   splitTrans = getSplitTrans();
   setTranspose(splitTrans);
@@ -320,319 +342,264 @@ void LFODelayHandle() {
   }
 }
 
-void commandTopNote() {
-  int topNote = 0;
-  bool noteActive = false;
+// Mono lower & uppper
 
-  for (int i = 0; i < 128; i++) {
-    if (notes[i]) {
-      topNote = i;
-      noteActive = true;
-    }
-  }
+void commandTopNoteLower() {
+  int topNote = -1;
+  for (int i = 0; i < 128; i++)
+    if (notesLower[i]) topNote = i;
 
-  if (noteActive)
-    commandNote(topNote);
-  else  // All notes are off, turn off gate
-    MIDI6.sendNoteOff(noteMsg, 0, 1);
+  if (topNote >= 0)
+    assignVoice(topNote, noteVel, 0);
+  else
+    releaseVoice(noteMsg, 0);
 }
 
-void commandBottomNote() {
-  int bottomNote = 0;
-  bool noteActive = false;
+void commandBottomNoteLower() {
+  int bottomNote = -1;
+  for (int i = 127; i >= 0; i--)
+    if (notesLower[i]) bottomNote = i;
 
-  for (int i = 127; i >= 0; i--) {
-    if (notes[i]) {
-      bottomNote = i;
-      noteActive = true;
-    }
-  }
-
-  if (noteActive)
-    commandNote(bottomNote);
-  else  // All notes are off, turn off gate
-    MIDI6.sendNoteOff(noteMsg, 0, 1);
+  if (bottomNote >= 0)
+    assignVoice(bottomNote, noteVel, 0);
+  else
+    releaseVoice(noteMsg, 0);
 }
 
-void commandLastNote() {
-
-  int8_t noteIndx;
-
+void commandLastNoteLower() {
   for (int i = 0; i < 40; i++) {
-    noteIndx = noteOrder[mod(orderIndx - i, 40)];
-    if (notes[noteIndx]) {
-      commandNote(noteIndx);
+    int8_t idx = noteOrderLower[mod(orderIndxLower - i, 40)];
+    if (notesLower[idx]) {
+      assignVoice(idx, noteVel, 0);
       return;
     }
   }
-  MIDI6.sendNoteOff(noteMsg, 0, 1);
+  releaseVoice(noteMsg, 0);
 }
 
-void commandNote(int noteMsg) {
-  MIDI6.sendNoteOn(noteMsg, noteVel, 1);
+void commandTopNoteUpper() {
+  int topNote = -1;
+  for (int i = 0; i < 128; i++)
+    if (notesUpper[i]) topNote = i;
+
+  if (topNote >= 0)
+    assignVoice(topNote, noteVel, 4);
+  else
+    releaseVoice(noteMsg, 4);
 }
 
-void commandTopNoteUni() {
-  int topNote = 0;
-  bool noteActive = false;
+void commandBottomNoteUpper() {
+  int bottomNote = -1;
+  for (int i = 127; i >= 0; i--)
+    if (notesUpper[i]) bottomNote = i;
 
-  for (int i = 0; i < 128; i++) {
-    if (notes[i]) {
-      topNote = i;
-      noteActive = true;
-    }
-  }
-
-  if (noteActive) {
-    commandNoteUni(topNote);
-  } else {  // All notes are off, turn off gate
-    MIDI6.sendNoteOff(noteMsg, 0, 1);
-    MIDI6.sendNoteOff(noteMsg, 0, 2);
-    MIDI6.sendNoteOff(noteMsg, 0, 3);
-    MIDI6.sendNoteOff(noteMsg, 0, 4);
-    MIDI6.sendNoteOff(noteMsg, 0, 5);
-    MIDI6.sendNoteOff(noteMsg, 0, 6);
-    MIDI6.sendNoteOff(noteMsg, 0, 7);
-    MIDI6.sendNoteOff(noteMsg, 0, 8);
-  }
+  if (bottomNote >= 0)
+    assignVoice(bottomNote, noteVel, 4);
+  else
+    releaseVoice(noteMsg, 4);
 }
 
-void commandBottomNoteUni() {
-  int bottomNote = 0;
-  bool noteActive = false;
-
-  for (int i = 127; i >= 0; i--) {
-    if (notes[i]) {
-      bottomNote = i;
-      noteActive = true;
-    }
-  }
-
-  if (noteActive) {
-    commandNoteUni(bottomNote);
-  } else {  // All notes are off, turn off gate
-    MIDI6.sendNoteOff(noteMsg, 0, 1);
-    MIDI6.sendNoteOff(noteMsg, 0, 2);
-    MIDI6.sendNoteOff(noteMsg, 0, 3);
-    MIDI6.sendNoteOff(noteMsg, 0, 4);
-    MIDI6.sendNoteOff(noteMsg, 0, 5);
-    MIDI6.sendNoteOff(noteMsg, 0, 6);
-    MIDI6.sendNoteOff(noteMsg, 0, 7);
-    MIDI6.sendNoteOff(noteMsg, 0, 8);
-  }
-}
-
-void commandLastNoteUni() {
-
-  int8_t noteIndx;
-
+void commandLastNoteUpper() {
   for (int i = 0; i < 40; i++) {
-    noteIndx = noteOrder[mod(orderIndx - i, 40)];
-    if (notes[noteIndx]) {
-      commandNoteUni(noteIndx);
+    int8_t idx = noteOrderUpper[mod(orderIndxUpper - i, 40)];
+    if (notesUpper[idx]) {
+      assignVoice(idx, noteVel, 4);
       return;
     }
   }
-  MIDI6.sendNoteOff(noteMsg, 0, 1);
-  MIDI6.sendNoteOff(noteIndx, 0, 2);
-  MIDI6.sendNoteOff(noteIndx, 0, 3);
-  MIDI6.sendNoteOff(noteIndx, 0, 4);
-  MIDI6.sendNoteOff(noteIndx, 0, 5);
-  MIDI6.sendNoteOff(noteIndx, 0, 6);
-  MIDI6.sendNoteOff(noteIndx, 0, 7);
-  MIDI6.sendNoteOff(noteIndx, 0, 8);
+  releaseVoice(noteMsg, 4);
 }
 
-void commandNoteUni(int noteMsg) {
+// Unison lower and upper
 
-  MIDI6.sendNoteOn(noteMsg, noteVel, 1);
-  MIDI6.sendNoteOn(noteMsg, noteVel, 2);
-  MIDI6.sendNoteOn(noteMsg, noteVel, 3);
-  MIDI6.sendNoteOn(noteMsg, noteVel, 4);
-  MIDI6.sendNoteOn(noteMsg, noteVel, 5);
-  MIDI6.sendNoteOn(noteMsg, noteVel, 6);
-  MIDI6.sendNoteOn(noteMsg, noteVel, 7);
-  MIDI6.sendNoteOn(noteMsg, noteVel, 8);
+void commandTopNoteUniLower() {
+  int topNote = -1;
+  for (int i = 0; i < 128; i++)
+    if (notesLower[i]) topNote = i;
+
+  if (topNote >= 0)
+    for (int v = 0; v < 4; v++) assignVoice(topNote, noteVel, v);
+  else
+    for (int v = 0; v < 4; v++) releaseVoice(noteMsg, v);
 }
+
+void commandBottomNoteUniLower() {
+  int bottomNote = -1;
+  for (int i = 127; i >= 0; i--)
+    if (notesLower[i]) bottomNote = i;
+
+  if (bottomNote >= 0)
+    for (int v = 0; v < 4; v++) assignVoice(bottomNote, noteVel, v);
+  else
+    for (int v = 0; v < 4; v++) releaseVoice(noteMsg, v);
+}
+
+void commandLastNoteUniLower() {
+  for (int i = 0; i < 40; i++) {
+    int8_t idx = noteOrderLower[mod(orderIndxLower - i, 40)];
+    if (notesLower[idx]) {
+      for (int v = 0; v < 4; v++) assignVoice(idx, noteVel, v);
+      return;
+    }
+  }
+  for (int v = 0; v < 4; v++) releaseVoice(noteMsg, v);
+}
+
+void commandTopNoteUniUpper() {
+  int topNote = -1;
+  for (int i = 0; i < 128; i++)
+    if (notesUpper[i]) topNote = i;
+
+  if (topNote >= 0)
+    for (int v = 4; v < 8; v++) assignVoice(topNote, noteVel, v);
+  else
+    for (int v = 4; v < 8; v++) releaseVoice(noteMsg, v);
+}
+
+void commandBottomNoteUniUpper() {
+  int bottomNote = -1;
+  for (int i = 127; i >= 0; i--)
+    if (notesUpper[i]) bottomNote = i;
+
+  if (bottomNote >= 0)
+    for (int v = 4; v < 8; v++) assignVoice(bottomNote, noteVel, v);
+  else
+    for (int v = 4; v < 8; v++) releaseVoice(noteMsg, v);
+}
+
+void commandLastNoteUniUpper() {
+  for (int i = 0; i < 40; i++) {
+    int8_t idx = noteOrderUpper[mod(orderIndxUpper - i, 40)];
+    if (notesUpper[idx]) {
+      for (int v = 4; v < 8; v++) assignVoice(idx, noteVel, v);
+      return;
+    }
+  }
+  for (int v = 4; v < 8; v++) releaseVoice(noteMsg, v);
+}
+
 
 void myNoteOn(byte channel, byte note, byte velocity) {
 
-  // for lfo multi trigger
-  numberOfNotesU = numberOfNotesU + 1;
-  numberOfNotesL = numberOfNotesL + 1;
-
-  //Check for out of range notes
-  if (note >= 0 && note <= 127) {
-    voiceAssignment[note] = getVoiceNoPoly2(note) - 1;
-  }
+  numberOfNotesU++;
+  numberOfNotesL++;
 
   prevNote = note;
-  switch (panelData[P_keyboardMode]) {
+
+  int voiceNum = -1;
+
+  switch (playMode) {
+
+    // WHOLE MODE (No changes needed if currently working)
     case 0:
-      switch (getVoiceNo(-1)) {
+      switch (panelData[P_keyboardMode]) {
+        case 0:
+          voiceNum = getVoiceNo(-1) - 1;
+          assignVoice(note, velocity, voiceNum);
+          break;  // Poly1
         case 1:
-          voices[0].note = note;
-          voices[0].velocity = velocity;
-          voices[0].timeOn = millis();
-          MIDI6.sendNoteOn(voices[0].note, voices[0].velocity, 1);
-          voiceOn[0] = true;
-          break;
-        case 2:
-          voices[1].note = note;
-          voices[1].velocity = velocity;
-          voices[1].timeOn = millis();
-          MIDI6.sendNoteOn(voices[1].note, voices[1].velocity, 2);
-          voiceOn[1] = true;
-          break;
-        case 3:
-          voices[2].note = note;
-          voices[2].velocity = velocity;
-          voices[2].timeOn = millis();
-          MIDI6.sendNoteOn(voices[2].note, voices[2].velocity, 3);
-          voiceOn[2] = true;
-          break;
-        case 4:
-          voices[3].note = note;
-          voices[3].velocity = velocity;
-          voices[3].timeOn = millis();
-          MIDI6.sendNoteOn(voices[3].note, voices[3].velocity, 4);
-          voiceOn[3] = true;
-          break;
-        case 5:
-          voices[4].note = note;
-          voices[4].velocity = velocity;
-          voices[4].timeOn = millis();
-          MIDI6.sendNoteOn(voices[4].note, voices[4].velocity, 5);
-          voiceOn[4] = true;
-          break;
-        case 6:
-          voices[5].note = note;
-          voices[5].velocity = velocity;
-          voices[5].timeOn = millis();
-          MIDI6.sendNoteOn(voices[5].note, voices[5].velocity, 6);
-          voiceOn[5] = true;
-          break;
-        case 7:
-          voices[6].note = note;
-          voices[6].velocity = velocity;
-          voices[6].timeOn = millis();
-          MIDI6.sendNoteOn(voices[6].note, voices[6].velocity, 7);
-          voiceOn[6] = true;
-          break;
-        case 8:
-          voices[7].note = note;
-          voices[7].velocity = velocity;
-          voices[7].timeOn = millis();
-          MIDI6.sendNoteOn(voices[7].note, voices[7].velocity, 8);
-          voiceOn[7] = true;
-          break;
+          voiceNum = getVoiceNoPoly2(-1) - 1;
+          assignVoice(note, velocity, voiceNum);
+          break;                                             // Poly2
+        case 2: commandMonoNoteOn(note, velocity); break;    // Mono
+        case 3: commandUnisonNoteOn(note, velocity); break;  // Unison
       }
+      voiceAssignment[note] = voiceNum;
       break;
 
+    // DUAL MODE (Explicitly corrected, place this clearly here):
     case 1:
-      switch (getVoiceNoPoly2(-1)) {
-        case 1:
-          voices[0].note = note;
-          voices[0].velocity = velocity;
-          voices[0].timeOn = millis();
-          MIDI6.sendNoteOn(voices[0].note, voices[0].velocity, 1);
-          voiceOn[0] = true;
-          break;
-        case 2:
-          voices[1].note = note;
-          voices[1].velocity = velocity;
-          voices[1].timeOn = millis();
-          MIDI6.sendNoteOn(voices[1].note, voices[1].velocity, 2);
-          voiceOn[1] = true;
-          break;
-        case 3:
-          voices[2].note = note;
-          voices[2].velocity = velocity;
-          voices[2].timeOn = millis();
-          MIDI6.sendNoteOn(voices[2].note, voices[2].velocity, 3);
-          voiceOn[2] = true;
-          break;
-        case 4:
-          voices[3].note = note;
-          voices[3].velocity = velocity;
-          voices[3].timeOn = millis();
-          MIDI6.sendNoteOn(voices[3].note, voices[3].velocity, 4);
-          voiceOn[3] = true;
-          break;
-        case 5:
-          voices[4].note = note;
-          voices[4].velocity = velocity;
-          voices[4].timeOn = millis();
-          MIDI6.sendNoteOn(voices[4].note, voices[4].velocity, 5);
-          voiceOn[4] = true;
-          break;
-        case 6:
-          voices[5].note = note;
-          voices[5].velocity = velocity;
-          voices[5].timeOn = millis();
-          MIDI6.sendNoteOn(voices[5].note, voices[5].velocity, 6);
-          voiceOn[5] = true;
-          break;
-        case 7:
-          voices[6].note = note;
-          voices[6].velocity = velocity;
-          voices[6].timeOn = millis();
-          MIDI6.sendNoteOn(voices[6].note, voices[6].velocity, 7);
-          voiceOn[6] = true;
-          break;
-        case 8:
-          voices[7].note = note;
-          voices[7].velocity = velocity;
-          voices[7].timeOn = millis();
-          MIDI6.sendNoteOn(voices[7].note, voices[7].velocity, 8);
-          voiceOn[7] = true;
-          break;
+      {
+        // Lower Split
+        if (lowerData[P_keyboardMode] == 1) {  // Poly2 Lower
+          int lowerVoice = getLowerSplitVoicePoly2(note);
+          int oldNote = voiceToNoteLower[lowerVoice];
+          if (oldNote >= 0) {
+            releaseVoice(oldNote, lowerVoice);
+            voiceAssignmentLower[oldNote] = -1;
+          }
+          assignVoice(note, velocity, lowerVoice);
+          voiceAssignmentLower[note] = lowerVoice;
+          voiceToNoteLower[lowerVoice] = note;
+        } else if (lowerData[P_keyboardMode] == 0) {  // Poly1 Lower
+          int lowerVoice = getLowerSplitVoice(note);
+          assignVoice(note, velocity, lowerVoice);
+          voiceAssignmentLower[note] = lowerVoice;
+          voiceToNoteLower[lowerVoice] = note;
+        } else if (lowerData[P_keyboardMode] == 2) {
+          commandMonoNoteOnLower(note, velocity, lowerData[P_NotePriority]);
+        } else if (lowerData[P_keyboardMode] == 3) {
+          commandUnisonNoteOnLower(note, velocity, lowerData[P_NotePriority]);
+        }
+
+        // Upper Split
+        if (upperData[P_keyboardMode] == 1) {  // Poly2 Upper
+          int upperVoice = getUpperSplitVoicePoly2(note);
+          int oldNote = voiceToNoteUpper[upperVoice - 4];
+          if (oldNote >= 0) {
+            releaseVoice(oldNote, upperVoice);
+            voiceAssignmentUpper[oldNote] = -1;
+          }
+          assignVoice(note, velocity, upperVoice);
+          voiceAssignmentUpper[note] = upperVoice;
+          voiceToNoteUpper[upperVoice - 4] = note;
+        } else if (upperData[P_keyboardMode] == 0) {  // Poly1 Upper
+          int upperVoice = getUpperSplitVoice(note);
+          assignVoice(note, velocity, upperVoice);
+          voiceAssignmentUpper[note] = upperVoice;
+          voiceToNoteUpper[upperVoice - 4] = note;
+        } else if (upperData[P_keyboardMode] == 2) {
+          commandMonoNoteOnUpper(note, velocity, upperData[P_NotePriority]);
+        } else if (upperData[P_keyboardMode] == 3) {
+          commandUnisonNoteOnUpper(note, velocity, upperData[P_NotePriority]);
+        }
       }
       break;
 
-    case 2:
-      noteMsg = note;
-      noteVel = velocity;
-
-      if (velocity == 0) {
-        notes[noteMsg] = false;
-      } else {
-        notes[noteMsg] = true;
-      }
-
-      if (panelData[P_NotePriority] == 0) {  // Highest note priority
-        commandTopNote();
-      } else if (panelData[P_NotePriority] == 1) {  // Lowest note priority
-        commandBottomNote();
-      } else {                 // Last note priority
-        if (notes[noteMsg]) {  // If note is on and using last note priority, add to ordered list
-          orderIndx = (orderIndx + 1) % 40;
-          noteOrder[orderIndx] = noteMsg;
+      // SPLIT MODE (Also explicitly corrected, place here clearly):
+    case 2:  // SPLIT MODE explicitly confirmed (note-on):
+      if (note < splitPoint) {
+        switch (lowerData[P_keyboardMode]) {
+          case 0:
+            voiceNum = getLowerSplitVoice(note);
+            assignVoice(note, velocity, voiceNum);
+            voiceAssignmentLower[note] = voiceNum;
+            voiceToNoteLower[voiceNum] = note;
+            break;
+          case 1:
+            voiceNum = getLowerSplitVoicePoly2(note);
+            assignVoice(note, velocity, voiceNum);
+            voiceAssignmentLower[note] = voiceNum;
+            voiceToNoteLower[voiceNum] = note;
+            break;
+          case 2:
+            commandMonoNoteOnLower(note, velocity, lowerData[P_NotePriority]);
+            break;
+          case 3:
+            commandUnisonNoteOnLower(note, velocity, lowerData[P_NotePriority]);
+            break;
         }
-        commandLastNote();
-      }
-      break;
-
-    case 3:
-      noteMsg = note;
-      noteVel = velocity;
-
-      if (velocity == 0) {
-        notes[noteMsg] = false;
       } else {
-        notes[noteMsg] = true;
-      }
-
-      if (panelData[P_NotePriority] == 0) {  // Highest note priority
-        commandTopNoteUni();
-      } else if (panelData[P_NotePriority] == 1) {  // Lowest note priority
-        commandBottomNoteUni();
-      } else {                 // Last note priority
-        if (notes[noteMsg]) {  // If note is on and using last note priority, add to ordered list
-          orderIndx = (orderIndx + 1) % 40;
-          noteOrder[orderIndx] = noteMsg;
+        switch (upperData[P_keyboardMode]) {
+          case 0:
+            voiceNum = getUpperSplitVoice(note);
+            assignVoice(note, velocity, voiceNum);
+            voiceAssignmentUpper[note] = voiceNum;
+            voiceToNoteUpper[voiceNum - 4] = note;
+            break;
+          case 1:
+            voiceNum = getUpperSplitVoicePoly2(note);
+            assignVoice(note, velocity, voiceNum);
+            voiceAssignmentUpper[note] = voiceNum;
+            voiceToNoteUpper[voiceNum - 4] = note;
+            break;
+          case 2:
+            commandMonoNoteOnUpper(note, velocity, upperData[P_NotePriority]);
+            break;
+          case 3:
+            commandUnisonNoteOnUpper(note, velocity, upperData[P_NotePriority]);
+            break;
         }
-        commandLastNoteUni();
       }
       break;
   }
@@ -640,149 +607,351 @@ void myNoteOn(byte channel, byte note, byte velocity) {
 
 void myNoteOff(byte channel, byte note, byte velocity) {
 
-  numberOfNotesU = numberOfNotesU - 1;
-  oldnumberOfNotesU = oldnumberOfNotesU - 1;
-  numberOfNotesL = numberOfNotesL - 1;
-  oldnumberOfNotesL = oldnumberOfNotesL - 1;
+  numberOfNotesU--;
+  numberOfNotesL--;
 
-  switch (panelData[P_keyboardMode]) {
+  int assignedVoice = voiceAssignment[note];
+
+  switch (playMode) {
+
+    // WHOLE MODE corrected explicitly
     case 0:
-      switch (getVoiceNo(note)) {
+      switch (panelData[P_keyboardMode]) {
+        case 0:
+          assignedVoice = getVoiceNo(note) - 1;
+          releaseVoice(note, assignedVoice);
+          break;
         case 1:
-          MIDI6.sendNoteOn(voices[0].note, 0, 1);
-          voices[0].note = -1;
-          voiceOn[0] = false;
+          assignedVoice = getVoiceNoPoly2(note) - 1;
+          releaseVoice(note, assignedVoice);
           break;
-        case 2:
-          MIDI6.sendNoteOn(voices[1].note, 0, 2);
-          voices[1].note = -1;
-          voiceOn[1] = false;
-          break;
-        case 3:
-          MIDI6.sendNoteOn(voices[2].note, 0, 3);
-          voices[2].note = -1;
-          voiceOn[2] = false;
-          break;
-        case 4:
-          MIDI6.sendNoteOn(voices[3].note, 0, 4);
-          voices[3].note = -1;
-          voiceOn[3] = false;
-          break;
-        case 5:
-          MIDI6.sendNoteOn(voices[4].note, 0, 5);
-          voices[4].note = -1;
-          voiceOn[4] = false;
-          break;
-        case 6:
-          MIDI6.sendNoteOn(voices[5].note, 0, 6);
-          voices[5].note = -1;
-          voiceOn[5] = false;
-          break;
-        case 7:
-          MIDI6.sendNoteOn(voices[6].note, 0, 7);
-          voices[6].note = -1;
-          voiceOn[6] = false;
-          break;
-        case 8:
-          MIDI6.sendNoteOn(voices[7].note, 0, 8);
-          voices[7].note = -1;
-          voiceOn[7] = false;
-          break;
+        case 2: commandMonoNoteOff(note); break;
+        case 3: commandUnisonNoteOff(note); break;
       }
       break;
 
-    case 1:
-      switch (getVoiceNoPoly2(note)) {
-        case 1:
-          MIDI6.sendNoteOn(voices[0].note, 0, 1);
-          voices[0].note = -1;
-          voiceOn[0] = false;
-          break;
-        case 2:
-          MIDI6.sendNoteOn(voices[1].note, 0, 2);
-          voices[1].note = -1;
-          voiceOn[1] = false;
-          break;
-        case 3:
-          MIDI6.sendNoteOn(voices[2].note, 0, 3);
-          voices[2].note = -1;
-          voiceOn[2] = false;
-          break;
-        case 4:
-          MIDI6.sendNoteOn(voices[3].note, 0, 4);
-          voices[3].note = -1;
-          voiceOn[3] = false;
-          break;
-        case 5:
-          MIDI6.sendNoteOn(voices[4].note, 0, 5);
-          voices[4].note = -1;
-          voiceOn[4] = false;
-          break;
-        case 6:
-          MIDI6.sendNoteOn(voices[5].note, 0, 6);
-          voices[5].note = -1;
-          voiceOn[5] = false;
-          break;
-        case 7:
-          MIDI6.sendNoteOn(voices[6].note, 0, 7);
-          voices[6].note = -1;
-          voiceOn[6] = false;
-          break;
-        case 8:
-          MIDI6.sendNoteOn(voices[7].note, 0, 8);
-          voices[7].note = -1;
-          voiceOn[7] = false;
-          break;
-      }
-      break;
-
-    case 2:
-      noteMsg = note;
-
-      if (velocity == 0 || velocity == 64) {
-        notes[noteMsg] = false;
-      } else {
-        notes[noteMsg] = true;
-      }
-
-      // Pins NP_SEL1 and NP_SEL2 indictate note priority
-      // velmV = ((unsigned int)((float)velocity) * VEL_SF);
-      // sample_data = (channel_a & 0xFFF0000F) | (((int(velmV)) & 0xFFFF) << 4);
-      // outputDAC(DAC_NOTE2, sample_data);
-      if (panelData[P_NotePriority] == 0) {  // Highest note priority
-        commandTopNote();
-      } else if (panelData[P_NotePriority] == 1) {  // Lowest note priority
-        commandBottomNote();
-      } else {                 // Last note priority
-        if (notes[noteMsg]) {  // If note is on and using last note priority, add to ordered list
-          orderIndx = (orderIndx + 1) % 40;
-          noteOrder[orderIndx] = noteMsg;
+      // DUAL MODE corrected explicitly
+    case 1:  // DUAL MODE Poly2 fix explicitly (note-off):
+      {
+        // Lower Split
+        if (lowerData[P_keyboardMode] == 2) commandMonoNoteOffLower(note);
+        else if (lowerData[P_keyboardMode] == 3) commandUnisonNoteOffLower(note);
+        else {
+          int lowerVoice = voiceAssignmentLower[note];
+          if (lowerVoice >= 0 && lowerVoice <= 3 && voiceToNoteLower[lowerVoice] == note) {
+            releaseVoice(note, lowerVoice);
+            voiceAssignmentLower[note] = -1;
+            voiceToNoteLower[lowerVoice] = -1;
+          }
         }
-        commandLastNote();
-      }
-      break;
 
-    case 3:
-      noteMsg = note;
-
-      if (velocity == 0 || velocity == 64) {
-        notes[noteMsg] = false;
-      } else {
-        notes[noteMsg] = true;
-      }
-
-      if (panelData[P_NotePriority] == 0) {  // Highest note priority
-        commandTopNoteUni();
-      } else if (panelData[P_NotePriority] == 1) {  // Lowest note priority
-        commandBottomNoteUni();
-      } else {                 // Last note priority
-        if (notes[noteMsg]) {  // If note is on and using last note priority, add to ordered list
-          orderIndx = (orderIndx + 1) % 40;
-          noteOrder[orderIndx] = noteMsg;
+        // Upper Split
+        if (upperData[P_keyboardMode] == 2) commandMonoNoteOffUpper(note);
+        else if (upperData[P_keyboardMode] == 3) commandUnisonNoteOffUpper(note);
+        else {
+          int upperVoice = voiceAssignmentUpper[note];
+          if (upperVoice >= 4 && upperVoice <= 7 && voiceToNoteUpper[upperVoice - 4] == note) {
+            releaseVoice(note, upperVoice);
+            voiceAssignmentUpper[note] = -1;
+            voiceToNoteUpper[upperVoice - 4] = -1;
+          }
         }
-        commandLastNoteUni();
       }
       break;
+
+      // SPLIT MODE corrected explicitly
+    case 2:  // SPLIT MODE explicitly corrected (note-off):
+      {
+        if (note < splitPoint) {
+          if (lowerData[P_keyboardMode] == 2) {
+            commandMonoNoteOffLower(note);
+          } else if (lowerData[P_keyboardMode] == 3) {
+            commandUnisonNoteOffLower(note);
+          } else {
+            int lowerVoice = voiceAssignmentLower[note];
+            if (lowerVoice >= 0 && lowerVoice <= 3 && voiceToNoteLower[lowerVoice] == note) {
+              releaseVoice(note, lowerVoice);
+              voiceAssignmentLower[note] = -1;
+              voiceToNoteLower[lowerVoice] = -1;
+            }
+          }
+        } else {
+          if (upperData[P_keyboardMode] == 2) {
+            commandMonoNoteOffUpper(note);
+          } else if (upperData[P_keyboardMode] == 3) {
+            commandUnisonNoteOffUpper(note);
+          } else {
+            int upperVoice = voiceAssignmentUpper[note];
+            if (upperVoice >= 4 && upperVoice <= 7 && voiceToNoteUpper[upperVoice - 4] == note) {
+              releaseVoice(note, upperVoice);
+              voiceAssignmentUpper[note] = -1;
+              voiceToNoteUpper[upperVoice - 4] = -1;
+            }
+          }
+        }
+      }
+      break;
+  }
+}
+
+void commandMonoNoteOn(byte note, byte velocity) {
+  notesWhole[note] = true;
+  noteMsg = note;
+  noteVel = velocity;
+  orderIndxWhole = (orderIndxWhole + 1) % 40;
+  noteOrderWhole[orderIndxWhole] = note;
+
+  if (lowerData[P_NotePriority] == 0) commandTopNoteWhole();
+  else if (lowerData[P_NotePriority] == 1) commandBottomNoteWhole();
+  else commandLastNoteWhole();
+}
+
+void commandMonoNoteOff(byte note) {
+  notesWhole[note] = false;
+  noteMsg = note;
+  commandLastNoteWhole();
+}
+
+void commandTopNoteWhole() {
+  int topNote = -1;
+  for (int i = 0; i < 128; i++)
+    if (notesWhole[i]) topNote = i;
+
+  if (topNote >= 0) assignVoice(topNote, noteVel, 0);
+  else releaseVoice(noteMsg, 0);
+}
+
+void commandBottomNoteWhole() {
+  int bottomNote = -1;
+  for (int i = 127; i >= 0; i--)
+    if (notesWhole[i]) bottomNote = i;
+
+  if (bottomNote >= 0) assignVoice(bottomNote, noteVel, 0);
+  else releaseVoice(noteMsg, 0);
+}
+
+void commandLastNoteWhole() {
+  for (int i = 0; i < 40; i++) {
+    int8_t idx = noteOrderWhole[mod(orderIndxWhole - i, 40)];
+    if (notesWhole[idx]) {
+      assignVoice(idx, noteVel, 0);
+      return;
+    }
+  }
+  releaseVoice(noteMsg, 0);
+}
+
+void commandUnisonNoteOn(byte note, byte velocity) {
+  notesWhole[note] = true;
+  noteMsg = note;
+  noteVel = velocity;
+  orderIndxWhole = (orderIndxWhole + 1) % 40;
+  noteOrderWhole[orderIndxWhole] = note;
+
+  if (lowerData[P_NotePriority] == 0) commandTopNoteUniWhole();
+  else if (lowerData[P_NotePriority] == 1) commandBottomNoteUniWhole();
+  else commandLastNoteUniWhole();
+}
+
+void commandUnisonNoteOff(byte note) {
+  notesWhole[note] = false;
+  noteMsg = note;
+  commandLastNoteUniWhole();
+}
+
+void commandTopNoteUniWhole() {
+  int topNote = -1;
+  for (int i = 0; i < 128; i++)
+    if (notesWhole[i]) topNote = i;
+  if (topNote >= 0)
+    for (int v = 0; v < 8; v++) assignVoice(topNote, noteVel, v);
+  else
+    for (int v = 0; v < 8; v++) releaseVoice(noteMsg, v);
+}
+
+void commandBottomNoteUniWhole() {
+  int bottomNote = -1;
+  for (int i = 127; i >= 0; i--)
+    if (notesWhole[i]) bottomNote = i;
+  if (bottomNote >= 0)
+    for (int v = 0; v < 8; v++) assignVoice(bottomNote, noteVel, v);
+  else
+    for (int v = 0; v < 8; v++) releaseVoice(noteMsg, v);
+}
+
+void commandLastNoteUniWhole() {
+  for (int i = 0; i < 40; i++) {
+    int8_t idx = noteOrderWhole[mod(orderIndxWhole - i, 40)];
+    if (notesWhole[idx]) {
+      for (int v = 0; v < 8; v++) assignVoice(idx, noteVel, v);
+      return;
+    }
+  }
+  for (int v = 0; v < 8; v++) releaseVoice(noteMsg, v);
+}
+
+
+void commandMonoNoteOnUpper(byte note, byte velocity, byte priority) {
+  notesUpper[note] = true;
+  noteMsg = note;
+  noteVel = velocity;
+  orderIndxUpper = (orderIndxUpper + 1) % 40;
+  noteOrderUpper[orderIndxUpper] = note;
+  if (priority == 0) commandTopNoteUpper();
+  else if (priority == 1) commandBottomNoteUpper();
+  else commandLastNoteUpper();
+}
+
+void commandMonoNoteOffUpper(byte note) {
+  notesUpper[note] = false;
+  noteMsg = note;
+  commandLastNoteUpper();
+}
+
+void commandMonoNoteOnLower(byte note, byte velocity, byte priority) {
+  notesLower[note] = true;
+  noteMsg = note;
+  noteVel = velocity;
+  orderIndxLower = (orderIndxLower + 1) % 40;
+  noteOrderLower[orderIndxLower] = note;
+
+  if (priority == 0) commandTopNoteLower();
+  else if (priority == 1) commandBottomNoteLower();
+  else commandLastNoteLower();
+}
+
+void commandMonoNoteOffLower(byte note) {
+  notesLower[note] = false;
+  noteMsg = note;
+  commandLastNoteLower();
+}
+
+void commandUnisonNoteOnUpper(byte note, byte velocity, byte priority) {
+  notesUpper[note] = true;
+  noteMsg = note;                                       // explicitly set here
+  noteVel = velocity;                                   // explicitly set here
+  if (priority == 0) commandTopNoteUniUpper();          // Highest priority
+  else if (priority == 1) commandBottomNoteUniUpper();  // Lowest priority
+  else commandLastNoteUniUpper();                       // Last note priority
+}
+
+void commandUnisonNoteOffUpper(byte note) {
+  notesUpper[note] = false;
+  noteMsg = note;  // explicitly set here
+  commandLastNoteUniUpper();
+}
+
+void commandUnisonNoteOnLower(byte note, byte velocity, byte priority) {
+  notesLower[note] = true;
+  noteMsg = note;                                       // explicitly set here
+  noteVel = velocity;                                   // explicitly set here
+  if (priority == 0) commandTopNoteUniLower();          // Highest priority
+  else if (priority == 1) commandBottomNoteUniLower();  // Lowest priority
+  else commandLastNoteUniLower();                       // Last note priority
+}
+
+void commandUnisonNoteOffLower(byte note) {
+  notesLower[note] = false;
+  noteMsg = note;  // explicitly set here
+  commandLastNoteUniLower();
+}
+
+int getUpperSplitVoice(byte note) {
+  for (int i = 0; i < 4; i++) {
+    int idx = 4 + (upperSplitVoicePointer + i) % 4;
+    if (!voiceOn[idx]) {
+      upperSplitVoicePointer = (idx + 1) % 4;
+      return idx;
+    }
+  }
+  // fallback oldest (poly2 style if no voice free)
+  int oldest = 4;
+  unsigned long oldestTime = voices[4].timeOn;
+  for (int i = 5; i < 8; i++)
+    if (voices[i].timeOn < oldestTime) {
+      oldest = i;
+      oldestTime = voices[i].timeOn;
+    }
+  upperSplitVoicePointer = ((oldest - 4) + 1) % 4;
+  return oldest;
+}
+
+int getLowerSplitVoice(byte note) {
+  for (int i = 0; i < 4; i++) {
+    int idx = (lowerSplitVoicePointer + i) % 4;
+    if (!voiceOn[idx]) {
+      lowerSplitVoicePointer = (idx + 1) % 4;
+      return idx;
+    }
+  }
+  int oldest = 0;
+  unsigned long oldestTime = voices[0].timeOn;
+  for (int i = 1; i < 4; i++)
+    if (voices[i].timeOn < oldestTime) {
+      oldest = i;
+      oldestTime = voices[i].timeOn;
+    }
+  lowerSplitVoicePointer = (oldest + 1) % 4;
+  return oldest;
+}
+
+int getLowerSplitVoicePoly2(byte note) {
+  for (int i = 0; i < 4; i++)
+    if (!voiceOn[i]) return i;
+
+  int oldest = 0;
+  unsigned long oldestTime = voices[0].timeOn;
+
+  for (int i = 1; i < 4; i++) {
+    if (voices[i].timeOn < oldestTime) {
+      oldest = i;
+      oldestTime = voices[i].timeOn;
+    }
+  }
+  return oldest;
+}
+
+int getUpperSplitVoicePoly2(byte note) {
+  for (int i = 4; i < 8; i++)
+    if (!voiceOn[i]) return i;
+
+  int oldest = 4;
+  unsigned long oldestTime = voices[4].timeOn;
+
+  for (int i = 5; i < 8; i++) {
+    if (voices[i].timeOn < oldestTime) {
+      oldest = i;
+      oldestTime = voices[i].timeOn;
+    }
+  }
+  return oldest;
+}
+
+
+// Leave these functions as-is
+void assignVoice(byte note, byte velocity, int voiceIdx) {
+  if (voiceIdx >= 0 && voiceIdx < 8) {
+    voices[voiceIdx].note = note;
+    voices[voiceIdx].velocity = velocity;
+    voices[voiceIdx].timeOn = millis();
+    MIDI6.sendNoteOn(note, velocity, voiceIdx + 1);
+    voiceOn[voiceIdx] = true;
+  }
+}
+
+void releaseVoice(byte note, int voiceIdx) {
+  if (voiceIdx >= 0 && voiceIdx < 8 && voices[voiceIdx].note == note) {
+    MIDI6.sendNoteOn(note, 0, voiceIdx + 1);
+    voices[voiceIdx].note = -1;
+    voiceOn[voiceIdx] = false;
+
+    if (voiceIdx < 4) {
+      voiceAssignmentLower[note] = -1;
+      voiceToNoteLower[voiceIdx] = -1;
+    } else {
+      voiceAssignmentUpper[note] = -1;
+      voiceToNoteUpper[voiceIdx - 4] = -1;
+    }
   }
 }
 
@@ -901,16 +1070,6 @@ void allNotesOff() {
 }
 
 void updatepwLFO(boolean announce) {
-  // Serial.print("Upper SW ");
-  // Serial.println(upperSW);
-  // Serial.print("Lower SW ");
-  // Serial.println(lowerSW);
-  // Serial.print("WholeMode ");
-  // Serial.println(wholemode);
-  // Serial.print("Upper PW LFO Rate ");
-  // Serial.println(upperData[P_pwLFO]);
-  // Serial.print("Lower PW LFO Rate ");
-  // Serial.println(lowerData[P_pwLFO]);
 
   if (announce) {
     showCurrentParameterPage("PWM Rate", int(pwLFOstr));
@@ -999,13 +1158,6 @@ void updateosc2PWM(boolean announce) {
 }
 
 void updateosc1PW(boolean announce) {
-
-  // Serial.print("Wholemode ");
-  // Serial.println(wholemode);
-  // Serial.print("Upper PW ");
-  // Serial.println(upperData[P_osc1PW]);
-  // Serial.print("Lower PW ");
-  // Serial.println(lowerData[P_osc1PW]);
 
   if (announce) {
     showCurrentParameterPage("OSC1 PW", String(osc1PWstr) + " %");
@@ -1714,17 +1866,7 @@ void updatekeytrack(boolean announce) {
 }
 
 void updateLFORate(boolean announce) {
-  // Serial.print("Upper SW ");
-  // Serial.println(upperSW);
-  // Serial.print("Lower SW ");
-  // Serial.println(lowerSW);
-  // Serial.print("WholeMode ");
-  // Serial.println(wholemode);
-  // Serial.print("Upper LFO Rate ");
-  // Serial.println(upperData[P_LFORate]);
-  // Serial.print("Lower LFO Rate ");
-  // Serial.println(lowerData[P_LFORate]);
-  
+
   if (announce) {
     showCurrentParameterPage("LFO Rate", String(LFORatestr) + " Hz");
   }
@@ -1847,11 +1989,6 @@ void updateStratusLFOWaveform(boolean announce) {
     panelData[P_LFOWaveform] = lowerData[P_LFOWaveform];
     panelData[P_lfoAlt] = lowerData[P_lfoAlt];
   }
-
-  // Serial.print("LFO alt ");
-  // Serial.println(panelData[P_lfoAlt]);
-  // Serial.print("LFO Wave ");
-  // Serial.println(panelData[P_LFOWaveform]);
 
   if (panelData[P_lfoAlt]) {
     switch (panelData[P_LFOWaveform]) {
@@ -2210,6 +2347,9 @@ void updateplayMode(boolean announce) {
 
 void updatekeyboardMode(boolean announce) {
   if (upperSW) {
+    if (dualmode) {
+      lowerData[P_keyboardMode] = upperData[P_keyboardMode];
+    }
     if (upperData[P_keyboardMode] == 0) {
       if (announce) {
         showCurrentParameterPage("Keyboard Mode", "Poly 1");
@@ -2236,6 +2376,9 @@ void updatekeyboardMode(boolean announce) {
       midiCCOut(CCkeyboardMode, 3);
     }
   } else {
+    if (dualmode) {
+      upperData[P_keyboardMode] = lowerData[P_keyboardMode];
+    }
     if (lowerData[P_keyboardMode] == 0) {
       if (announce) {
         showCurrentParameterPage("Keyboard Mode", "Poly 1");
@@ -3200,6 +3343,9 @@ void updatefilterVel(boolean announce) {
 
 void updateNotePriority(boolean announce) {
   if (upperSW) {
+    if (dualmode) {
+      lowerData[P_NotePriority] = upperData[P_NotePriority];
+    }
     switch (upperData[P_NotePriority]) {
       case 0:
         if (announce) {
@@ -3226,6 +3372,9 @@ void updateNotePriority(boolean announce) {
         break;
     }
   } else {
+    if (dualmode) {
+      upperData[P_NotePriority] = lowerData[P_NotePriority];
+    }
     switch (lowerData[P_NotePriority]) {
       case 0:
         if (announce) {
@@ -3470,7 +3619,6 @@ void updateupperSW(boolean announce) {
       upperParamsToDisplay();
       setAllButtons();
       srp.writePin(UPPER_RELAY_1, HIGH);
-
     }
   }
 }
@@ -4615,7 +4763,7 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCmodwheel:
       if (upperSW) {
-        midiCCOut62(WSmodwheel, value / 8); // divided by 8 because the convert bumps it up to 4095
+        midiCCOut62(WSmodwheel, value / 8);  // divided by 8 because the convert bumps it up to 4095
       } else {
         midiCCOut61(WSmodwheel, value / 8);
         if (wholemode) {
@@ -4638,32 +4786,30 @@ void myProgramChange(byte channel, byte program) {
 }
 
 void myAfterTouch(byte channel, byte value) {
-  
-  Serial.print("Upper Dest ");
-  Serial.println(upperData[P_AfterTouchDest]);
-  Serial.print("Lower Dest ");
-  Serial.println(lowerData[P_AfterTouchDest]);
 
-  afterTouch = int(value * MIDICCTOPOT);
+  afterTouch = (value * 4095) / 127;  // Exact scaling, range 0–4095
+  afterTouchU = (afterTouch * upperData[P_ATDepth]) / 4095;
+  afterTouchL = (afterTouch * lowerData[P_ATDepth]) / 4095;
+
   switch (upperData[P_AfterTouchDest]) {
     case 1:
       MIDI6.sendAfterTouch(value, 2);
       break;
-    // case 2:
-    //   upperData[P_filterCutoff] = (oldfilterCutoffU + afterTouch);
-    //   if (afterTouch < 10) {
-    //     upperData[P_filterCutoff] = oldfilterCutoffU;
-    //   }
-    //   if (upperData[P_filterCutoff] > 4095) {
-    //     upperData[P_filterCutoff] = 4095;
-    //   }
-    //   break;
-    // case 3:
-    //   upperData[P_filterLFO] = afterTouch;
-    //   break;
-    // case 4:
-    //   upperData[P_amDepth] = afterTouch;
-    //   break;
+    case 2:
+      upperData[P_filterCutoff] = (oldfilterCutoffU + afterTouchU);
+      if (afterTouchU < 10) {
+        upperData[P_filterCutoff] = oldfilterCutoffU;
+      }
+      if (upperData[P_filterCutoff] > 4095) {
+        upperData[P_filterCutoff] = 4095;
+      }
+      break;
+    case 3:
+      upperData[P_filterLFO] = afterTouchU;
+      break;
+    case 4:
+      upperData[P_amDepth] = afterTouchU;
+      break;
   }
   switch (lowerData[P_AfterTouchDest]) {
     case 1:
@@ -4672,21 +4818,21 @@ void myAfterTouch(byte channel, byte value) {
         MIDI6.sendAfterTouch(value, 2);
       }
       break;
-    // case 2:
-    //   lowerData[P_filterCutoff] = (oldfilterCutoffL + afterTouch);
-    //   if (afterTouch < 10) {
-    //     lowerData[P_filterCutoff] = oldfilterCutoffL;
-    //   }
-    //   if (lowerData[P_filterCutoff] > 4095) {
-    //     lowerData[P_filterCutoff] = 4095;
-    //   }
-    //   break;
-    // case 3:
-    //   lowerData[P_filterLFO] = afterTouch;
-    //   break;
-    // case 4:
-    //   lowerData[P_amDepth] = afterTouch;
-    //   break;
+    case 2:
+      lowerData[P_filterCutoff] = (oldfilterCutoffL + afterTouchL);
+      if (afterTouchL < 10) {
+        lowerData[P_filterCutoff] = oldfilterCutoffL;
+      }
+      if (lowerData[P_filterCutoff] > 4095) {
+        lowerData[P_filterCutoff] = 4095;
+      }
+      break;
+    case 3:
+      lowerData[P_filterLFO] = afterTouchL;
+      break;
+    case 4:
+      lowerData[P_amDepth] = afterTouchL;
+      break;
   }
 }
 
@@ -5377,21 +5523,6 @@ void writeDemux() {
   digitalWriteFast(DEMUX_3, muxOutput & B1000);
 }
 
-void checkEeprom() {
-
-  // if (oldsplitTrans != splitTrans) {
-  //   setTranspose(splitTrans);
-  // }
-
-  // if (oldAfterTouchDestU != upperData[P_AfterTouchDest]) {
-  //   oldAfterTouchDestU = upperData[P_AfterTouchDest];
-  // }
-
-  // if (oldAfterTouchDestL != lowerData[P_AfterTouchDest]) {
-  //   oldAfterTouchDestL = lowerData[P_AfterTouchDest];
-  // }
-}
-
 void showSettingsPage() {
   showSettingsPage(settings::current_setting(), settings::current_setting_value(), state);
 }
@@ -5912,7 +6043,6 @@ void loop() {
   }
 
   checkSwitches();
-  checkEeprom();
   writeDemux();
   checkMux();
   checkEncoder();

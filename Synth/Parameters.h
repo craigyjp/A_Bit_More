@@ -103,6 +103,8 @@ bool lowerPickUp[77];
 #define P_ATDepth 74
 
 int playMode = 0;
+int lowerSplitVoicePointer = 0;
+int upperSplitVoicePointer = 0;
 
 //Delayed LFO
 int numberOfNotes = 0;
@@ -128,8 +130,6 @@ int oldfilterCutoff = 0;
 int oldfilterCutoffU = 0;
 int oldfilterCutoffL = 0;
 
-
-
 boolean upperSW = false;
 int oldupperSW = 0;
 boolean lowerSW = true;
@@ -139,11 +139,11 @@ int chordHoldU = 0;
 int chordHoldL = 0;
 
 float afterTouch = 0;
+float afterTouchU = 0;
+float afterTouchL = 0;
 int AfterTouchDest = 0;
 int AfterTouchDestU = 0;
 int AfterTouchDestL = 0;
-int oldAfterTouchDestU = 0;
-int oldAfterTouchDestL = 0;
 float pwLFOstr = 0;
 float fmDepthstr = 0;
 float ATDepthstr = 0;
