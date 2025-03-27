@@ -105,6 +105,9 @@ bool lowerPickUp[77];
 int playMode = 0;
 int lowerSplitVoicePointer = 0;
 int upperSplitVoicePointer = 0;
+int performanceIndex = 0;
+bool inPerformanceMode = false;
+static bool recallHeldToggleLatch = false;
 
 //Delayed LFO
 int numberOfNotes = 0;

@@ -136,7 +136,7 @@ void renderCurrentPatchPage() {
   tft.setCursor(5, 10);
   tft.println("Number");
   tft.setCursor(100, 10);
-  tft.println("Patchname");
+  tft.println(inPerformanceMode ? "Performance" : "Patchname");
   switch (playMode) {
     case 0:
       tft.setCursor(240, 10);
@@ -207,7 +207,7 @@ void renderCurrentParameterPage() {
   tft.setCursor(5, 10);
   tft.println("Number");
   tft.setCursor(100, 10);
-  tft.println("Patchname");
+  tft.println(inPerformanceMode ? "Performance" : "Patchname");
   switch (playMode) {
     case 0:
       tft.setCursor(240, 10);
@@ -407,31 +407,27 @@ void renderRecallPage() {
   tft.println("Recall?");
   tft.drawFastHLine(10, 50, tft.width() - 20, ST7735_RED);
 
-
   tft.setTextSize(2);
   tft.setFont(&FreeSans9pt7b);
+
+  // Upper patch display
   tft.setCursor(10, 80);
   tft.setTextColor(ST7735_YELLOW);
-  tft.println(patches.last().patchNo);
+  tft.println(currentPgmNumU);
   tft.setCursor(100, 80);
   tft.setTextColor(ST7735_WHITE);
-  tft.println(patches.last().patchName);
+  tft.println(currentPatchNameU);
 
-  tft.fillRect(10, 120, tft.width() - 20, 44, ST77XX_RED);
+  // Divider
+  tft.fillRect(10, 120, tft.width() - 20, 4, ST77XX_RED);
 
-  tft.setCursor(10, 130);
+  // Lower patch display
+  tft.setCursor(10, 140);
   tft.setTextColor(ST7735_YELLOW);
-  tft.println(patches.first().patchNo);
-  tft.setCursor(100, 130);
+  tft.println(currentPgmNumL);
+  tft.setCursor(100, 140);
   tft.setTextColor(ST7735_WHITE);
-  tft.println(patches.first().patchName);
-
-  tft.setCursor(10, 180);
-  tft.setTextColor(ST7735_YELLOW);
-  patches.size() > 1 ? tft.println(patches[1].patchNo) : tft.println(patches.last().patchNo);
-  tft.setCursor(100, 180);
-  tft.setTextColor(ST7735_WHITE);
-  patches.size() > 1 ? tft.println(patches[1].patchName) : tft.println(patches.last().patchName);
+  tft.println(currentPatchNameL);
 }
 
 void showRenamingPage(String newName) {
@@ -503,6 +499,10 @@ void showCurrentParameterPage(const char *param, String val) {
 }
 
 void showPatchPage(String numberU, String nameU, String numberL, String nameL) {
+  Serial.println("[showPatchPage] Updating display patch values:");
+  Serial.print("Upper: "); Serial.print(numberU); Serial.print(" - "); Serial.println(nameU);
+  Serial.print("Lower: "); Serial.print(numberL); Serial.print(" - "); Serial.println(nameL);
+
   currentPgmNumU = numberU;
   currentPatchNameU = nameU;
   currentPgmNumL = numberL;

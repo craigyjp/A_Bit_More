@@ -293,7 +293,7 @@ void setup() {
 }
 
 void recallPerformance(const Performance &perf) {
-  Serial.println("Recalling performance: " + perf.name);
+  // Serial.println("Recalling performance: " + perf.name);
   currentPerformance = perf;
   playMode = perf.mode;
 
@@ -301,20 +301,24 @@ void recallPerformance(const Performance &perf) {
     case WHOLE:
       recallPatch(perf.lowerPatchNo);
       patchNo = perf.lowerPatchNo;
-      showPatchPage(String(perf.upperPatchNo), getPatchName(perf.upperPatchNo), String(perf.lowerPatchNo), getPatchName(perf.lowerPatchNo));
+      refreshPatchDisplayFromState();
       break;
     case DUAL:
     case SPLIT:
       recallPatch(perf.upperPatchNo);
       recallPatch(perf.lowerPatchNo);
       patchNo = perf.lowerPatchNo;
-      showPatchPage(
-        String(perf.upperPatchNo),
-        getPatchName(perf.upperPatchNo),
-        String(perf.lowerPatchNo),
-        getPatchName(perf.lowerPatchNo));
+      refreshPatchDisplayFromState();
       break;
   }
+}
+
+void refreshPatchDisplayFromState() {
+  showPatchPage(
+    currentPgmNumU,
+    currentPatchNameU,
+    currentPgmNumL,
+    currentPatchNameL);
 }
 
 String getModeName(PlayMode mode) {
@@ -326,56 +330,52 @@ String getModeName(PlayMode mode) {
   }
 }
 
+
 void loadPerformances() {
   performances.clear();
-
-  if (!SD.exists("/performances")) {
-    SD.mkdir("/performances");
-  }
-
   File dir = SD.open("/performances");
-  if (!dir) {
-    Serial.println("Error opening /performances folder!");
+
+  if (!dir || !dir.isDirectory()) {
+    Serial.println("/performances not found or is not a directory");
     return;
   }
 
   while (true) {
-    File perfFile = dir.openNextFile();
-    if (!perfFile) break;
-    if (perfFile.isDirectory()) continue;
+    File file = dir.openNextFile();
+    if (!file) break;
 
-    char str[40];
-    String fields[4];
-    int i = 0;
-    while (perfFile.available() && i < 4) {
-      size_t n = readField(&perfFile, str, sizeof(str), ",\n");
-      if (n == 0) break;
-      if (str[n - 1] == ',' || str[n - 1] == '\n') str[n - 1] = '\0';
-      fields[i++] = String(str);
+    if (file.isDirectory()) {
+      file.close();
+      continue;
     }
-    perfFile.close();
 
-    performances.push(Performance{
-      atoi(perfFile.name() + 4),
-      fields[0].toInt(),
-      fields[1].toInt(),
-      fields[2],
-      (PlayMode)fields[3].toInt() });
+    String dataLine = file.readStringUntil('\n');
+    file.close();
+
+    if (dataLine.length() > 0) {
+      int comma1 = dataLine.indexOf(',');
+      int comma2 = dataLine.indexOf(',', comma1 + 1);
+      int comma3 = dataLine.indexOf(',', comma2 + 1);
+
+      if (comma1 == -1 || comma2 == -1 || comma3 == -1) continue;
+
+      int upper = dataLine.substring(0, comma1).toInt();
+      int lower = dataLine.substring(comma1 + 1, comma2).toInt();
+      String name = dataLine.substring(comma2 + 1, comma3);
+      int mode = dataLine.substring(comma3 + 1).toInt();
+
+      int perfNo = performances.size() + 1;
+      performances.push({ perfNo, upper, lower, name, (PlayMode)mode });
+
+      Serial.print("Loaded performance: ");
+      Serial.println(name);
+    }
   }
 
-  dir.close();
-
-  if (performances.size() == 0 && patches.size() > 0) {
-    Performance defaultPerf = {
-      1,
-      patches.first().patchNo,
-      patches.first().patchNo,
-      "Default",
-      WHOLE
-    };
-    performances.push(defaultPerf);
+  if (performances.size() == 0) {
+    Performance defaultPerf = { 1, 1, 1, "Default", WHOLE };
     savePerformance("perf001", defaultPerf);
-    loadPerformances();
+    loadPerformances();  // try again
   }
 }
 
@@ -3817,7 +3817,7 @@ void updateMonoMulti(boolean announce) {
 }
 
 void updatePatchname() {
-  showPatchPage(String(patchNoU), patchNameU, String(patchNoL), patchNameL);
+  refreshPatchDisplayFromState();
 }
 
 void myControlChange(byte channel, byte control, int value) {
@@ -4984,6 +4984,9 @@ void myAfterTouch(byte channel, byte value) {
 void recallPatch(int patchNo) {
   allNotesOff();
 
+  // Serial.print(">>> recallPatch CALLED with: ");
+  // Serial.println(patchNo);
+
   File patchFile = SD.open(String(patchNo).c_str());
   if (!patchFile) {
     Serial.println("File not found");
@@ -4992,20 +4995,40 @@ void recallPatch(int patchNo) {
     recallPatchData(patchFile, data);
     patchFile.close();
 
-    if (playMode == 0 || !upperSW) {
-      // WHOLE mode or editing lower
-      currentPgmNumL = String(patchNo);
-      currentPatchNameL = data[0];
-      setCurrentPatchData(data);  // applies to synth as LAYER
-    } else {
-      // editing upper
-      currentPgmNumU = String(patchNo);
-      currentPatchNameU = data[0];
-      setCurrentPatchData(data);  // applies to synth as LAYER
-    }
-  }
-}
+    // Find matching patch in the circular buffer to set name and number
+    for (int i = 0; i < patches.size(); i++) {
 
+      if (patches[i].patchNo == patchNo) {
+        if (upperSW) {
+          upperPatchIndex = i;
+          currentPgmNumU = String(patches[i].patchNo);
+          currentPatchNameU = patches[i].patchName;
+          // Serial.println("Set upper patch from recallPatch()");
+          // Serial.println(currentPgmNumU);
+          // Serial.println(currentPatchNameU);
+        } else {
+          lowerPatchIndex = i;
+          currentPgmNumL = String(patches[i].patchNo);
+          currentPatchNameL = patches[i].patchName;
+          // Serial.println("Set lower patch from recallPatch()");
+          // Serial.println(currentPgmNumL);
+          // Serial.println(currentPatchNameL);
+        }
+
+        break;
+      }
+    }
+
+    setCurrentPatchData(data);
+  }
+  //   Serial.println("AFTER recallPatch:");
+  // Serial.print("  playMode: "); Serial.println(playMode);
+  // Serial.print("  upperSW: "); Serial.println(upperSW);
+  // Serial.print("  currentPgmNumU: "); Serial.println(currentPgmNumU);
+  // Serial.print("  currentPatchNameU: "); Serial.println(currentPatchNameU);
+  // Serial.print("  currentPgmNumL: "); Serial.println(currentPgmNumL);
+  // Serial.print("  currentPatchNameL: "); Serial.println(currentPatchNameL);
+}
 
 void setCurrentPatchData(String data[]) {
   int tempData[75];  // Temporary array for converted integers
@@ -5688,105 +5711,122 @@ void showPerformancePage(String perfNum, String name, int upperNo, String upperN
   currentLowerPatchName = lowerName;
 }
 
-void checkSwitches() {
+void reinitialiseToPanel() {
+  //This sets the current patch to be the same as the current hardware panel state - all the pots
+  //The four button controls stay the same state
+  //This reinialises the previous hardware values to force a re-read
+  muxInput = 0;
+  for (int i = 0; i < MUXCHANNELS; i++) {
+    mux1ValuesPrev[i] = RE_READ;
+    mux2ValuesPrev[i] = RE_READ;
+    mux3ValuesPrev[i] = RE_READ;
+  }
+  patchName = INITPATCHNAME;
+  showPatchPage("Initial", "Panel Settings", "", "");
+}
 
+void checkSwitches() {
   button.update(digitalRead(TUNE_BUTTON), 50, LOW);
   if (button.held()) {
     midiCCOut61(WSresetAutotune, 127);
     midiCCOut62(WSresetAutotune, 127);
     showCurrentParameterPage("Autotune", String("Reset"));
-    //digitalWrite(TUNE_LED, LOW);
   } else if (button.released(true)) {
     midiCCOut61(WSautotune, 127);
     midiCCOut62(WSautotune, 127);
     showCurrentParameterPage("Autotune", String("Started"));
-    //digitalWrite(TUNE_LED, HIGH);
   }
 
   saveButton.update();
   if (saveButton.held()) {
-    switch (state) {
-      case PARAMETER:
-      case PATCH:
-        state = DELETE;
-        break;
+    if (state == PARAMETER || state == PATCH) {
+      state = DELETE;
     }
   } else if (saveButton.numClicks() == 1) {
     switch (state) {
-      // case PARAMETER:
-      //   if (patches.size() < PATCHES_LIMIT) {
-      //     resetPatchesOrdering();  //Reset order of patches from first patch
-      //     patches.push({ patches.size() + 1, INITPATCHNAME });
-      //     state = SAVE;
-      //   }
-      //   break;
       case SAVE:
-        //Save as new patch with INITIALPATCH name or overwrite existing keeping name - bypassing patch renaming
         patchName = patches.last().patchName;
         state = PATCH;
         savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
-        showPatchPage(patches.last().patchNo, patches.last().patchName, patches.last().patchNo, patches.last().patchName);
+        refreshPatchDisplayFromState();
         patchNo = patches.last().patchNo;
-        loadPatches();  //Get rid of pushed patch if it wasn't saved
+        loadPatches();
         setPatchesOrdering(patchNo);
         renamedPatch = "";
         state = PARAMETER;
         break;
+
       case PATCHNAMING:
-        if (renamedPatch.length() > 0) patchName = renamedPatch;  //Prevent empty strings
+        if (renamedPatch.length() > 0) patchName = renamedPatch;
         state = PATCH;
         savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
-        showPatchPage(patches.last().patchNo, patchName, patches.last().patchNo, patchName);
+        refreshPatchDisplayFromState();
         patchNo = patches.last().patchNo;
-        loadPatches();  //Get rid of pushed patch if it wasn't saved
+        loadPatches();
         setPatchesOrdering(patchNo);
         renamedPatch = "";
         state = PARAMETER;
         break;
 
       case PARAMETER:
-        if (performances.size() < PERFORMANCES_LIMIT) {
-          Performance newPerf;
-          newPerf.performanceNo = performances.size() + 1;
-          newPerf.upperPatchNo = patchNo;  // Current patch
-          newPerf.lowerPatchNo = patchNo;
-          newPerf.name = "New Perf";
-          performances.push(newPerf);
-          currentPerformance = newPerf;
+        if (inPerformanceMode) {
+          // --- Save PERFORMANCE ---
+          if (performances.size() < PERFORMANCES_LIMIT) {
+            int newPerfNo = performances.size() + 1;
+            Performance newPerf = {
+              newPerfNo,
+              patches[upperPatchIndex].patchNo,
+              patches[lowerPatchIndex].patchNo,
+              INITPATCHNAME,
+              (PlayMode)playMode
+            };
+            currentPerformance = newPerf;
+            performances.push(currentPerformance);
 
-          showPerformancePage(
-            String(newPerf.performanceNo),
-            newPerf.name,
-            newPerf.upperPatchNo,
-            getPatchName(newPerf.upperPatchNo),
-            newPerf.lowerPatchNo,
-            getPatchName(newPerf.lowerPatchNo));
+            showPerformancePage(
+              String(newPerf.performanceNo),
+              newPerf.name,
+              newPerf.upperPatchNo,
+              getPatchName(newPerf.upperPatchNo),
+              newPerf.lowerPatchNo,
+              getPatchName(newPerf.lowerPatchNo));
 
-          state = PERFORMANCE_SAVE;
+            state = PERFORMANCE_NAMING;
+            renamedPatch = "";
+            charIndex = 0;
+            currentCharacter = CHARACTERS[charIndex];
+            showRenamingPage(currentPerformance.name);
+          }
+
+        } else {
+          // --- Save PATCH ---
+          if (patches.size() < PATCHES_LIMIT) {
+            resetPatchesOrdering();  // optional: start from patch 1
+            patches.push({ patches.size() + 1, INITPATCHNAME });
+            state = SAVE;
+          }
         }
         break;
 
-      case PERFORMANCE_SAVE:
-        // Enter naming mode
-        patchName = currentPerformance.name;
+
+      case PERFORMANCE_NAMING:
+        if (renamedPatch.length() > 0) {
+          currentPerformance.name = renamedPatch;
+        }
+
+        char filename[12];
+        sprintf(filename, "perf%03d", currentPerformance.performanceNo);
+
+        Serial.print("Saving performance to: ");
+        Serial.println(filename);
+
+        savePerformance(filename, currentPerformance);
+        loadPerformances();
+
+        state = PARAMETER;
         renamedPatch = "";
         charIndex = 0;
         currentCharacter = CHARACTERS[charIndex];
-        showRenamingPage(patchName);
-        state = PERFORMANCE_NAMING;
-        break;
-
-      case PERFORMANCE_NAMING:
-        if (renamedPatch.length() > 0)
-          currentPerformance.name = renamedPatch;
-
-        savePerformance(
-          ("perf" + String(currentPerformance.performanceNo)).c_str(),
-          currentPerformance);
-
-        loadPerformances();
-        setPerformancesOrdering(currentPerformance.performanceNo);  // optional helper like patches
-        state = PARAMETER;
         break;
     }
   }
@@ -5844,26 +5884,38 @@ void checkSwitches() {
         state = SETTINGS;
         showSettingsPage();
         break;
+      case PERFORMANCE_NAMING:
+        renamedPatch = "";
+        charIndex = 0;
+        state = PARAMETER;
+        // Optionally remove the unsaved performance from the buffer:
+        if (performances.size() > 0 && performances.last().name == INITPATCHNAME) {
+          performances.pop();
+        }
+        break;
     }
   }
 
   //Encoder switch
   recallButton.update();
   if (recallButton.held()) {
-    //If Recall button held, return to current patch setting
-    //which clears any changes made
-    state = PATCH;
-    //Recall the current patch
-    patchNo = patches.first().patchNo;
-    recallPatch(patchNo);
-    state = PARAMETER;
-  } else if (recallButton.numClicks() == 1) {
+    if (!recallHeldToggleLatch) {
+      inPerformanceMode = !inPerformanceMode;
+      recallHeldToggleLatch = true;
+
+      Serial.print("[MODE] Switched to ");
+      Serial.println(inPerformanceMode ? "Performance Mode" : "Patch Mode");
+
+      showCurrentParameterPage("Mode", inPerformanceMode ? "Performance" : "Patch");
+    }
+    return;
+  } else {
+    recallHeldToggleLatch = false;
+  }
+  if (recallButton.numClicks() == 1) {
     switch (state) {
       case RECALL:
-        state = PATCH;
-        //Recall the current patch
-        patchNo = patches.first().patchNo;
-        recallPatch(patchNo);
+        Serial.println("[INFO] Ignored default RECALL to avoid overwriting performance recall.");
         state = PARAMETER;
         break;
       case SAVE:
@@ -5921,37 +5973,48 @@ void checkSwitches() {
         break;
 
       case PERFORMANCE_RECALL:
-        currentPerformance = performances.first();
-        recallPerformance(currentPerformance);
-        state = PARAMETER;
-        break;
+        for (int i = 0; i < patches.size(); i++) {
+          if (patches[i].patchNo == currentPerformance.upperPatchNo) {
+            upperPatchIndex = i;
+          }
+          if (patches[i].patchNo == currentPerformance.lowerPatchNo) {
+            lowerPatchIndex = i;
+          }
+        }
 
-      case PERFORMANCE_SAVE:
-        showRenamingPage(currentPerformance.name);
-        state = PERFORMANCE_NAMING;
-        break;
+        playMode = currentPerformance.mode;
+        wholemode = (playMode == WHOLE);
+        updateplayMode(0);
+
+        upperSW = true;
+        recallPatch(currentPerformance.upperPatchNo);
+        // Serial.println("After U recall:");
+        // Serial.println(currentPgmNumU);
+        // Serial.println(currentPatchNameU);
+
+        upperSW = false;
+        recallPatch(currentPerformance.lowerPatchNo);
+        // Serial.println("After L recall:");
+        // Serial.println(currentPgmNumL);
+        // Serial.println(currentPatchNameL);
+
+
+        refreshPatchDisplayFromState();
+
+        state = PARAMETER;
+        patchNo = 0;  // ✅ Clear global patchNo to avoid accidental reuse
+        return;
 
       case PERFORMANCE_NAMING:
-        currentPerformance.name = renamedPatch;
-        savePerformance(("perf" + String(currentPerformance.performanceNo)).c_str(), currentPerformance);
-        state = PARAMETER;
+        if (renamedPatch.length() < 12) {
+          renamedPatch.concat(String(currentCharacter));
+          charIndex = 0;
+          currentCharacter = CHARACTERS[charIndex];
+          showRenamingPage(renamedPatch);
+        }
         break;
     }
   }
-}
-
-void reinitialiseToPanel() {
-  //This sets the current patch to be the same as the current hardware panel state - all the pots
-  //The four button controls stay the same state
-  //This reinialises the previous hardware values to force a re-read
-  muxInput = 0;
-  for (int i = 0; i < MUXCHANNELS; i++) {
-    mux1ValuesPrev[i] = RE_READ;
-    mux2ValuesPrev[i] = RE_READ;
-    mux3ValuesPrev[i] = RE_READ;
-  }
-  patchName = INITPATCHNAME;
-  showPatchPage("Initial", "Panel Settings", "", "");
 }
 
 // Updated checkEncoder() with upperPatchIndex and lowerPatchIndex
@@ -5963,6 +6026,27 @@ void checkEncoder() {
     moved = true;
 
     switch (state) {
+
+      case PERFORMANCE_RECALL:
+        performanceIndex++;
+        if (performanceIndex >= performances.size()) performanceIndex = 0;
+        currentPerformance = performances[performanceIndex];
+        showPerformancePage(
+          String(currentPerformance.performanceNo),
+          currentPerformance.name,
+          currentPerformance.upperPatchNo,
+          getPatchName(currentPerformance.upperPatchNo),
+          currentPerformance.lowerPatchNo,
+          getPatchName(currentPerformance.lowerPatchNo));
+        break;
+
+      case PERFORMANCE_NAMING:
+        charIndex++;
+        if (charIndex >= TOTALCHARS) charIndex = 0;
+        currentCharacter = CHARACTERS[charIndex];
+        showRenamingPage(renamedPatch + currentCharacter);
+        break;
+
       case PARAMETER:
         if (upperSW) {
           upperPatchIndex++;
@@ -5975,11 +6059,7 @@ void checkEncoder() {
           patchNo = patches[lowerPatchIndex].patchNo;
           recallPatch(patchNo);
         }
-        showPatchPage(
-          String(patches[upperPatchIndex].patchNo),
-          patches[upperPatchIndex].patchName,
-          String(patches[lowerPatchIndex].patchNo),
-          patches[lowerPatchIndex].patchName);
+        refreshPatchDisplayFromState();
         break;
 
       case RECALL:
@@ -6008,6 +6088,27 @@ void checkEncoder() {
     moved = true;
 
     switch (state) {
+
+      case PERFORMANCE_RECALL:
+        performanceIndex--;
+        if (performanceIndex < 0) performanceIndex = performances.size() - 1;
+        currentPerformance = performances[performanceIndex];
+        showPerformancePage(
+          String(currentPerformance.performanceNo),
+          currentPerformance.name,
+          currentPerformance.upperPatchNo,
+          getPatchName(currentPerformance.upperPatchNo),
+          currentPerformance.lowerPatchNo,
+          getPatchName(currentPerformance.lowerPatchNo));
+        break;
+
+      case PERFORMANCE_NAMING:
+        charIndex--;
+        if (charIndex < 0) charIndex = TOTALCHARS - 1;
+        currentCharacter = CHARACTERS[charIndex];
+        showRenamingPage(renamedPatch + currentCharacter);
+        break;
+
       case PARAMETER:
         if (upperSW) {
           upperPatchIndex--;
@@ -6020,11 +6121,7 @@ void checkEncoder() {
           patchNo = patches[lowerPatchIndex].patchNo;
           recallPatch(patchNo);
         }
-        showPatchPage(
-          String(patches[upperPatchIndex].patchNo),
-          patches[upperPatchIndex].patchName,
-          String(patches[lowerPatchIndex].patchNo),
-          patches[lowerPatchIndex].patchName);
+        refreshPatchDisplayFromState();
         break;
 
       case RECALL:
