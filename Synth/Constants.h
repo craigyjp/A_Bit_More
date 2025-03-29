@@ -34,5 +34,6 @@ const char* INITPATCHNAME = "Initial Patch";
 const uint32_t CLICK_DURATION = 250;
 #define HOLD_DURATION 1000
 #define PATCHES_LIMIT 999
+#define PERFORMANCES_LIMIT 128
 const String INITPATCH = "Solina,1,1,1,1,1,1,1,1,1,01,1,1,1,1,1,1,1,1,1,01,1,1,1,1,1,1,1,1,1,01,1,1,1,1,1,1,1,1,1,01,1,1,1,1,1,1,1,1,1,01,1,1,1,1,1,1,1,1,1,01,1,1,1,1,1,1,1,1,1,01,1,1,1";
 #define TOLERANCE 20

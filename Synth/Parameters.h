@@ -108,6 +108,7 @@ int upperSplitVoicePointer = 0;
 int performanceIndex = 0;
 bool inPerformanceMode = false;
 static bool recallHeldToggleLatch = false;
+bool startedRenaming = false;
 
 //Delayed LFO
 int numberOfNotes = 0;
