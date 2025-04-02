@@ -12,6 +12,7 @@
 #define   CCamDepth 11
 #define   CCosc2Interval 12
 
+#define   CCoscATDepth 14
 #define   CCoscfmDepth 15
 #define   CCosc1PW 16
 #define   CCosc2PW 17
