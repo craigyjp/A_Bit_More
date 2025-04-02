@@ -52,6 +52,9 @@ void setup() {
   renderCurrentPatchPage();
 }
 
+uint16_t getActiveColor() {
+  return upperSW ? TFT_CYAN : TFT_YELLOW;
+}
 
 int mapValue(int value, int max_value, int scale) {
   return (value * scale) / max_value;
@@ -85,9 +88,9 @@ void myControlChange(byte channel, byte control, int value) {
       drawBar0(52, panelData[P_pmFilterEnv], NUM_STEPS, STEP_HEIGHT);
       break;
 
-    case CCnoiseLevel:
-      panelData[P_noiseLevel] = value;
-      drawPWIndicator8(192, panelData[P_noiseLevel]);
+    case CCvolumeControl:
+      panelData[P_volumeControl] = value;
+      drawBar0(98, panelData[P_volumeControl], NUM_STEPS, STEP_HEIGHT);
       break;
 
     case CCamDepth:
@@ -95,9 +98,9 @@ void myControlChange(byte channel, byte control, int value) {
       drawBar0(144, panelData[P_amDepth], NUM_STEPS, STEP_HEIGHT);
       break;
 
-    case CCvolumeControl:
-      panelData[P_volumeControl] = value;
-      drawBar0(98, panelData[P_volumeControl], NUM_STEPS, STEP_HEIGHT);
+    case CCoscATDepth:
+      panelData[P_ATDepth] = value;
+      drawBar0(192, panelData[P_ATDepth], NUM_STEPS, STEP_HEIGHT);
       break;
 
     case CCmodWheelDepth:
@@ -156,6 +159,17 @@ void myLEDupdate(byte channel, byte control, int value) {
         digitalWrite(AMP_GATED_LED, HIGH);
       }
       break;
+
+    case CCupperSW:
+      upperSW = 1;
+      lowerSW = 0;
+      break;
+
+    case CClowerSW:
+      upperSW = 0;
+      lowerSW = 1;
+      break;
+
   }
 }
 
@@ -165,7 +179,7 @@ void drawBar0(int x, int value, int steps, int stepHeight) {
   for (int i = 0; i < steps; i++) {
     int y = 210 - (i * stepHeight);
     if (i < filledSteps) {
-      tft.fillRoundRect(x, y - stepHeight, BAR_WIDTH, stepHeight - 2, 2, TFT_YELLOW);  // Filled step
+      tft.fillRoundRect(x, y - stepHeight, BAR_WIDTH, stepHeight - 2, 2, getActiveColor());  // Filled step
     } else {
       tft.fillRoundRect(x, y - stepHeight, BAR_WIDTH, stepHeight - 2, 2, TFT_BLACK);  // Unfilled step
     }
@@ -179,23 +193,9 @@ void drawBar1(int x, int value, int steps, int stepHeight) {
     int y = 210 - (i * stepHeight);  // Each step is stacked upwards
 
     // Draw filled steps only up to `value`
-    uint16_t color = (i < value) ? TFT_YELLOW : TFT_BLACK;
+    uint16_t color = (i < value) ? getActiveColor() : TFT_BLACK;
     tft.fillRoundRect(x, y - stepHeight, BAR_WIDTH, stepHeight - 2, 2, color);
   }
-}
-
-void drawPWIndicator8(int x, int value) {
-  // Clear the entire bar area by drawing a rectangle with the background color
-  tft.fillRoundRect(x, 208 - BAR_HEIGHT, BAR_WIDTH, BAR_HEIGHT, 2, TFT_BLACK);
-  tft.drawFastVLine(204, 50, 155, TFT_RED);
-  tft.drawFastHLine(192, 50, 24, TFT_RED);
-  tft.drawFastHLine(192, 127, 24, TFT_RED);
-  tft.drawFastHLine(192, 205, 24, TFT_RED);
-  // Calculate the y position for the current value
-  int y = 205 - ((value * (BAR_HEIGHT - STEP_HEIGHT)) / 1023);
-
-  // Draw the new bar at the calculated position
-  tft.fillRoundRect(x, y - STEP_HEIGHT / 2, BAR_WIDTH, STEP_HEIGHT, 2, TFT_YELLOW);
 }
 
 void renderCurrentPatchPage() {
@@ -214,10 +214,8 @@ void renderCurrentPatchPage() {
   tft.print("Vol");
   tft.setCursor(142, 233);
   tft.print("AM");
-  tft.setCursor(142, 233);
-  tft.print("AM");
   tft.setCursor(184, 233);
-  tft.print("Noise");
+  tft.print("AT");
   tft.setCursor(234, 233);
   tft.print("MW");
   tft.setCursor(280, 233);
@@ -252,16 +250,11 @@ void renderCurrentPatchPage() {
   tft.setCursor(200, 33);
   tft.print(panelData[P_pmDestFilter] == 0 ? "Filter Off" : "Filter On");
 
-  tft.drawFastVLine(204, 50, 155, TFT_RED);
-  tft.drawFastHLine(192, 50, 24, TFT_RED);
-  tft.drawFastHLine(192, 127, 24, TFT_RED);
-  tft.drawFastHLine(192, 205, 24, TFT_RED);
-
   drawBar0(6, panelData[P_pmDCO2], NUM_STEPS, STEP_HEIGHT);
   drawBar0(52, panelData[P_pmFilterEnv], NUM_STEPS, STEP_HEIGHT);
   drawBar0(98, panelData[P_volumeControl], NUM_STEPS, STEP_HEIGHT);
   drawBar0(144, panelData[P_amDepth], NUM_STEPS, STEP_HEIGHT);
-  drawPWIndicator8(192, panelData[P_noiseLevel]);
+  drawBar0(192, panelData[P_ATDepth], NUM_STEPS, STEP_HEIGHT);
   drawBar0(236, panelData[P_modWheelDepth], NUM_STEPS, STEP_HEIGHT);
   drawBar1(282, panelData[P_PitchBendLevel], DET_STEPS, DET_STEP_HEIGHT);
 }

@@ -41,9 +41,9 @@ int lowerSW = 1;
 
 int returnvalue = 0;
 
-int upperData[76];
-int lowerData[76];
-int panelData[76];
+int upperData[77];
+int lowerData[77];
+int panelData[77];
 
 #define P_sysex 0
 #define P_pwLFO 1
@@ -119,3 +119,4 @@ int panelData[76];
 #define P_lfoMultiplier 71
 #define P_NotePriority 72
 #define P_keytrackSW 73
+#define P_ATDepth 74
