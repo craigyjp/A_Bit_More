@@ -632,7 +632,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
 
     // WHOLE MODE (No changes needed if currently working)
     case 0:
-      switch (panelData[P_keyboardMode]) {
+      switch (lowerData[P_keyboardMode]) {
         case 0:
           voiceNum = getVoiceNo(-1) - 1;
           assignVoice(note, velocity, voiceNum);
@@ -756,7 +756,7 @@ void myNoteOff(byte channel, byte note, byte velocity) {
 
     // WHOLE MODE corrected explicitly
     case 0:
-      switch (panelData[P_keyboardMode]) {
+      switch (lowerData[P_keyboardMode]) {
         case 0:
           assignedVoice = getVoiceNo(note) - 1;
           releaseVoice(note, assignedVoice);
@@ -5084,6 +5084,7 @@ void setCurrentPatchData(String data[]) {
 
       oldfilterCutoffU = upperData[P_filterCutoff];
       upperParamsToDisplay();
+      setAllButtons();
     }
   }
 
