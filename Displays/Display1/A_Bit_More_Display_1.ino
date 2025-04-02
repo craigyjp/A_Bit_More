@@ -56,6 +56,10 @@ int mapValue(int value, int max_value, int scale) {
   return (value * scale) / max_value;
 }
 
+uint16_t getActiveColor() {
+  return upperSW ? TFT_CYAN : TFT_YELLOW;
+}
+
 void myConvertControlChange(byte channel, byte number, byte value) {
 
   if (channel == 1) {
@@ -139,7 +143,7 @@ void myLEDupdate(byte channel, byte control, int value) {
       panelData[P_osc1Range] = value;
       tft.setFreeFont(&FreeSans12pt7b);
       // Set range label and value inside a box along the top
-      tft.fillRoundRect(180, 10, 130, 30, 5, TFT_YELLOW);  // Background box for range
+      tft.fillRoundRect(180, 10, 130, 30, 5, getActiveColor());  // Background box for range
       tft.setTextColor(TFT_BLACK);
       tft.setCursor(195, 33);
       switch (panelData[P_osc1Range]) {
@@ -163,6 +167,17 @@ void myLEDupdate(byte channel, byte control, int value) {
         digitalWrite(KEYTRACK_LED, LOW);
       }
       break;
+
+    case CCupperSW:
+      upperSW = 1;
+      lowerSW = 0;
+      break;
+
+    case CClowerSW:
+      upperSW = 0;
+      lowerSW = 1;
+      break;
+      
   }
 }
 
@@ -174,7 +189,7 @@ void drawBar0(int x, int value, int steps, int stepHeight) {
   for (int i = 0; i < steps; i++) {
     int y = 210 - (i * stepHeight);
     if (i < filledSteps) {
-      tft.fillRoundRect(x, y - stepHeight, BAR_WIDTH, stepHeight - 2, 2, TFT_YELLOW);  // Filled step
+      tft.fillRoundRect(x, y - stepHeight, BAR_WIDTH, stepHeight - 2, 2, getActiveColor());  // Filled step
     } else {
       tft.fillRoundRect(x, y - stepHeight, BAR_WIDTH, stepHeight - 2, 2, TFT_BLACK);  // Unfilled step
     }
@@ -192,7 +207,7 @@ void drawPWIndicator0(int x, int value) {
   int y = 205 - ((value * (BAR_HEIGHT - STEP_HEIGHT)) / 1023);
 
   // Draw the new bar at the calculated position
-  tft.fillRoundRect(x, y - STEP_HEIGHT / 2, BAR_WIDTH, STEP_HEIGHT, 2, TFT_YELLOW);
+  tft.fillRoundRect(x, y - STEP_HEIGHT / 2, BAR_WIDTH, STEP_HEIGHT, 2, getActiveColor());
 }
 
 void renderCurrentPatchPage() {
@@ -219,7 +234,7 @@ void renderCurrentPatchPage() {
         tft.setFreeFont(&FreeSans12pt7b);
         tft.setTextColor(TFT_BLACK);
         // Set range label and value inside a box along the top
-        tft.fillRoundRect(180, 10, 130, 30, 5, TFT_YELLOW);  // Background box for range
+        tft.fillRoundRect(180, 10, 130, 30, 5, getActiveColor());  // Background box for range
         tft.setCursor(195, 33);
         switch (panelData[P_osc1Range]) {
           case 0:
