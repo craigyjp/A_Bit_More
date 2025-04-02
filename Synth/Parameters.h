@@ -109,6 +109,7 @@ int performanceIndex = 0;
 bool inPerformanceMode = false;
 static bool recallHeldToggleLatch = false;
 bool startedRenaming = false;
+bool isAutotuning = false;
 
 //Delayed LFO
 int numberOfNotes = 0;

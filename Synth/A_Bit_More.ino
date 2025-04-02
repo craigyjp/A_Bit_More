@@ -621,6 +621,8 @@ void commandLastNoteUniUpper() {
 
 void myNoteOn(byte channel, byte note, byte velocity) {
 
+  if (isAutotuning) return;
+
   numberOfNotesU++;
   numberOfNotesL++;
 
@@ -747,6 +749,8 @@ void myNoteOn(byte channel, byte note, byte velocity) {
 
 void myNoteOff(byte channel, byte note, byte velocity) {
 
+  if (isAutotuning) return;
+  
   numberOfNotesU--;
   numberOfNotesL--;
 
@@ -6628,26 +6632,39 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
 void loop() {
 
   if (digitalRead(AUTOTUNE_INPUT) == HIGH) {
+    isAutotuning = true;
     digitalWrite(TUNE_LED, HIGH);
 
-    // Stop all tasks and wait until input goes low
     while (digitalRead(AUTOTUNE_INPUT) == HIGH) {
-      // Optional: Add a small delay to avoid busy-wait power drain
+      while (MIDI.read()) {}
+      while (MIDI6.read()) {}
+      while (MIDI7.read()) {}
+      while (usbMIDI.read()) {}
       writeDemux();
+      delay(1);
     }
 
     digitalWrite(TUNE_LED, LOW);
-  }
+    isAutotuning = false;
 
-  checkSwitches();
-  writeDemux();
-  checkMux();
-  checkEncoder();
-  MIDI.read(midiChannel);
-  MIDI6.read(midiChannel);
-  MIDI7.read();
-  usbMIDI.read(midiChannel);
-  octoswitch.update();  // read all the buttons for the Synth
-  srp.update();         // update all the LEDs in the buttons
-  LFODelayHandle();
+    while (MIDI.read()) {}
+    while (MIDI6.read()) {}
+    while (MIDI7.read()) {}
+    while (usbMIDI.read()) {}
+
+    allNotesOff();
+  } else {
+
+    checkSwitches();
+    writeDemux();
+    checkMux();
+    checkEncoder();
+    MIDI.read(midiChannel);
+    MIDI6.read(midiChannel);
+    MIDI7.read();
+    usbMIDI.read(midiChannel);
+    octoswitch.update();  // read all the buttons for the Synth
+    srp.update();         // update all the LEDs in the buttons
+    LFODelayHandle();
+  }
 }
