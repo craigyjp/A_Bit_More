@@ -5768,28 +5768,86 @@ void checkSwitches() {
   } else if (saveButton.numClicks() == 1) {
     switch (state) {
       case SAVE:
-        patchName = patches.last().patchName;
-        state = PATCH;
-        savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
-        refreshPatchDisplayFromState();
-        patchNo = patches.last().patchNo;
-        loadPatches();
-        setPatchesOrdering(patchNo);
-        renamedPatch = "";
-        state = PARAMETER;
+        {
+          if (renamedPatch.length() == 0) {
+            renamedPatch = INITPATCHNAME;  // fallback if no rename occurred
+          }
+
+          // Update patch name depending on upper or lower
+          if (upperSW) {
+            patchNameU = renamedPatch;
+            currentPatchNameU = renamedPatch;
+            currentPgmNumU = String(patches.last().patchNo);
+          } else {
+            patchNameL = renamedPatch;
+            currentPatchNameL = renamedPatch;
+            currentPgmNumL = String(patches.last().patchNo);
+          }
+
+          // ✅ Update last patch in the buffer before saving
+          patches.last().patchName = renamedPatch;
+
+          // ✅ Save updated patch data
+          String patchData = getCurrentPatchData();
+          savePatch(String(patches.last().patchNo).c_str(), patchData);
+
+          // ✅ Reload and reorder patches explicitly
+          loadPatches();
+          setPatchesOrdering(patches.last().patchNo);
+
+          // ✅ Correctly update patch index for immediate display
+          for (int i = 0; i < patches.size(); i++) {
+            if (patches[i].patchNo == patches.last().patchNo) {
+              if (upperSW) upperPatchIndex = i;
+              else lowerPatchIndex = i;
+              break;
+            }
+          }
+
+          // ✅ Immediately refresh display with updated data
+          refreshPatchDisplayFromState();
+
+          renamedPatch = "";
+          state = PARAMETER;
+        }
         break;
 
+
       case PATCHNAMING:
-        if (renamedPatch.length() > 0) patchName = renamedPatch;
-        state = PATCH;
-        savePatch(String(patches.last().patchNo).c_str(), getCurrentPatchData());
-        refreshPatchDisplayFromState();
-        patchNo = patches.last().patchNo;
-        loadPatches();
-        setPatchesOrdering(patchNo);
-        renamedPatch = "";
-        state = PARAMETER;
+        {
+          Serial.println("renamedPatch BEFORE SAVING: " + renamedPatch);
+
+          if (renamedPatch.length() == 0) {
+            renamedPatch = patches.last().patchName;  // fallback to existing name
+          }
+
+          // Update correct upper/lower patch name based on current layer
+          if (upperSW) {
+            patchNameU = renamedPatch;
+            currentPatchNameU = renamedPatch;  // Update immediately
+            currentPgmNumU = String(patches.last().patchNo);
+          } else {
+            patchNameL = renamedPatch;
+            currentPatchNameL = renamedPatch;  // Update immediately
+            currentPgmNumL = String(patches.last().patchNo);
+          }
+
+          // Update last patch in the patches buffer
+          patches.last().patchName = renamedPatch;
+
+          // Save patch data (with the correct name included)
+          String patchData = getCurrentPatchData();
+          savePatch(String(patches.last().patchNo).c_str(), patchData);
+
+          loadPatches();                   // Refresh patches list from SD card
+          refreshPatchDisplayFromState();  // immediately update the display
+          setPatchesOrdering(patches.last().patchNo);
+
+          renamedPatch = "";
+          state = PARAMETER;
+        }
         break;
+
 
       case PARAMETER:
         if (inPerformanceMode) {
@@ -5962,16 +6020,23 @@ void checkSwitches() {
     }
   }
 
-  //Encoder switch
+  // Encoder switch
   recallButton.update();
   if (recallButton.held()) {
     if (!recallHeldToggleLatch) {
       inPerformanceMode = !inPerformanceMode;
       recallHeldToggleLatch = true;
 
+      Serial.print("[MODE] Switched to ");
+      Serial.println(inPerformanceMode ? "Performance Mode" : "Patch Mode");
+
+      showCurrentParameterPage("Mode", inPerformanceMode ? "Performance" : "Patch");
+
       if (inPerformanceMode && performances.size() > 0) {
+        // Entering Performance Mode
         performanceIndex = 0;
         currentPerformance = performances[performanceIndex];
+
         showPerformancePage(
           String(currentPerformance.performanceNo),
           currentPerformance.name,
@@ -5979,15 +6044,15 @@ void checkSwitches() {
           getPatchName(currentPerformance.upperPatchNo),
           currentPerformance.lowerPatchNo,
           getPatchName(currentPerformance.lowerPatchNo));
+
+      } else {
+        // Returning to Patch Mode
+        refreshPatchDisplayFromState();
       }
-
-      Serial.print("[MODE] Switched to ");
-      Serial.println(inPerformanceMode ? "Performance Mode" : "Patch Mode");
-
-      showCurrentParameterPage("Mode", inPerformanceMode ? "Performance" : "Patch");
     }
+  } else {
+    recallHeldToggleLatch = false;
   }
-
   if (recallButton.numClicks() == 1) {
     switch (state) {
       case RECALL:
