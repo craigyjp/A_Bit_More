@@ -9,3 +9,5 @@ This is an 8 voice bi-timbral polyphonic dual VCO based synthesizer that uses an
 I have also added portamento, octave switching, oscillator sync etc.
 
 Filters are based on the Matrix 12 pole switching filters with 16 filter types available, dual LFO's are available for modulation and PWM, plus a white/pink noise source.
+
+# Although I have this repository the schematics are far from complete and some code is still required.
