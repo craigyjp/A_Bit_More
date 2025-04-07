@@ -6,7 +6,7 @@ Make sure this line is commented out in the setup file
 
 #include <../Setup453_RP2040_ST7789_240x320.h>  // RP2040, ST7789
 
-Then place the Setup453_RP2040_ST7789_240x320.h in the level above your library directory and edit it for the pins used.
+Then place the Setup453_RP2040_ST7789_240x320.h in your library directory and edit it for the pins used.
 
 //Pins RP2040
 
