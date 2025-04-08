@@ -11,3 +11,10 @@ I have also added portamento, octave switching, oscillator sync etc.
 Filters are based on the Matrix 12 pole switching filters with 16 filter types available, dual LFO's are available for modulation and PWM, plus a white/pink noise source.
 
 # Although I have this repository the schematics are far from complete and some code is still required.
+
+# Things to fix 
+
+1. Split point and split transpose to fix.
+2. Use the footpedal CC 104 to change the effect parameter 3 (leslie effect). 
+3. Add MIDI out/thru.
+4. Fix bug in lower unison/mono mode last note priority.
