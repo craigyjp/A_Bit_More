@@ -222,6 +222,16 @@ void setup() {
   midiChannel = getMIDIChannel();
   Serial.println("MIDI Ch:" + String(midiChannel) + " (0 is Omni On)");
 
+   //USB HOST MIDI Class Compliant
+  delay(400);  //Wait to turn on USB Host
+  myusb.begin();
+  midi1.setHandleControlChange(editControlChange);
+  midi1.setHandleNoteOff(myNoteOff);
+  midi1.setHandleNoteOn(myNoteOn);
+  midi1.setHandlePitchChange(DinHandlePitchBend);
+  midi1.setHandleAfterTouch(myAfterTouch);
+  Serial.println("USB HOST MIDI Class Compliant Listening");
+
   //USB Client MIDI
   usbMIDI.setHandleControlChange(editControlChange);
   usbMIDI.setHandleProgramChange(myProgramChange);
@@ -750,7 +760,7 @@ void myNoteOn(byte channel, byte note, byte velocity) {
 void myNoteOff(byte channel, byte note, byte velocity) {
 
   if (isAutotuning) return;
-  
+
   numberOfNotesU--;
   numberOfNotesL--;
 
@@ -3358,6 +3368,105 @@ void updatesyncSW(boolean announce) {
   }
 }
 
+void updatefootSwitch() {
+
+      if (upperSW) {
+        if (upperData[P_effectPot3] < 2047) {
+          upperslowpot3 = upperData[P_effectPot3];
+          upperfast = true;
+          upperslow = false;
+        }
+        if (upperData[P_effectPot3] > 2047) {
+          upperfastpot3 = upperData[P_effectPot3];
+          upperfast = false;
+          upperslow = true;
+        }
+      } else {
+        if (lowerData[P_effectPot3] < 2047) {
+          lowerslowpot3 = lowerData[P_effectPot3];
+          lowerfast = true;
+          lowerslow = false;
+        }
+        if (lowerData[P_effectPot3] > 2047) {
+          lowerfastpot3 = lowerData[P_effectPot3];
+          lowerfast = false;
+          lowerslow = true;
+        }
+        if (wholemode) {
+          if (upperData[P_effectPot3] < 2047) {
+            upperslowpot3 = upperData[P_effectPot3];
+            upperfast = true;
+            upperslow = false;
+          }
+          if (upperData[P_effectPot3] > 2047) {
+            upperfastpot3 = upperData[P_effectPot3];
+            upperfast = false;
+            upperslow = true;
+          }
+        }
+      }
+}
+
+void changeSpeed() {
+
+  if (upperfootPedal && upperslow) {
+    upperData[P_effectPot3]--;
+    upperData[P_effectPot3]--;
+    upperData[P_effectPot3]--;
+    upperData[P_effectPot3]--;
+    
+    if (upperData[P_effectPot3] <= upperslowpot3) {
+      upperData[P_effectPot3] = upperslowpot3;
+      midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
+      upperfootPedal = false;
+      upperslow = false;
+    }
+  }
+
+  if (upperfootPedal && upperfast) {
+    upperData[P_effectPot3]++;
+    upperData[P_effectPot3]++;
+    upperData[P_effectPot3]++;
+    upperData[P_effectPot3]++;
+    
+    if (upperData[P_effectPot3] >= upperfastpot3) {
+      upperData[P_effectPot3] = upperfastpot3;
+      midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
+      upperfootPedal = false;
+      upperfast = false;
+    }
+  }
+
+  if (lowerfootPedal && lowerslow) {
+    lowerData[P_effectPot3]--;
+    lowerData[P_effectPot3]--;
+    lowerData[P_effectPot3]--;
+    lowerData[P_effectPot3]--;
+    
+    if (lowerData[P_effectPot3] <= lowerslowpot3) {
+      lowerData[P_effectPot3] = lowerslowpot3;
+      midiCCOut71(CCeffectPot3, lowerData[P_effectPot3] >> midioutfrig);
+      lowerfootPedal = false;
+      lowerslow = false;
+    }
+  }
+
+  if (lowerfootPedal && lowerfast) {
+    lowerData[P_effectPot3]++;
+    lowerData[P_effectPot3]++;
+    lowerData[P_effectPot3]++;
+    lowerData[P_effectPot3]++;
+
+    if (lowerData[P_effectPot3] >= lowerfastpot3) {
+      lowerData[P_effectPot3] = lowerfastpot3;
+      midiCCOut71(CCeffectPot3, lowerData[P_effectPot3] >> midioutfrig);
+      lowerfootPedal = false;
+      lowerfast = false;
+    }
+  }
+
+}
+
 void updatefilterenvLogLin(boolean announce) {
 
   if (upperSW) {
@@ -4746,6 +4855,17 @@ void myControlChange(byte channel, byte control, int value) {
       updatesyncSW(1);
       break;
 
+    case CCeffectparam3:
+        if (value > 63) {
+          if (upperSW) {
+            upperfootPedal = true;
+          } else{
+            lowerfootPedal = true;
+          }
+          updatefootSwitch();
+        }
+      break;
+
     case CCkeyTrackSW:
       if (upperSW) {
         upperData[P_keytrackSW] = !upperData[P_keytrackSW];
@@ -5026,11 +5146,12 @@ void recallPatch(int patchNo) {
           upperPatchIndex = i;
           currentPgmNumU = String(patches[i].patchNo);
           currentPatchNameU = patches[i].patchName;
-
+          //storeLastPatchU(currentPgmNumU)
         } else {
           lowerPatchIndex = i;
           currentPgmNumL = String(patches[i].patchNo);
           currentPatchNameL = patches[i].patchName;
+          //storeLastPatchL(currentPgmNumL)
         }
 
         break;
@@ -5820,7 +5941,7 @@ void checkSwitches() {
 
       case PATCHNAMING:
         {
-          Serial.println("renamedPatch BEFORE SAVING: " + renamedPatch);
+          //Serial.println("renamedPatch BEFORE SAVING: " + renamedPatch);
 
           if (renamedPatch.length() == 0) {
             renamedPatch = patches.last().patchName;  // fallback to existing name
@@ -6032,8 +6153,8 @@ void checkSwitches() {
       inPerformanceMode = !inPerformanceMode;
       recallHeldToggleLatch = true;
 
-      Serial.print("[MODE] Switched to ");
-      Serial.println(inPerformanceMode ? "Performance Mode" : "Patch Mode");
+      //Serial.print("[MODE] Switched to ");
+      //Serial.println(inPerformanceMode ? "Performance Mode" : "Patch Mode");
 
       showCurrentParameterPage("Mode", inPerformanceMode ? "Performance" : "Patch");
 
@@ -6061,7 +6182,7 @@ void checkSwitches() {
   if (recallButton.numClicks() == 1) {
     switch (state) {
       case RECALL:
-        Serial.println("[INFO] Ignored default RECALL to avoid overwriting performance recall.");
+        //Serial.println("[INFO] Ignored default RECALL to avoid overwriting performance recall.");
         state = PARAMETER;
         break;
       case SAVE:
@@ -6636,6 +6757,7 @@ void loop() {
     digitalWrite(TUNE_LED, HIGH);
 
     while (digitalRead(AUTOTUNE_INPUT) == HIGH) {
+      while (midi1.read()) {}
       while (MIDI.read()) {}
       while (MIDI6.read()) {}
       while (MIDI7.read()) {}
@@ -6646,7 +6768,8 @@ void loop() {
 
     digitalWrite(TUNE_LED, LOW);
     isAutotuning = false;
-
+    
+    while (midi1.read()) {}
     while (MIDI.read()) {}
     while (MIDI6.read()) {}
     while (MIDI7.read()) {}
@@ -6659,6 +6782,7 @@ void loop() {
     writeDemux();
     checkMux();
     checkEncoder();
+    midi1.read(midiChannel);  //USB HOST MIDI Class Compliant
     MIDI.read(midiChannel);
     MIDI6.read(midiChannel);
     MIDI7.read();
@@ -6666,5 +6790,6 @@ void loop() {
     octoswitch.update();  // read all the buttons for the Synth
     srp.update();         // update all the LEDs in the buttons
     LFODelayHandle();
+    changeSpeed();
   }
 }

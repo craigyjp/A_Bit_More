@@ -680,15 +680,15 @@ void showCurrentParameterPage(const char *param, String val) {
 }
 
 void showPatchPage(String numberU, String nameU, String numberL, String nameL) {
-  Serial.println("[showPatchPage] Updating display patch values:");
-  Serial.print("Upper: ");
-  Serial.print(numberU);
-  Serial.print(" - ");
-  Serial.println(nameU);
-  Serial.print("Lower: ");
-  Serial.print(numberL);
-  Serial.print(" - ");
-  Serial.println(nameL);
+  // Serial.println("[showPatchPage] Updating display patch values:");
+  // Serial.print("Upper: ");
+  // Serial.print(numberU);
+  // Serial.print(" - ");
+  // Serial.println(nameU);
+  // Serial.print("Lower: ");
+  // Serial.print(numberL);
+  // Serial.print(" - ");
+  // Serial.println(nameL);
 
   currentPgmNumU = numberU;
   currentPatchNameU = nameU;

@@ -1,0 +1,28 @@
+Internal
+"Chorus",  "Flange", "Tremolo", "Pitch", "Pitch", "No Effect", "Reverb", "Reverb"
+"Reverb",  "Reverb", "Reverb",  "Shift", "Echo",  " ",         "1",       "2"
+
+Rom 1
+"Qubit","SuperNova","Modulated","Echo",   "Shimmer", "Sample &","Modulated","Glitch Bit"
+"Delay","Delay",    "Delay",    "Reverb", "Reverb",  "Hold",    "Reverb",   "Delay"
+
+Rom 2
+"Daydream","Starfield","Dual Pitch","Triple", "Reverse","Wah",   "Vibrato","Phaser"
+"Delay",   "Delay",    "Shift",     "Delay",  "Delay",  "Reverb","Reverb", "Reverb"
+
+Rom 3
+"Phaser","Flanger","VP330",   "Cathedral","Rotor", "Ensemble","Leslie", "Wah Wah"
+"Bass",  "Bass",   "Ensemble","",         "Effect","Effect",  "Effect", ""
+
+Qubit Effects
+Rom 1
+"Shimmer", "Modulated", "Modulated", "Pitch", "Bit",	"Dual Pitch", "Tremelo", "Daydream"
+"Reverb",  "Reverb", 	"Delay",     "Delay", "Crusher","Shift",      "", 	 "Delay"
+
+Rom 2
+"Space", "Glitch Bit", "Starfield", "ChoirSaw", "Parallax", "S&H Filter", "Kaleidoscope", "Digifuzzer"
+"Delay", "Delay",      "Delay",     "", 	"", 	    "", 	  "",	 	  ""
+
+Rom 3
+"Abbey",  "Spring", "Room",   "Plate", "Wah",    "Vibrato", "Phaser", "Flanger"
+"Reverb", "Reverb", "Reverb", "Reverb","Reverb", "Reverb",  "Reverb", "Reverb"

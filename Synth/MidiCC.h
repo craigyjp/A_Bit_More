@@ -98,6 +98,7 @@
 
 #define   CCosc2PulseLevel 102
 #define   CCosc2SawLevel 103
+#define   CCeffectparam3 104
 #define   CCallnotesoff 123//Panic button
 
 // CC values used in the WAVEshare to control params

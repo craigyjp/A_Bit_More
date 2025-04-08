@@ -111,6 +111,18 @@ static bool recallHeldToggleLatch = false;
 bool startedRenaming = false;
 bool isAutotuning = false;
 
+// footswitch
+bool upperfootPedal = false;
+bool lowerfootPedal = false;
+int upperfastpot3 = 4090;
+int upperslowpot3 = 10;
+bool upperfast = false;
+bool upperslow = true;
+int lowerfastpot3 = 4090;
+int lowerslowpot3 = 10;
+bool lowerfast = false;
+bool lowerslow = true;
+
 //Delayed LFO
 int numberOfNotes = 0;
 int oldnumberOfNotes = 0;
