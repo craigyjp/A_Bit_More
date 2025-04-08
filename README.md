@@ -17,4 +17,3 @@ Filters are based on the Matrix 12 pole switching filters with 16 filter types a
 * Add MIDI out/thru.
 * Fix bug in lower unison/mono mode last note priority.
 * Add sustain from pedal A (CC 64).
-* Fix bug leaving split mode to wholemode upper is still playing split sound
