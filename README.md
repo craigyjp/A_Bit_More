@@ -14,7 +14,7 @@ Filters are based on the Matrix 12 pole switching filters with 16 filter types a
 
 # Things to fix 
 
-1. Split point and split transpose to fix.
-2. Add MIDI out/thru.
-3. Fix bug in lower unison/mono mode last note priority.
-4. Add sustain from pedal A (CC 64).
+* Add MIDI out/thru.
+* Fix bug in lower unison/mono mode last note priority.
+* Add sustain from pedal A (CC 64).
+* Fix bug leaving split mode to wholemode upper is still playing split sound
