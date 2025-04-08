@@ -15,7 +15,6 @@ Filters are based on the Matrix 12 pole switching filters with 16 filter types a
 # Things to fix 
 
 1. Split point and split transpose to fix.
-2. Use the footpedal CC 104 to change the effect parameter 3 (leslie effect). 
-3. Add MIDI out/thru.
-4. Fix bug in lower unison/mono mode last note priority.
-5. Add sustain from pedal A (CC 64).
+2. Add MIDI out/thru.
+3. Fix bug in lower unison/mono mode last note priority.
+4. Add sustain from pedal A (CC 64).
