@@ -2474,6 +2474,9 @@ void updateplayMode(boolean announce) {
     lowerSW = true;
     upperSW = false;
     updatelowerSW(0);
+    lowerParamsToDisplay();
+    setAllButtons();
+    
   } else if (playMode == 1) {
     if (announce) {
       showCurrentParameterPage("Key Mode", "Dual");
