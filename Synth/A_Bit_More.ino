@@ -2476,7 +2476,7 @@ void updateplayMode(boolean announce) {
     updatelowerSW(0);
     lowerParamsToDisplay();
     setAllButtons();
-    
+
   } else if (playMode == 1) {
     if (announce) {
       showCurrentParameterPage("Key Mode", "Dual");
@@ -3411,59 +3411,61 @@ void updatefootSwitch() {
 }
 
 void changeSpeed() {
-
-  if (upperfootPedal && upperslow) {
-    upperData[P_effectPot3]--;
-    upperData[P_effectPot3]--;
-    upperData[P_effectPot3]--;
-
-    if (upperData[P_effectPot3] <= upperslowpot3) {
-      upperData[P_effectPot3] = upperslowpot3;
-      midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
-      upperfootPedal = false;
-      upperslow = false;
+  if (upperfootPedal) {
+    if (upperslow) {
+      upperData[P_effectPot3] -= 3;
+      if (upperData[P_effectPot3] <= upperslowpot3) {
+        upperData[P_effectPot3] = upperslowpot3;
+        midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
+        upperLastSentPot3 = upperData[P_effectPot3];
+        upperfootPedal = false;
+        upperslow = false;
+      } else if (abs(upperData[P_effectPot3] - upperLastSentPot3) >= 32) {
+        midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
+        upperLastSentPot3 = upperData[P_effectPot3];
+      }
+    } else if (upperfast) {
+      upperData[P_effectPot3] += 3;
+      if (upperData[P_effectPot3] >= upperfastpot3) {
+        upperData[P_effectPot3] = upperfastpot3;
+        midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
+        upperLastSentPot3 = upperData[P_effectPot3];
+        upperfootPedal = false;
+        upperfast = false;
+      } else if (abs(upperData[P_effectPot3] - upperLastSentPot3) >= 32) {
+        midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
+        upperLastSentPot3 = upperData[P_effectPot3];
+      }
     }
   }
 
-  if (upperfootPedal && upperfast) {
-    upperData[P_effectPot3]++;
-    upperData[P_effectPot3]++;
-    upperData[P_effectPot3]++;
-
-    if (upperData[P_effectPot3] >= upperfastpot3) {
-      upperData[P_effectPot3] = upperfastpot3;
-      midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
-      upperfootPedal = false;
-      upperfast = false;
+  if (lowerfootPedal) {
+    if (lowerslow) {
+      lowerData[P_effectPot3] -= 3;
+      if (lowerData[P_effectPot3] <= lowerslowpot3) {
+        lowerData[P_effectPot3] = lowerslowpot3;
+        midiCCOut71(CCeffectPot3, lowerData[P_effectPot3] >> midioutfrig);
+        lowerLastSentPot3 = lowerData[P_effectPot3];
+        lowerfootPedal = false;
+        lowerslow = false;
+      } else if (abs(lowerData[P_effectPot3] - lowerLastSentPot3) >= 32) {
+        midiCCOut71(CCeffectPot3, lowerData[P_effectPot3] >> midioutfrig);
+        lowerLastSentPot3 = lowerData[P_effectPot3];
+      }
+    } else if (lowerfast) {
+      lowerData[P_effectPot3] += 3;
+      if (lowerData[P_effectPot3] >= lowerfastpot3) {
+        lowerData[P_effectPot3] = lowerfastpot3;
+        midiCCOut71(CCeffectPot3, lowerData[P_effectPot3] >> midioutfrig);
+        lowerLastSentPot3 = lowerData[P_effectPot3];
+        lowerfootPedal = false;
+        lowerfast = false;
+      } else if (abs(lowerData[P_effectPot3] - lowerLastSentPot3) >= 32) {
+        midiCCOut71(CCeffectPot3, lowerData[P_effectPot3] >> midioutfrig);
+        lowerLastSentPot3 = lowerData[P_effectPot3];
+      }
     }
   }
-
-  if (lowerfootPedal && lowerslow) {
-    lowerData[P_effectPot3]--;
-    lowerData[P_effectPot3]--;
-    lowerData[P_effectPot3]--;
-    
-    if (lowerData[P_effectPot3] <= lowerslowpot3) {
-      lowerData[P_effectPot3] = lowerslowpot3;
-      midiCCOut71(CCeffectPot3, lowerData[P_effectPot3] >> midioutfrig);
-      lowerfootPedal = false;
-      lowerslow = false;
-    }
-  }
-
-  if (lowerfootPedal && lowerfast) {
-    lowerData[P_effectPot3]++;
-    lowerData[P_effectPot3]++;
-    lowerData[P_effectPot3]++;
-
-    if (lowerData[P_effectPot3] >= lowerfastpot3) {
-      lowerData[P_effectPot3] = lowerfastpot3;
-      midiCCOut71(CCeffectPot3, lowerData[P_effectPot3] >> midioutfrig);
-      lowerfootPedal = false;
-      lowerfast = false;
-    }
-  }
-
 }
 
 void updatefilterenvLogLin(boolean announce) {

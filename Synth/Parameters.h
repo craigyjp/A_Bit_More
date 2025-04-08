@@ -122,6 +122,8 @@ int lowerfastpot3 = 4090;
 int lowerslowpot3 = 10;
 bool lowerfast = false;
 bool lowerslow = true;
+int upperLastSentPot3 = -1;
+int lowerLastSentPot3 = -1;
 
 //Delayed LFO
 int numberOfNotes = 0;
