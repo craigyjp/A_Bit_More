@@ -1,6 +1,6 @@
 ## Based on the the original Crumar Bit series synthesizers I have created an RP2040 based DCO synthesizer. 
 
-## Unfortunately the project did not work out too well as the DCO's were noisy and the PWM and triangle sound atrocious.
+## Unfortunately the project did not work out too well as the DCO's were noisy and the PWM and triangle sounded atrocious.
 
 ## So a new synth is born with the same controller, new displays and the same filters, but now each RP2040 autotunes a pair of AS3340 VCO's
 
