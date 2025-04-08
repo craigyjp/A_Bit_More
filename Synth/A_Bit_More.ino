@@ -264,7 +264,7 @@ void setup() {
   lowerData[P_AfterTouchDest] = getAfterTouchL();
 
   splitPoint = getSplitPoint();
-  splitPoint = 60;
+  splitPoint = (splitPoint + 36 );
 
   splitTrans = getSplitTrans();
   setTranspose(splitTrans);
@@ -3413,8 +3413,7 @@ void changeSpeed() {
     upperData[P_effectPot3]--;
     upperData[P_effectPot3]--;
     upperData[P_effectPot3]--;
-    upperData[P_effectPot3]--;
-    
+
     if (upperData[P_effectPot3] <= upperslowpot3) {
       upperData[P_effectPot3] = upperslowpot3;
       midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
@@ -3427,8 +3426,7 @@ void changeSpeed() {
     upperData[P_effectPot3]++;
     upperData[P_effectPot3]++;
     upperData[P_effectPot3]++;
-    upperData[P_effectPot3]++;
-    
+
     if (upperData[P_effectPot3] >= upperfastpot3) {
       upperData[P_effectPot3] = upperfastpot3;
       midiCCOut71(CCeffectPot3, upperData[P_effectPot3] >> midioutfrig);
@@ -3438,7 +3436,6 @@ void changeSpeed() {
   }
 
   if (lowerfootPedal && lowerslow) {
-    lowerData[P_effectPot3]--;
     lowerData[P_effectPot3]--;
     lowerData[P_effectPot3]--;
     lowerData[P_effectPot3]--;
@@ -3452,7 +3449,6 @@ void changeSpeed() {
   }
 
   if (lowerfootPedal && lowerfast) {
-    lowerData[P_effectPot3]++;
     lowerData[P_effectPot3]++;
     lowerData[P_effectPot3]++;
     lowerData[P_effectPot3]++;

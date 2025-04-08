@@ -45,6 +45,7 @@ void settingsSplitPoint(int index, const char *value) {
   if (strcmp(value, "59") == 0) newsplitPoint = 23;
   if (strcmp(value, "60") == 0) newsplitPoint = 24;
   storeSplitPoint(newsplitPoint);
+  splitPoint = (newsplitPoint + 36);
 }
 
 void settingsSplitTrans(int index, const char *value) {
