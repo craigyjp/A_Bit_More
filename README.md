@@ -18,6 +18,7 @@ The case and keybed are a CME UF-70 Classic (black) and I've only kept the main 
 
 # Things to fix 
 
+* Add chord hold in wholemode only.
 * Add MIDI out/thru.
 * Fix bug in lower unison/mono mode last note priority.
 * Add sustain from pedal A (CC 64).
