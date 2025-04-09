@@ -4,6 +4,8 @@
 
 ## So a new synth is born with the same controller, new displays and the same filters, but now each RP2040 autotunes a pair of AS3340 VCO's
 
+![Synth](Photos/synth.jpg)
+
 This is an 8 voice bi-timbral polyphonic dual VCO based synthesizer that uses an RP2040 to autotune and control a pair of AS3340 VCO chips.
 
 I have also added portamento, octave switching, oscillator sync etc.
