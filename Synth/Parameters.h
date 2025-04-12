@@ -110,6 +110,7 @@ bool inPerformanceMode = false;
 static bool recallHeldToggleLatch = false;
 bool startedRenaming = false;
 bool isAutotuning = false;
+int scaled = 0;
 
 // footswitch
 bool upperfootPedal = false;

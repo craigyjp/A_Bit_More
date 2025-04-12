@@ -5700,8 +5700,12 @@ void writeDemux() {
       break;
 
     case 10:
-      sample_data1 = (channel_a & 0xFFF0000F) | (((int(upperData[P_effectsMix] * MULT2V)) & 0xFFFF) << 4);
-      sample_data2 = (channel_c & 0xFFF0000F) | (((int(lowerData[P_effectsMix] * MULT2V)) & 0xFFFF) << 4);
+      scaled = int(upperData[P_effectsMix] * MULT3V);
+      if (scaled > CLAMP2V) scaled = CLAMP2V;
+      sample_data1 = (channel_a & 0xFFF0000F) | ((scaled & 0xFFFF) << 4);
+      scaled = int(lowerData[P_effectsMix] * MULT3V);
+      if (scaled > CLAMP2V) scaled = CLAMP2V;
+      sample_data2 = (channel_c & 0xFFF0000F) | ((scaled & 0xFFFF) << 4);
 
       sample_data3 = (channel_b & 0xFFF0000F) | (((int(upperData[P_filterRes] * MULT2V)) & 0xFFFF) << 4);
       sample_data4 = (channel_d & 0xFFF0000F) | (((int(lowerData[P_filterRes] * MULT2V)) & 0xFFFF) << 4);

@@ -38,6 +38,8 @@ ADC *adc = new ADC();
 #define MULT33V 5.325
 #define DACMULT 6.5
 #define MIDICCTOPOT 8.62
+#define MULT3V 10.67
+#define CLAMP2V 26500  // DAC value that corresponds to 2V
 
 #define DAC_CS1 10
 
