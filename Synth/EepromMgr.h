@@ -18,7 +18,7 @@
 #define EEPROM_PITCHBEND 15
 #define EEPROM_MONOMULTI_L 16
 #define EEPROM_MONOMULTI_U 17
-#define EEPROM_PICKUP_ENABLE 18
+#define EEPROM_ENCODER_ACCELERATE 18
 
 int getMIDIChannel() {
   byte midiChannel = EEPROM.read(EEPROM_MIDI_CH);
@@ -28,18 +28,6 @@ int getMIDIChannel() {
 
 void storeMidiChannel(byte channel) {
   EEPROM.update(EEPROM_MIDI_CH, channel);
-}
-
-boolean getPickupEnable()
-{
-  byte pu = EEPROM.read(EEPROM_PICKUP_ENABLE);
-  if (pu < 0 || pu > 1)return false; //If EEPROM has no pickup enable stored
-  return pu == 1 ? true : false;
-}
-
-void storePickupEnable(byte pickUpActive)
-{
-  EEPROM.update(EEPROM_PICKUP_ENABLE, pickUpActive);
 }
 
 float getSplitPoint() {
@@ -60,6 +48,17 @@ float getSplitTrans() {
 
 void storeSplitTrans(byte type) {
   EEPROM.update(EEPROM_SPLITTRANS, type);
+}
+
+boolean getEncoderAccelerate() {
+  byte ea = EEPROM.read(EEPROM_ENCODER_ACCELERATE); 
+  if (ea < 0 || ea > 1)return true; //If EEPROM has no encoder direction stored
+  return ea == 1 ? true : false;
+}
+
+void storeEncoderAccelerate(byte encoderAccelerate)
+{
+  EEPROM.update(EEPROM_ENCODER_ACCELERATE, encoderAccelerate);
 }
 
 float getAfterTouchU() {

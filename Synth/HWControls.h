@@ -4,21 +4,279 @@
 #include <Encoder.h>
 #include <Bounce.h>
 #include "TButton.h"
-#include <ADC.h>
-#include <ADC_util.h>
-#include <VREF.h>
 
-ADC *adc = new ADC();
+#include "Rotary.h"
+#include "RotaryEncOverMCP.h"
 
-//Teensy 3.6 - Mux Pins
-#define MUX_0 37
-#define MUX_1 30
-#define MUX_2 31
-#define MUX_3 32
+#define OSC1_PW_BUTTON 0
+#define OSC2_PW_BUTTON 1
+#define FM_DEPTH_BUTTON 2
+#define OSC2_DETUNE_BUTTON 3
+#define OSC1_SAW_BUTTON 4
+#define OSC1_PULSE_BUTTON 5
+#define OSC1_SUB_BUTTON 6
+#define OSC2_SAW_BUTTON 7
+#define OSC2_PULSE_BUTTON 8
+#define OSC2_TRI_BUTTON 9
+#define EFFECTS_MIX_BUTTON 10
+#define NOISE_BUTTON 11
 
-#define MUX1_S A0
-#define MUX2_S A1
-#define MUX3_S A2
+
+// Pins for MCP23017
+#define GPA0 0
+#define GPA1 1
+#define GPA2 2
+#define GPA3 3
+#define GPA4 4
+#define GPA5 5
+#define GPA6 6
+#define GPA7 7
+#define GPB0 8
+#define GPB1 9
+#define GPB2 10
+#define GPB3 11
+#define GPB4 12
+#define GPB5 13
+#define GPB6 14
+#define GPB7 15
+
+void RotaryEncoderChanged(bool clockwise, int id);
+
+void mainButtonChanged(Button *btn, bool released);
+
+Adafruit_MCP23017 mcp1;
+Adafruit_MCP23017 mcp2;
+Adafruit_MCP23017 mcp3;
+Adafruit_MCP23017 mcp4;
+Adafruit_MCP23017 mcp5;
+Adafruit_MCP23017 mcp6;
+Adafruit_MCP23017 mcp7;
+
+//Array of pointers of all MCPs
+Adafruit_MCP23017 *allMCPs[] = { &mcp1, &mcp2, &mcp3, &mcp4, &mcp5, &mcp6, &mcp7 };
+
+/* Array of all rotary encoders and their pins */
+RotaryEncOverMCP rotaryEncoders[] = {
+  RotaryEncOverMCP(&mcp1, 0, 1, &RotaryEncoderChanged, 1),
+  RotaryEncOverMCP(&mcp1, 2, 3, &RotaryEncoderChanged, 2),
+  RotaryEncOverMCP(&mcp1, 4, 5, &RotaryEncoderChanged, 3),
+  RotaryEncOverMCP(&mcp1, 8, 9, &RotaryEncoderChanged, 4),
+  RotaryEncOverMCP(&mcp1, 10, 11, &RotaryEncoderChanged, 5),
+  RotaryEncOverMCP(&mcp1, 12, 13, &RotaryEncoderChanged, 6),
+  RotaryEncOverMCP(&mcp2, 0, 1, &RotaryEncoderChanged, 7),
+  RotaryEncOverMCP(&mcp2, 2, 3, &RotaryEncoderChanged, 8),
+  RotaryEncOverMCP(&mcp2, 4, 5, &RotaryEncoderChanged, 9),
+  RotaryEncOverMCP(&mcp2, 8, 9, &RotaryEncoderChanged, 10),
+  RotaryEncOverMCP(&mcp2, 10, 11, &RotaryEncoderChanged, 11),
+  RotaryEncOverMCP(&mcp2, 12, 13, &RotaryEncoderChanged, 12),
+  RotaryEncOverMCP(&mcp3, 0, 1, &RotaryEncoderChanged, 13),
+  RotaryEncOverMCP(&mcp3, 2, 3, &RotaryEncoderChanged, 14),
+  RotaryEncOverMCP(&mcp3, 4, 5, &RotaryEncoderChanged, 15),
+  RotaryEncOverMCP(&mcp3, 8, 9, &RotaryEncoderChanged, 16),
+  RotaryEncOverMCP(&mcp3, 10, 11, &RotaryEncoderChanged, 17),
+  RotaryEncOverMCP(&mcp3, 12, 13, &RotaryEncoderChanged, 18),
+  RotaryEncOverMCP(&mcp4, 0, 1, &RotaryEncoderChanged, 19),
+  RotaryEncOverMCP(&mcp4, 2, 3, &RotaryEncoderChanged, 20),
+  RotaryEncOverMCP(&mcp4, 4, 5, &RotaryEncoderChanged, 21),
+  RotaryEncOverMCP(&mcp4, 8, 9, &RotaryEncoderChanged, 22),
+  RotaryEncOverMCP(&mcp4, 10, 11, &RotaryEncoderChanged, 23),
+  RotaryEncOverMCP(&mcp4, 12, 13, &RotaryEncoderChanged, 24),
+  RotaryEncOverMCP(&mcp5, 0, 1, &RotaryEncoderChanged, 25),
+  RotaryEncOverMCP(&mcp5, 2, 3, &RotaryEncoderChanged, 26),
+  RotaryEncOverMCP(&mcp5, 4, 5, &RotaryEncoderChanged, 27),
+  RotaryEncOverMCP(&mcp5, 8, 9, &RotaryEncoderChanged, 28),
+  RotaryEncOverMCP(&mcp5, 10, 11, &RotaryEncoderChanged, 29),
+  RotaryEncOverMCP(&mcp5, 12, 13, &RotaryEncoderChanged, 30),
+  RotaryEncOverMCP(&mcp6, 0, 1, &RotaryEncoderChanged, 31),
+  RotaryEncOverMCP(&mcp6, 2, 3, &RotaryEncoderChanged, 32),
+  RotaryEncOverMCP(&mcp6, 4, 5, &RotaryEncoderChanged, 33),
+  RotaryEncOverMCP(&mcp6, 8, 9, &RotaryEncoderChanged, 34),
+  RotaryEncOverMCP(&mcp6, 10, 11, &RotaryEncoderChanged, 35),
+  RotaryEncOverMCP(&mcp6, 12, 13, &RotaryEncoderChanged, 36),
+  RotaryEncOverMCP(&mcp7, 0, 1, &RotaryEncoderChanged, 37),
+  RotaryEncOverMCP(&mcp7, 2, 3, &RotaryEncoderChanged, 39),
+  RotaryEncOverMCP(&mcp7, 4, 5, &RotaryEncoderChanged, 39),
+  RotaryEncOverMCP(&mcp7, 8, 9, &RotaryEncoderChanged, 40),
+  RotaryEncOverMCP(&mcp7, 10, 11, &RotaryEncoderChanged, 41),
+  RotaryEncOverMCP(&mcp7, 12, 13, &RotaryEncoderChanged, 42),
+};
+
+// after your rotaryEncoders[] definition
+constexpr size_t NUM_MCP = sizeof(allMCPs) / sizeof(allMCPs[0]);
+constexpr int numMCPs = (int)(sizeof(allMCPs) / sizeof(*allMCPs));
+constexpr int numEncoders = (int)(sizeof(rotaryEncoders) / sizeof(*rotaryEncoders));
+
+// an array of vectors to hold pointers to the encoders on each MCP
+std::vector<RotaryEncOverMCP *> encByMCP[NUM_MCP];
+
+Button osc1_PW_Button = Button(&mcp1, 6, OSC1_PW_BUTTON, &mainButtonChanged);
+Button osc2_PW_Button = Button(&mcp1, 14, OSC2_PW_BUTTON, &mainButtonChanged);
+Button fm_depth_Button = Button(&mcp2, 6, FM_DEPTH_BUTTON, &mainButtonChanged);
+Button osc2_detune_Button = Button(&mcp2, 14, OSC2_DETUNE_BUTTON, &mainButtonChanged);
+Button osc1_saw_Button = Button(&mcp3, 6, OSC1_SAW_BUTTON, &mainButtonChanged);
+Button osc1_pulse_Button = Button(&mcp3, 14, OSC1_PULSE_BUTTON, &mainButtonChanged);
+Button osc1_sub_Button = Button(&mcp4, 6, OSC1_SUB_BUTTON, &mainButtonChanged);
+Button osc2_saw_Button = Button(&mcp4, 14, OSC2_SAW_BUTTON, &mainButtonChanged);
+Button osc2_pulse_Button = Button(&mcp5, 6, OSC2_PULSE_BUTTON, &mainButtonChanged);
+Button osc2_tri_Button = Button(&mcp5, 14, OSC2_TRI_BUTTON, &mainButtonChanged);
+Button effects_mix_Button = Button(&mcp7, 6, EFFECTS_MIX_BUTTON, &mainButtonChanged);
+Button noise_Button = Button(&mcp7, 14, NOISE_BUTTON, &mainButtonChanged);
+
+Button *mainButtons[] = {
+  &osc1_PW_Button,
+  &osc2_PW_Button,
+  &fm_depth_Button,
+  &osc2_detune_Button,
+  &osc1_saw_Button,
+  &osc1_pulse_Button,
+  &osc1_sub_Button,
+  &osc2_saw_Button,
+  &osc2_pulse_Button,
+  &osc2_tri_Button,
+  &effects_mix_Button,
+  &noise_Button,
+};
+
+Button *allButtons[] = {
+  &osc1_PW_Button,
+  &osc2_PW_Button,
+  &fm_depth_Button,
+  &osc2_detune_Button,
+  &osc1_saw_Button,
+  &osc1_pulse_Button,
+  &osc1_sub_Button,
+  &osc2_saw_Button,
+  &osc2_pulse_Button,
+  &osc2_tri_Button,
+  &effects_mix_Button,
+  &noise_Button,
+};
+
+// GP1
+#define glide_A 0
+#define glide_B 1
+#define osc1_PW_A 2
+#define osc1_PW_B 3
+#define osc1_PWM_A 4
+#define osc1_PWM_B 5
+#define OSC1_PW_SW 6
+// #define unused 7
+#define osc1_saw_A 8
+#define osc1_saw_B 9
+#define osc1_pulse_A 10
+#define osc1_pulse_B 11
+#define osc1_sub_A 12
+#define osc1_sub_B 13
+#define OSC2_PW_SW 14
+// #define unused 15
+
+// GP2
+#define fm_depth_A 0
+#define fm_depth_B 1
+#define osc2_PW_A 2
+#define osc2_PW_B 3
+#define osc2_PWM_A 4
+#define osc2_PWM_B 5
+#define FM_DEPTH_SW 6
+//#define unsused 7
+#define osc2_saw_A 8
+#define osc2_saw_B 9
+#define osc2_pulse_A 10
+#define osc2_pulse_B 11
+#define osc2_tri_A 12
+#define osc2_tri_B 13
+#define DETUNE_SW 14
+//#define unused 15
+
+// GP3
+#define vcf_cut_A 0
+#define vcf_cut_B 1
+#define vcf_res_A 2
+#define vcf_res_B 3
+#define vcf_eg_A 4
+#define vcf_eg_B 5
+#define OSC1_SAW_SW 6
+//#define unsused 7
+#define vcf_key_A 8
+#define vcf_key_B 9
+#define vcf_lfo_A 10
+#define vcf_lfo_B 11
+#define filter_attack_A 12
+#define filter_attack_B 13
+#define OSC1_PULSE_SW 14
+//#define unused 15
+
+// GP4
+#define filter_decay_A 0
+#define filter_decay_B 1
+#define filter_sustain_A 2
+#define filter_sustain_B 3
+#define filter_release_A 4
+#define filter_release_B 5
+#define OSC1_SUB_SW 6
+//#define unsused 7
+#define osc2_detune_A 8
+#define osc2_detune_B 9
+#define osc2_interval_A 10
+#define osc2_interval_B 11
+#define amp_attack_A 12
+#define amp_attack_B 13
+#define LFO_SELECT_LED_RED 14
+//#define unused 15
+
+// GP5
+#define amp_decay_A 0
+#define amp_decay_B 1
+#define amp_sustain_A 2
+#define amp_sustain_B 3
+#define amp_release_A 2
+#define amp_release_B 3
+#define OSC2_PULSE_SW 6
+//#define unsused 7
+#define lfo_rate_A 8
+#define lfo_rate_B 9
+#define lfo_delay_A 10
+#define lfo_delay_B 11
+#define mw_depth_A 12
+#define mw_depath_B 13
+#define OSC2_TRI_SW 14
+//#define unused 15
+
+// GP6
+#define pw_lfo_A 0
+#define pw_lfo_B 1
+#define pb_depth_A 2
+#define pb_depth_B 3
+#define noise_A 4
+#define noise_B 5
+//#define unsused 6
+//#define unsused 7
+#define at_depth_A 8
+#define at_depth_B 9
+#define effect_mix_A 10
+#define effect_mix_B 11
+#define volume_A 12
+#define volume_B 13
+//#define unused 14
+//#define unused 15
+
+// GP7
+#define effect1_A 0
+#define effect_1_B 1
+#define effect_2_A 2
+#define effect_2_B 3
+#define effect_3_A 4
+#define effect_3_B 5
+#define EFFECT_MIX_SW 6
+//#define unused 7
+#define pm_dco_A 8
+#define pm_dco_B 9
+#define pm_env_A 10
+#define pm_env_B 11
+#define am_dpeth_A 12
+#define am_depth_B 13
+#define NOISE_SW 14
+//#define unused 15
 
 #define DEMUX_0 36
 #define DEMUX_1 35
@@ -31,148 +289,90 @@ ADC *adc = new ADC();
 
 
 //Note DAC
-#define MULT1V 3.3
-#define MULT1_2V 3.8
-#define MULT2V 6.475
-#define MULT5V 8
-#define MULT33V 5.325
-#define DACMULT 6.5
-#define MIDICCTOPOT 8.62
-#define MULT3V 10.67
+#define MULT1V 106.4
+#define MULT1_2V 122.5
+#define MULT2V 217.4
+#define MULT5V 256
+#define MULT33V 170.85
+//#define DACMULT 6.5
+//#define MIDICCTOPOT 8.62
+#define MULT3V 344
 #define CLAMP2V 26500  // DAC value that corresponds to 2V
 
 #define DAC_CS1 10
 
-//Mux 1 Connections
+// New DeMux 1 Connections A
 
-#define MUX1_glideTime 0
-#define MUX1_osc1SawLevel 1
-#define MUX1_osc1PulseLevel 2
-#define MUX1_osc1PW 3
-#define MUX1_osc1PWM 4
-#define MUX1_osc2Detune 5
-#define MUX1_osc2interval 6
-#define MUX1_fmDepth 7
-#define MUX1_osc1SubLevel 8
-#define MUX1_osc2SawLevel 9
-#define MUX1_osc2PulseLevel 10
-#define MUX1_osc2TriangleLevel 11
-#define MUX1_osc2PW 12
-#define MUX1_osc2PWM 13
-#define MUX1_spare14 14
-#define MUX1_spare15 15
-
-//Mux 2 Connections
-
-#define MUX2_filterAttack 0
-#define MUX2_filterDecay 1
-#define MUX2_filterSustain 2
-#define MUX2_filterRelease 3
-#define MUX2_ampAttack 4
-#define MUX2_ampDecay 5	
-#define MUX2_ampSustain 6
-#define MUX2_ampRelease 7	
-#define MUX2_filterLFO 8
-#define MUX2_keyTrack 9
-#define MUX2_filterCutoff 10
-#define MUX2_filterRes 11
-#define MUX2_filterEGlevel 12
-#define MUX2_spare13 13
-#define MUX2_spare14 14
-#define MUX2_spare15 15
-
-//Mux 3 Connections
-
-#define MUX3_pitchBendDepth 0
-#define MUX3_effectMix 1
-#define MUX3_volumeControl 2
-#define MUX3_amplifierLFO 3
-#define MUX3_spare4 5
-#define MUX3_ATDepth 4
-#define MUX3_noiseLevel 6 
-#define MUX3_pwLFO 7
-#define MUX3_LFORate 8
-#define MUX3_LFODelay 9
-#define MUX3_modWheelDepth 10
-#define MUX3_effectPot1 11
-#define MUX3_effectPot2 12
-#define MUX3_effectPot3 13
-#define MUX3_PM_DCO2 14
-#define MUX3_PM_FilterEnv 15
-
-
-// New DeMux 1 Connections A 
-
-#define DEMUX1_noiseLevel_Upper 0           // 0-2v
-#define DEMUX1_osc1SawLevel_Upper 1         // 0-2v
-#define DEMUX1_osc1PulseLevel_Upper 2       // 0-2v
-#define DEMUX1_osc1SubLevel_Upper 3         // 0-2v
-#define DEMUX1_osc1PM_DCO1_level_Upper 4    // 0-2v
-#define DEMUX1_osc1PM_Env_level_Upper 5     // 0-2v
-#define DEMUX1_osc2SawLevel_Upper 6         // 0-2v
-#define DEMUX1_osc2PulseLevel_Upper 7       // 0-2v
-#define DEMUX1_osc2TriLevel_Upper 8         // 0-2v
-#define DEMUX1_volumeControl_Upper 9        // 0-2v
-#define DEMUX1_effectMix_Upper 10           // 0-2v
-#define DEMUX1_FM_LFO_Depth_Upper 11        // 0-2v
-#define DEMUX1_TM_LFO_Depth_Upper 12        // 0-2v
-#define DEMUX1_AM_LFO_Depth_Upper 13        // 0-2v
-#define DEMUX1_spare 14                     // 0-2v
-#define DEMUX1_PW_LFO_Rate_Upper 15         // 0-5v
+#define DEMUX1_noiseLevel_Upper 0         // 0-2v
+#define DEMUX1_osc1SawLevel_Upper 1       // 0-2v
+#define DEMUX1_osc1PulseLevel_Upper 2     // 0-2v
+#define DEMUX1_osc1SubLevel_Upper 3       // 0-2v
+#define DEMUX1_osc1PM_DCO1_level_Upper 4  // 0-2v
+#define DEMUX1_osc1PM_Env_level_Upper 5   // 0-2v
+#define DEMUX1_osc2SawLevel_Upper 6       // 0-2v
+#define DEMUX1_osc2PulseLevel_Upper 7     // 0-2v
+#define DEMUX1_osc2TriLevel_Upper 8       // 0-2v
+#define DEMUX1_volumeControl_Upper 9      // 0-2v
+#define DEMUX1_effectMix_Upper 10         // 0-2v
+#define DEMUX1_FM_LFO_Depth_Upper 11      // 0-2v
+#define DEMUX1_TM_LFO_Depth_Upper 12      // 0-2v
+#define DEMUX1_AM_LFO_Depth_Upper 13      // 0-2v
+#define DEMUX1_spare 14                   // 0-2v
+#define DEMUX1_PW_LFO_Rate_Upper 15       // 0-5v
 
 //DeMux 2 Connections B
-#define DEMUX2_filterAttack_Upper 0         // 0-5v
-#define DEMUX2_filterDecay_Upper 1          // 0-5v
-#define DEMUX2_filterSustain_Upper 2        // 0-5v
-#define DEMUX2_filterRelease_Upper 3        // 0-5v
-#define DEMUX2_ampAttack_Upper 4            // 0-5v
-#define DEMUX2_ampDecay_Upper 5             // 0-5v
-#define DEMUX2_amp_Sustain_Upper 6          // 0-5v
-#define DEMUX2_ampRelease_Upper 7           // 0-5v
-#define DEMUX2_egDepth_upper 8              // 0-5v
-#define DEMUX2_filterCutoff_Upper 9         // 0-5v
-#define DEMUX2_filterRes_Upper 10           // 0-5v  
-#define DEMUX2_LFO_Rate_Upper 11            // 0-5v
-#define DEMUX2_LFO_Wave_Upper 12            // 0-5v 
-#define DEMUX2_effectPot1_Upper 13          // 0-3.3v 
-#define DEMUX2_effectPot2_Upper 14          // 0-3.3v
-#define DEMUX2_effectPot3_Upper 15          // 0-3.3v
+#define DEMUX2_filterAttack_Upper 0   // 0-5v
+#define DEMUX2_filterDecay_Upper 1    // 0-5v
+#define DEMUX2_filterSustain_Upper 2  // 0-5v
+#define DEMUX2_filterRelease_Upper 3  // 0-5v
+#define DEMUX2_ampAttack_Upper 4      // 0-5v
+#define DEMUX2_ampDecay_Upper 5       // 0-5v
+#define DEMUX2_amp_Sustain_Upper 6    // 0-5v
+#define DEMUX2_ampRelease_Upper 7     // 0-5v
+#define DEMUX2_egDepth_upper 8        // 0-5v
+#define DEMUX2_filterCutoff_Upper 9   // 0-5v
+#define DEMUX2_filterRes_Upper 10     // 0-5v
+#define DEMUX2_LFO_Rate_Upper 11      // 0-5v
+#define DEMUX2_LFO_Wave_Upper 12      // 0-5v
+#define DEMUX2_effectPot1_Upper 13    // 0-3.3v
+#define DEMUX2_effectPot2_Upper 14    // 0-3.3v
+#define DEMUX2_effectPot3_Upper 15    // 0-3.3v
 
 //DeMux 3 Connections C
-#define DEMUX3_noiseLevel_Lower 0           // 0-2v
-#define DEMUX3_osc1SawLevel_Lower 1         // 0-2v
-#define DEMUX3_osc1PulseLevel_Lower 2       // 0-2v
-#define DEMUX3_osc1SubLevel_Lower 3         // 0-2v
-#define DEMUX3_osc1PM_DCO1_level_Lower 4    // 0-2v
-#define DEMUX3_osc1PM_Env_level_Lower 5     // 0-2v
-#define DEMUX3_osc2SawLevel_Lower 6         // 0-2v
-#define DEMUX3_osc2PulseLevel_Lower 7       // 0-2v
-#define DEMUX3_osc2TriLevel_Lower 8         // 0-2v
-#define DEMUX3_volumeControl_Lower 9        // 0-2v
-#define DEMUX3_effectMix_Lower 10           // 0-2v
-#define DEMUX3_FM_LFO_Depth_Lower 11        // 0-2v
-#define DEMUX3_TM_LFO_Depth_Lower 12        // 0-2v
-#define DEMUX3_AM_LFO_Depth_Lower 13        // 0-2v
-#define DEMUX3_spare 14                     // 0-2v
-#define DEMUX3_PW_LFO_Rate_Lower 15         // 0-5v
+#define DEMUX3_noiseLevel_Lower 0         // 0-2v
+#define DEMUX3_osc1SawLevel_Lower 1       // 0-2v
+#define DEMUX3_osc1PulseLevel_Lower 2     // 0-2v
+#define DEMUX3_osc1SubLevel_Lower 3       // 0-2v
+#define DEMUX3_osc1PM_DCO1_level_Lower 4  // 0-2v
+#define DEMUX3_osc1PM_Env_level_Lower 5   // 0-2v
+#define DEMUX3_osc2SawLevel_Lower 6       // 0-2v
+#define DEMUX3_osc2PulseLevel_Lower 7     // 0-2v
+#define DEMUX3_osc2TriLevel_Lower 8       // 0-2v
+#define DEMUX3_volumeControl_Lower 9      // 0-2v
+#define DEMUX3_effectMix_Lower 10         // 0-2v
+#define DEMUX3_FM_LFO_Depth_Lower 11      // 0-2v
+#define DEMUX3_TM_LFO_Depth_Lower 12      // 0-2v
+#define DEMUX3_AM_LFO_Depth_Lower 13      // 0-2v
+#define DEMUX3_spare 14                   // 0-2v
+#define DEMUX3_PW_LFO_Rate_Lower 15       // 0-5v
 
 //DeMux 4 Connections D
-#define DEMUX4_filterAttack_Lower 0         // 0-5v
-#define DEMUX4_filterDecay_Lower 1          // 0-5v
-#define DEMUX4_filterSustain_Lower 2        // 0-5v
-#define DEMUX4_filterRelease_Lower 3        // 0-5v
-#define DEMUX4_ampAttack_Lower 4            // 0-5v 
-#define DEMUX4_ampDecay_Lower 5             // 0-5v
-#define DEMUX4_amp_Sustain_Lower 6          // 0-5v
-#define DEMUX4_ampRelease_Lower 7           // 0-5v
-#define DEMUX4_egDepth_Lower 8              // 0-5v
-#define DEMUX4_filterCutoff_Lower 9         // 0-5v
-#define DEMUX4_filterRes_Lower 10           // 0-5v 
-#define DEMUX4_LFO_Rate_Lower 11            // 0-5v
-#define DEMUX4_LFO_Wave_Lower 12            // 0-5v
-#define DEMUX4_effectPot1_Upper 13          // 0-3.3v 
-#define DEMUX4_effectPot2_Lower 14          // 0-3.3v 
-#define DEMUX4_effectPot3_Lower 15          // 0-3.3v 
+#define DEMUX4_filterAttack_Lower 0   // 0-5v
+#define DEMUX4_filterDecay_Lower 1    // 0-5v
+#define DEMUX4_filterSustain_Lower 2  // 0-5v
+#define DEMUX4_filterRelease_Lower 3  // 0-5v
+#define DEMUX4_ampAttack_Lower 4      // 0-5v
+#define DEMUX4_ampDecay_Lower 5       // 0-5v
+#define DEMUX4_amp_Sustain_Lower 6    // 0-5v
+#define DEMUX4_ampRelease_Lower 7     // 0-5v
+#define DEMUX4_egDepth_Lower 8        // 0-5v
+#define DEMUX4_filterCutoff_Lower 9   // 0-5v
+#define DEMUX4_filterRes_Lower 10     // 0-5v
+#define DEMUX4_LFO_Rate_Lower 11      // 0-5v
+#define DEMUX4_LFO_Wave_Lower 12      // 0-5v
+#define DEMUX4_effectPot1_Upper 13    // 0-3.3v
+#define DEMUX4_effectPot2_Lower 14    // 0-3.3v
+#define DEMUX4_effectPot3_Lower 15    // 0-3.3v
 
 // 74HC165 Switches
 
@@ -199,7 +399,7 @@ ADC *adc = new ADC();
 #define FILTER_ENV_LOOP_SW 18
 #define AMP_ENV_VELOCITY_SW 19
 #define AMP_ENV_LIN_LOG_SW 20
-#define AMP_ENV_LOOP_SW  21
+#define AMP_ENV_LOOP_SW 21
 #define LFO_WAVEFORM_SW 22
 #define SYNC_SW 23
 
@@ -223,7 +423,7 @@ ADC *adc = new ADC();
 #define AMP_VELOCITY_UPPER 6
 #define LFO_ALT_UPPER 7
 
-#define POLYMOD_DEST_DCO1_UPPER 8 
+#define POLYMOD_DEST_DCO1_UPPER 8
 #define POLYMOD_DEST_FILTER_UPPER 9
 #define EFFECT_BANK_1_UPPER 10
 #define EFFECT_BANK_2_UPPER 11
@@ -250,7 +450,7 @@ ADC *adc = new ADC();
 #define AMP_VELOCITY_LOWER 30
 #define LFO_ALT_LOWER 31
 
-#define POLYMOD_DEST_DCO1_LOWER 32 
+#define POLYMOD_DEST_DCO1_LOWER 32
 #define POLYMOD_DEST_FILTER_LOWER 33
 #define EFFECT_BANK_1_LOWER 34
 #define EFFECT_BANK_2_LOWER 35
@@ -278,7 +478,7 @@ ADC *adc = new ADC();
 #define AMP_MODE_BIT1_LOWER 55
 
 #define UPPER_RELAY_1 56
-#define UPPER_RELAY_2 57 // LEDs for LFO (lower Default)
+#define UPPER_RELAY_2 57  // LEDs for LFO (lower Default)
 #define LFO_MULTI_BIT0_UPPER 58
 #define LFO_MULTI_BIT1_UPPER 59
 #define LFO_MULTI_BIT2_UPPER 60
@@ -288,8 +488,8 @@ ADC *adc = new ADC();
 
 // System Switches etc
 
-#define TUNE_BUTTON 18
-#define TUNE_LED 19
+#define TUNE_BUTTON 16
+#define TUNE_LED 17
 
 #define RECALL_SW 20
 #define SAVE_SW 23
@@ -299,23 +499,10 @@ ADC *adc = new ADC();
 #define ENCODER_PINA 4
 #define ENCODER_PINB 5
 
-#define MUXCHANNELS 16
-#define DEMUXCHANNELS 16
-#define QUANTISE_FACTOR 31
-
 #define DEBOUNCE 30
+#define DEMUXCHANNELS 16
 
-static byte muxInput = 0;
 static byte muxOutput = 0;
-
-static int mux1ValuesPrev[MUXCHANNELS] = {};
-static int mux2ValuesPrev[MUXCHANNELS] = {};
-static int mux3ValuesPrev[MUXCHANNELS] = {};
-
-static int mux1Read = 0;
-static int mux2Read = 0;
-static int mux3Read = 0;
-
 
 static long encPrevious = 0;
 
@@ -324,38 +511,17 @@ TButton settingsButton{ SETTINGS_SW, LOW, HOLD_DURATION, DEBOUNCE, CLICK_DURATIO
 TButton backButton{ BACK_SW, LOW, HOLD_DURATION, DEBOUNCE, CLICK_DURATION };
 TButton recallButton{ RECALL_SW, LOW, HOLD_DURATION, DEBOUNCE, CLICK_DURATION };  //On encoder
 
-Encoder encoder(ENCODER_PINB, ENCODER_PINA);//This often needs the pins swapping depending on the encoder
+Encoder encoder(ENCODER_PINB, ENCODER_PINA);  //This often needs the pins swapping depending on the encoder
 
-void setupHardware()
-{
-
-  analogReadResolution(12);
-
-  //MUXs on ADC1
-  adc->adc1->setAveraging(32); // set number of averages 0, 4, 8, 16 or 32.
-  adc->adc1->setResolution(12); // set bits of resolution  8, 10, 12 or 16 bits.
-  adc->adc1->setConversionSpeed(ADC_CONVERSION_SPEED::VERY_LOW_SPEED); // change the conversion speed
-  adc->adc1->setSamplingSpeed(ADC_SAMPLING_SPEED::HIGH_SPEED); // change the sampling speed
-
-  //Mux address pins
+void setupHardware() {
 
   pinMode(DAC_CS1, OUTPUT);
   digitalWrite(DAC_CS1, HIGH);
-
-  pinMode(MUX_0, OUTPUT);
-  pinMode(MUX_1, OUTPUT);
-  pinMode(MUX_2, OUTPUT);
-  pinMode(MUX_3, OUTPUT);
 
   pinMode(DEMUX_0, OUTPUT);
   pinMode(DEMUX_1, OUTPUT);
   pinMode(DEMUX_2, OUTPUT);
   pinMode(DEMUX_3, OUTPUT);
-
-  digitalWrite(MUX_0, LOW);
-  digitalWrite(MUX_1, LOW);
-  digitalWrite(MUX_2, LOW);
-  digitalWrite(MUX_3, LOW);
 
   digitalWrite(DEMUX_0, LOW);
   digitalWrite(DEMUX_1, LOW);
@@ -375,13 +541,8 @@ void setupHardware()
 
   //Switches
 
-  pinMode(RECALL_SW, INPUT_PULLUP); //On encoder
+  pinMode(RECALL_SW, INPUT_PULLUP);  //On encoder
   pinMode(SAVE_SW, INPUT_PULLUP);
   pinMode(SETTINGS_SW, INPUT_PULLUP);
   pinMode(BACK_SW, INPUT_PULLUP);
-
-  pinMode(MUX1_S, INPUT_DISABLE);
-  pinMode(MUX2_S, INPUT_DISABLE);
-  pinMode(MUX3_S, INPUT_DISABLE);
-  
 }

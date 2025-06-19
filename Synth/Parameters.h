@@ -18,13 +18,21 @@ int lastPlayedNote = -1;  // Track the last note played
 int lastPlayedVoice = 0;  // Track the voice of the last note played
 int lastUsedVoice = 0;    // Global variable to store the last used voice
 
+// adding encoders
+bool rotaryEncoderChanged(int id, bool clockwise, int speed);
+#define NUM_ENCODERS 42
+unsigned long lastTransition[NUM_ENCODERS + 1];
+boolean accelerate = true;
+int speed = 1;
+int value = 0;
+
 int upperData[77];
 int lowerData[77];
 int panelData[77];
-int prevUpperData[77];
-bool upperPickUp[77];
-int prevLowerData[77];
-bool lowerPickUp[77];
+// int prevUpperData[77];
+// bool upperPickUp[77];
+// int prevLowerData[77];
+// bool lowerPickUp[77];
 
 #define P_sysex 0
 #define P_pwLFO 1
@@ -115,12 +123,12 @@ int scaled = 0;
 // footswitch
 bool upperfootPedal = false;
 bool lowerfootPedal = false;
-int upperfastpot3 = 4090;
-int upperslowpot3 = 10;
+int upperfastpot3 = 1022;
+int upperslowpot3 = 2;
 bool upperfast = false;
 bool upperslow = true;
-int lowerfastpot3 = 4090;
-int lowerslowpot3 = 10;
+int lowerfastpot3 = 1022;
+int lowerslowpot3 = 2;
 bool lowerfast = false;
 bool lowerslow = true;
 int upperLastSentPot3 = -1;

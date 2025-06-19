@@ -7,7 +7,7 @@ void settingsAfterTouchU();
 void settingsAfterTouchL();
 void settingsPitchBend();
 void settingsEncoderDir();
-void settingsPickupEnable();
+void settingsEncoderAccelerate();
 
 int currentIndexMIDICh();
 int currentIndexSplitPoint();
@@ -16,7 +16,7 @@ int currentIndexAfterTouchU();
 int currentIndexAfterTouchL();
 int currentIndexPitchBend();
 int currentIndexEncoderDir();
-int currentIndexPickupEnable();
+int currentIndexEncoderAccelerate();
 
 void settingsSplitPoint(int index, const char *value) {
   if (strcmp(value, "36") == 0) newsplitPoint = 0;
@@ -93,16 +93,14 @@ void settingsEncoderDir(int index, const char *value) {
   storeEncoderDir(encCW ? 1 : 0);
 }
 
-void settingsPickupEnable(int index, const char *value) {
-  if (strcmp(value, "Off") == 0) {
-    pickUpActive = false;
+void settingsEncoderAccelerate(int index, const char *value) {
+  if (strcmp(value, "Yes") == 0) {
+    accelerate = true;
   } else {
-    pickUpActive = true;
+    accelerate =  false;
   }
-  storePickupEnable(pickUpActive ? 1 : 0);
+  storeEncoderAccelerate(accelerate ? 0 : 1);
 }
-
-
 
 int currentIndexSplitTrans() {
   return getSplitTrans();
@@ -128,8 +126,8 @@ int currentIndexEncoderDir() {
   return getEncoderDir() ? 0 : 1;
 }
 
-int currentIndexPickupEnable() {
-  return getPickupEnable() ? 1 : 0;
+int currentIndexEncoderAccelerate() {
+  return getEncoderAccelerate() ? 0 : 1;
 }
 
 // add settings to the circular buffer
@@ -140,5 +138,5 @@ void setUpSettings() {
   settings::append(settings::SettingsOption{ "AfterTouch U", { "Off", "DCO Mod", "CutOff Freq", "VCF Mod", "VCA Mod", "\0" }, settingsAfterTouchU, currentIndexAfterTouchU });
   settings::append(settings::SettingsOption{ "AfterTouch L", { "Off", "DCO Mod", "CutOff Freq", "VCF Mod", "VCA Mod", "\0" }, settingsAfterTouchL, currentIndexAfterTouchL });
   settings::append(settings::SettingsOption{ "Encoder", { "Type 1", "Type 2", "\0" }, settingsEncoderDir, currentIndexEncoderDir });
-  settings::append(settings::SettingsOption{ "Pick-up", {"Off", "On", "\0"}, settingsPickupEnable, currentIndexPickupEnable});
+  settings::append(settings::SettingsOption{ "Enc Speed", {"No", "Yes", "\0"}, settingsEncoderAccelerate, currentIndexEncoderAccelerate});
 }
