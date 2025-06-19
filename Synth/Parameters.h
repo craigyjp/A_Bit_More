@@ -123,11 +123,11 @@ int scaled = 0;
 // footswitch
 bool upperfootPedal = false;
 bool lowerfootPedal = false;
-int upperfastpot3 = 1022;
+int upperfastpot3 = 125;
 int upperslowpot3 = 2;
 bool upperfast = false;
 bool upperslow = true;
-int lowerfastpot3 = 1022;
+int lowerfastpot3 = 125;
 int lowerslowpot3 = 2;
 bool lowerfast = false;
 bool lowerslow = true;

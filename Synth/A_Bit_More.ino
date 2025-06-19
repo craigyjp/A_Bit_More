@@ -322,6 +322,8 @@ void setup() {
 
   // Read the encoders accelerate
   accelerate = getEncoderAccelerate();
+  Serial.print("Accelerate ");
+  Serial.println(accelerate);
 
   //setupDisplay();
   delay(500);
@@ -4792,7 +4794,7 @@ void updatevcaGate(boolean announce) {
       midiCCOut72(CCvcaGate, 1);
       upperData[P_ampAttack] = 0;
       upperData[P_ampDecay] = 0;
-      upperData[P_ampSustain] = 1023;
+      upperData[P_ampSustain] = 127;
       upperData[P_ampRelease] = 0;
     }
   } else {
@@ -4820,12 +4822,12 @@ void updatevcaGate(boolean announce) {
       midiCCOut72(CCvcaGate, 1);
       lowerData[P_ampAttack] = 0;
       lowerData[P_ampDecay] = 0;
-      lowerData[P_ampSustain] = 1023;
+      lowerData[P_ampSustain] = 127;
       lowerData[P_ampRelease] = 0;
       if (wholemode) {
         upperData[P_ampAttack] = 0;
         upperData[P_ampDecay] = 0;
-        upperData[P_ampSustain] = 1023;
+        upperData[P_ampSustain] = 127;
         upperData[P_ampRelease] = 0;
       }
     }

@@ -5,7 +5,6 @@ void settingsSplitPoint();
 void settingsSplitTrans();
 void settingsAfterTouchU();
 void settingsAfterTouchL();
-void settingsPitchBend();
 void settingsEncoderDir();
 void settingsEncoderAccelerate();
 
@@ -14,7 +13,6 @@ int currentIndexSplitPoint();
 int currentIndexSplitTrans();
 int currentIndexAfterTouchU();
 int currentIndexAfterTouchL();
-int currentIndexPitchBend();
 int currentIndexEncoderDir();
 int currentIndexEncoderAccelerate();
 
@@ -99,7 +97,7 @@ void settingsEncoderAccelerate(int index, const char *value) {
   } else {
     accelerate =  false;
   }
-  storeEncoderAccelerate(accelerate ? 0 : 1);
+  storeEncoderAccelerate(accelerate ? 1 : 0);
 }
 
 int currentIndexSplitTrans() {
@@ -127,7 +125,7 @@ int currentIndexEncoderDir() {
 }
 
 int currentIndexEncoderAccelerate() {
-  return getEncoderAccelerate() ? 0 : 1;
+  return getEncoderAccelerate() ? 1 : 0;
 }
 
 // add settings to the circular buffer
