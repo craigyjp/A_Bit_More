@@ -201,12 +201,12 @@ void setup() {
   mcp5.pinMode(7, OUTPUT);   // pin 7 = GPA7 of MCP2301X
   mcp5.pinMode(15, OUTPUT);  // pin 15 = GPB7 of MCP2301X
 
-  mcp6.pinMode(6, OUTPUT);   // pin 6 = GPA7 of MCP2301X
+  mcp6.pinMode(6, OUTPUT);   // pin 6 = GPA6 of MCP2301X
   mcp6.pinMode(7, OUTPUT);   // pin 7 = GPA7 of MCP2301X
-  mcp6.pinMode(14, OUTPUT);  // pin 14 = GPA7 of MCP2301X
+  mcp6.pinMode(14, OUTPUT);  // pin 14 = GPB6 of MCP2301X
   mcp6.pinMode(15, OUTPUT);  // pin 15 = GPB7 of MCP2301X
 
-  mcp7.pinMode(6, OUTPUT);   // pin 6 = GPA6 of MCP2301X
+  mcp7.pinMode(7, OUTPUT);   // pin 7 = GPA7 of MCP2301X
   mcp7.pinMode(15, OUTPUT);  // pin 15 = GPB7 of MCP2301X
 
   setupDisplay();
@@ -994,11 +994,11 @@ void RotaryEncoderChanged(bool clockwise, int id) {
       if (upperSW) {
         upperData[P_effectsMix] = (upperData[P_effectsMix] + speed);
         upperData[P_effectsMix] = constrain(upperData[P_effectsMix], 0, 127);
-        effectsMixstr = upperData[P_effectsMix];
+        effectsMixstr = LINEARCENTREZERO[upperData[P_effectsMix]];
       } else {
         lowerData[P_effectsMix] = (lowerData[P_effectsMix] + speed);
         lowerData[P_effectsMix] = constrain(lowerData[P_effectsMix], 0, 127);
-        effectsMixstr = lowerData[P_effectsMix];
+        effectsMixstr = LINEARCENTREZERO[lowerData[P_effectsMix]];
         if (wholemode) {
           upperData[P_effectsMix] = lowerData[P_effectsMix];
         }
@@ -1134,168 +1134,340 @@ void RotaryEncoderChanged(bool clockwise, int id) {
 void mainButtonChanged(Button *btn, bool released) {
 
   switch (btn->id) {
-    // case OSC1_PW_BUTTON:
-    //   if (!released) {
-    //     osc1_octave = osc1_octave + 1;
-    //     if (osc1_octave > 2) {
-    //       osc1_octave = 0;
-    //     }
-    //     myControlChange(midiChannel, CCosc1_octave, osc1_octave);
-    //   }
-    //   break;
 
-    // case OSC1_WAVE_BUTTON:
-    //   if (!released) {
-    //     osc1_wave = osc1_wave + 1;
-    //     if (osc1_wave > 3) {
-    //       osc1_wave = 0;
-    //     }
-    //     myControlChange(midiChannel, CCosc1_wave, osc1_wave);
-    //   }
-    //   break;
+    case OSC1_PW_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleOsc1PWUpper) {
+            storedOsc1PWUpper = upperData[P_osc1PW];  // store current
+            upperData[P_osc1PW] = 63;                 // set to 50%
+          } else {
+            upperData[P_osc1PW] = storedOsc1PWUpper;  // restore original
+          }
+          toggleOsc1PWUpper = !toggleOsc1PWUpper;
+          osc1PWstr = PULSEWIDTH[upperData[P_osc1PW]];
+        } else {
+          if (!toggleOsc1PWLower) {
+            storedOsc1PWLower = lowerData[P_osc1PW];  // store current
+            lowerData[P_osc1PW] = 63;                 // set to 50%
+            if (wholemode) {
+              upperData[P_osc1PW] = lowerData[P_osc1PW];
+            }
+          } else {
+            lowerData[P_osc1PW] = storedOsc1PWLower;  // restore original
+            if (wholemode) {
+              upperData[P_osc1PW] = lowerData[P_osc1PW];
+            }
+          }
+          toggleOsc1PWLower = !toggleOsc1PWLower;
+          osc1PWstr = PULSEWIDTH[lowerData[P_osc1PW]];
+        }
 
-    // case OSC1_SUB_BUTTON:
-    //   if (!released) {
-    //     osc1_sub = !osc1_sub;
-    //     myControlChange(midiChannel, CCosc1_sub, osc1_sub);
-    //   }
-    //   break;
+        updateosc1PW(1);
+      }
+      break;
 
-    // case OSC2_WAVE_BUTTON:
-    //   if (!released) {
-    //     osc2_wave = osc2_wave + 1;
-    //     if (osc2_wave > 3) {
-    //       osc2_wave = 0;
-    //     }
-    //     myControlChange(midiChannel, CCosc2_wave, osc2_wave);
-    //   }
-    //   break;
+    case OSC2_PW_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleOsc2PWUpper) {
+            storedOsc2PWUpper = upperData[P_osc2PW];  // store current
+            upperData[P_osc2PW] = 63;                 // set to 50%
+          } else {
+            upperData[P_osc2PW] = storedOsc2PWUpper;  // restore original
+          }
+          toggleOsc2PWUpper = !toggleOsc2PWUpper;
+          osc2PWstr = PULSEWIDTH[upperData[P_osc2PW]];
+        } else {
+          if (!toggleOsc2PWLower) {
+            storedOsc2PWLower = lowerData[P_osc2PW];  // store current
+            lowerData[P_osc2PW] = 63;                 // set to 50%
+            if (wholemode) {
+              upperData[P_osc2PW] = lowerData[P_osc2PW];
+            }
+          } else {
+            lowerData[P_osc2PW] = storedOsc2PWLower;  // restore original
+            if (wholemode) {
+              upperData[P_osc2PW] = lowerData[P_osc2PW];
+            }
+          }
+          toggleOsc2PWLower = !toggleOsc2PWLower;
+          osc2PWstr = PULSEWIDTH[lowerData[P_osc2PW]];
+        }
 
-    // case OSC2_XMOD_BUTTON:
-    //   if (!released) {
-    //     osc2_xmod = osc2_xmod + 1;
-    //     if (osc2_xmod > 2) {
-    //       osc2_xmod = 0;
-    //     }
-    //     myControlChange(midiChannel, CCosc2_xmod, osc2_xmod);
-    //   }
-    //   break;
+        updateosc2PW(1);
+      }
+      break;
 
-    // case OSC2_EG_BUTTON:
-    //   if (!released) {
-    //     osc2_eg_select = osc2_eg_select + 1;
-    //     if (osc2_eg_select > 1) {
-    //       osc2_eg_select = 0;
-    //     }
-    //     myControlChange(midiChannel, CCosc2_eg_select, osc2_eg_select);
-    //   }
-    //   break;
+    case EFFECTS_MIX_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleEffectsMixU) {
+            storedEffectsMixU = upperData[P_effectsMix];
+            upperData[P_effectsMix] = 63;
+          } else {
+            upperData[P_effectsMix] = storedEffectsMixU;
+          }
+          toggleEffectsMixU = !toggleEffectsMixU;
+          effectsMixstr = LINEARCENTREZERO[upperData[P_effectsMix]];
+        } else {
+          if (!toggleEffectsMixL) {
+            storedEffectsMixL = lowerData[P_effectsMix];
+            lowerData[P_effectsMix] = 63;
+            if (wholemode) upperData[P_effectsMix] = 63;
+          } else {
+            lowerData[P_effectsMix] = storedEffectsMixL;
+            if (wholemode) upperData[P_effectsMix] = storedEffectsMixL;
+          }
+          toggleEffectsMixL = !toggleEffectsMixL;
+          effectsMixstr = LINEARCENTREZERO[lowerData[P_effectsMix]];
+        }
+        updateeffectsMix(1);
+      }
+      break;
 
-    // case LFO1_WAVE_BUTTON:
-    //   if (!released) {
-    //     lfo1_wave = lfo1_wave + 1;
-    //     if (lfo1_wave > 3) {
-    //       lfo1_wave = 0;
-    //     }
-    //     myControlChange(midiChannel, CClfo1_wave, lfo1_wave);
-    //   }
-    //   break;
+    case NOISE_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleNoiseLevelU) {
+            storedNoiseLevelU = upperData[P_noiseLevel];
+            upperData[P_noiseLevel] = 63;
+          } else {
+            upperData[P_noiseLevel] = storedNoiseLevelU;
+          }
+          toggleNoiseLevelU = !toggleNoiseLevelU;
+          noiseLevelstr = LINEARCENTREZERO[upperData[P_noiseLevel]];
+        } else {
+          if (!toggleNoiseLevelL) {
+            storedNoiseLevelL = lowerData[P_noiseLevel];
+            lowerData[P_noiseLevel] = 63;
+            if (wholemode) upperData[P_noiseLevel] = 63;
+          } else {
+            lowerData[P_noiseLevel] = storedNoiseLevelL;
+            if (wholemode) upperData[P_noiseLevel] = storedNoiseLevelL;
+          }
+          toggleNoiseLevelL = !toggleNoiseLevelL;
+          noiseLevelstr = LINEARCENTREZERO[lowerData[P_noiseLevel]];
+        }
+        updatenoiseLevel(1);
+      }
+      break;
 
-    // case LFO2_WAVE_BUTTON:
-    //   if (!released) {
-    //     lfo2_wave = lfo2_wave + 1;
-    //     if (lfo2_wave > 3) {
-    //       lfo2_wave = 0;
-    //     }
-    //     myControlChange(midiChannel, CClfo2_wave, lfo2_wave);
-    //   }
-    //   break;
+    case FM_DEPTH_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleFM_DepthU) {
+            storedFM_DepthU = upperData[P_fmDepth];
+            upperData[P_fmDepth] = 0;
+          } else {
+            upperData[P_fmDepth] = storedFM_DepthU;
+          }
+          toggleFM_DepthU = !toggleFM_DepthU;
+          fmDepthstr = upperData[P_fmDepth];
+        } else {
+          if (!toggleFM_DepthL) {
+            storedFM_DepthL = lowerData[P_fmDepth];
+            lowerData[P_fmDepth] = 0;
+            if (wholemode) upperData[P_fmDepth] = 0;
+          } else {
+            lowerData[P_fmDepth] = storedFM_DepthL;
+            if (wholemode) upperData[P_fmDepth] = storedFM_DepthL;
+          }
+          toggleFM_DepthL = !toggleFM_DepthL;
+          fmDepthstr = lowerData[P_fmDepth];
+        }
+        updatefmDepth(1);
+      }
+      break;
 
-    // case LFO3_WAVE_BUTTON:
-    //   if (!released) {
-    //     lfo3_wave = lfo3_wave + 1;
-    //     if (lfo3_wave > 3) {
-    //       lfo3_wave = 0;
-    //     }
-    //     myControlChange(midiChannel, CClfo3_wave, lfo3_wave);
-    //   }
-    //   break;
+    case OSC2_DETUNE_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleOsc2_detuneU) {
+            storedOsc2_detuneU = upperData[P_osc2Detune];
+            upperData[P_osc2Detune] = 0;
+          } else {
+            upperData[P_osc2Detune] = storedOsc2_detuneU;
+          }
+          toggleOsc2_detuneU = !toggleOsc2_detuneU;
+          osc2Detunestr = upperData[P_osc2Detune];
+        } else {
+          if (!toggleOsc2_detuneL) {
+            storedOsc2_detuneL = lowerData[P_osc2Detune];
+            lowerData[P_osc2Detune] = 0;
+            if (wholemode) upperData[P_osc2Detune] = 0;
+          } else {
+            lowerData[P_osc2Detune] = storedOsc2_detuneL;
+            if (wholemode) upperData[P_osc2Detune] = storedOsc2_detuneL;
+          }
+          toggleOsc2_detuneL = !toggleOsc2_detuneL;
+          osc2Detunestr = lowerData[P_osc2Detune];
+        }
+        updateosc2Detune(1);
+      }
+      break;
 
-    // case ENV_SEL_BUTTON:
-    //   if (!released) {
-    //     eg_select = eg_select + 1;
-    //     if (eg_select > 2) {
-    //       eg_select = 0;
-    //     }
-    //     myControlChange(midiChannel, CCeg_select, eg_select);
-    //   }
-    //   break;
+    case OSC1_SAW_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleOsc1_SawU) {
+            storedOsc1_SawU = upperData[P_osc1SawLevel];
+            upperData[P_osc1SawLevel] = 0;
+          } else {
+            upperData[P_osc1SawLevel] = storedOsc1_SawU;
+          }
+          toggleOsc1_SawU = !toggleOsc1_SawU;
+          osc1SawLevelstr = upperData[P_osc1SawLevel];
+        } else {
+          if (!toggleOsc1_SawL) {
+            storedOsc1_SawL = lowerData[P_osc1SawLevel];
+            lowerData[P_osc1SawLevel] = 0;
+            if (wholemode) upperData[P_osc1SawLevel] = 0;
+          } else {
+            lowerData[P_osc1SawLevel] = storedOsc1_SawL;
+            if (wholemode) upperData[P_osc1SawLevel] = storedOsc1_SawL;
+          }
+          toggleOsc1_SawL = !toggleOsc1_SawL;
+          osc1SawLevelstr = lowerData[P_osc1SawLevel];
+        }
+        updateOsc1SawLevel(1);
+      }
+      break;
 
-    // case LFO_SEL_BUTTON:
-    //   if (!released) {
-    //     lfo_select = lfo_select + 1;
-    //     if (lfo_select > 2) {
-    //       lfo_select = 0;
-    //     }
-    //     myControlChange(midiChannel, CClfo_select, lfo_select);
-    //   }
-    //   break;
+    case OSC2_SAW_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleOsc2_SawU) {
+            storedOsc2_SawU = upperData[P_osc2SawLevel];
+            upperData[P_osc2SawLevel] = 0;
+          } else {
+            upperData[P_osc2SawLevel] = storedOsc2_SawU;
+          }
+          toggleOsc2_SawU = !toggleOsc2_SawU;
+          osc2SawLevelstr = upperData[P_osc2SawLevel];
+        } else {
+          if (!toggleOsc2_SawL) {
+            storedOsc2_SawL = lowerData[P_osc2SawLevel];
+            lowerData[P_osc2SawLevel] = 0;
+            if (wholemode) upperData[P_osc2SawLevel] = 0;
+          } else {
+            lowerData[P_osc2SawLevel] = storedOsc2_SawL;
+            if (wholemode) upperData[P_osc2SawLevel] = storedOsc2_SawL;
+          }
+          toggleOsc2_SawL = !toggleOsc2_SawL;
+          osc2SawLevelstr = lowerData[P_osc2SawLevel];
+        }
+        updateOsc2SawLevel(1);
+      }
+      break;
 
-    // case OSC1_LEV_SW:
-    //   if (!released) {
-    //     osc1_level = 0;
-    //     myControlChange(midiChannel, CCosc1_level, osc1_level);
-    //   }
-    //   break;
+    case OSC1_PULSE_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleOsc1_PulseU) {
+            storedOsc1_PulseU = upperData[P_osc1PulseLevel];
+            upperData[P_osc1PulseLevel] = 0;
+          } else {
+            upperData[P_osc1PulseLevel] = storedOsc1_PulseU;
+          }
+          toggleOsc1_PulseU = !toggleOsc1_PulseU;
+          osc1PulseLevelstr = upperData[P_osc1PulseLevel];
+        } else {
+          if (!toggleOsc1_PulseL) {
+            storedOsc1_PulseL = lowerData[P_osc1PulseLevel];
+            lowerData[P_osc1PulseLevel] = 0;
+            if (wholemode) upperData[P_osc1PulseLevel] = 0;
+          } else {
+            lowerData[P_osc1PulseLevel] = storedOsc1_PulseL;
+            if (wholemode) upperData[P_osc1PulseLevel] = storedOsc1_PulseL;
+          }
+          toggleOsc1_PulseL = !toggleOsc1_PulseL;
+          osc1PulseLevelstr = lowerData[P_osc1PulseLevel];
+        }
+        updateOsc1PulseLevel(1);
+      }
+      break;
 
-    // case OSC2_DET_SW:
-    //   if (!released) {
-    //     osc2_detune = 50;
-    //     myControlChange(midiChannel, CCosc2_detune, osc2_detune);
-    //   }
-    //   break;
+    case OSC2_PULSE_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleOsc2_PulseU) {
+            storedOsc2_PulseU = upperData[P_osc2PulseLevel];
+            upperData[P_osc2PulseLevel] = 0;
+          } else {
+            upperData[P_osc2PulseLevel] = storedOsc2_PulseU;
+          }
+          toggleOsc2_PulseU = !toggleOsc2_PulseU;
+          osc2PulseLevelstr = upperData[P_osc2PulseLevel];
+        } else {
+          if (!toggleOsc2_PulseL) {
+            storedOsc2_PulseL = lowerData[P_osc2PulseLevel];
+            lowerData[P_osc2PulseLevel] = 0;
+            if (wholemode) upperData[P_osc2PulseLevel] = 0;
+          } else {
+            lowerData[P_osc2PulseLevel] = storedOsc2_PulseL;
+            if (wholemode) upperData[P_osc2PulseLevel] = storedOsc2_PulseL;
+          }
+          toggleOsc2_PulseL = !toggleOsc2_PulseL;
+          osc2PulseLevelstr = lowerData[P_osc2PulseLevel];
+        }
+        updateOsc2PulseLevel(1);
+      }
+      break;
 
-    // case OSC2_LEV_SW:
-    //   if (!released) {
-    //     osc2_level = 0;
-    //     myControlChange(midiChannel, CCosc2_level, osc2_level);
-    //   }
-    //   break;
+    case OSC1_SUB_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleOsc1_SubU) {
+            storedOsc1_SubU = upperData[P_osc1SubLevel];
+            upperData[P_osc1SubLevel] = 0;
+          } else {
+            upperData[P_osc1SubLevel] = storedOsc1_SubU;
+          }
+          toggleOsc1_SubU = !toggleOsc1_SubU;
+          osc1SubLevelstr = upperData[P_osc1SubLevel];
+        } else {
+          if (!toggleOsc1_SubL) {
+            storedOsc1_SubL = lowerData[P_osc1SubLevel];
+            lowerData[P_osc1SubLevel] = 0;
+            if (wholemode) upperData[P_osc1SubLevel] = 0;
+          } else {
+            lowerData[P_osc1SubLevel] = storedOsc1_SubL;
+            if (wholemode) upperData[P_osc1SubLevel] = storedOsc1_SubL;
+          }
+          toggleOsc1_SubL = !toggleOsc1_SubL;
+          osc1SubLevelstr = lowerData[P_osc1SubLevel];
+        }
+        updateOsc1SubLevel(1);
+      }
+      break;
 
-    // case OSC2_EG_SW:
-    //   if (!released) {
-    //     osc2_eg_depth = 50;
-    //     myControlChange(midiChannel, CCosc2_eg_depth, osc2_eg_depth);
-    //   }
-    //   break;
-
-    // case VCF_EG_SW:
-    //   if (!released) {
-    //     vcf_eg_depth = 50;
-    //     myControlChange(midiChannel, CCvcf_eg_depth, vcf_eg_depth);
-    //   }
-    //   break;
-
-    // case VCF_KEYF_SW:
-    //   if (!released) {
-    //     vcf_key_follow = 0;
-    //     myControlChange(midiChannel, CCvcf_key_follow, vcf_key_follow);
-    //   }
-    //   break;
-
-    // case VCF_VEL_SW:
-    //   if (!released) {
-    //     vcf_key_velocity = 0;
-    //     myControlChange(midiChannel, CCvcf_key_velocity, vcf_key_velocity);
-    //   }
-    //   break;
-
-    // case VCA_VEL_SW:
-    //   if (!released) {
-    //     vca_key_velocity = 0;
-    //     myControlChange(midiChannel, CCvca_key_velocity, vca_key_velocity);
-    //   }
-    //   break;
+    case OSC2_TRI_BUTTON:
+      if (!released) {
+        if (upperSW) {
+          if (!toggleOsc2_TriU) {
+            storedOsc2_TriU = upperData[P_osc2TriangleLevel];
+            upperData[P_osc2TriangleLevel] = 0;
+          } else {
+            upperData[P_osc2TriangleLevel] = storedOsc2_TriU;
+          }
+          toggleOsc2_TriU = !toggleOsc2_TriU;
+          osc2TriangleLevelstr = upperData[P_osc2TriangleLevel];
+        } else {
+          if (!toggleOsc2_TriL) {
+            storedOsc2_TriL = lowerData[P_osc2TriangleLevel];
+            lowerData[P_osc2TriangleLevel] = 0;
+            if (wholemode) upperData[P_osc2TriangleLevel] = 0;
+          } else {
+            lowerData[P_osc2TriangleLevel] = storedOsc2_TriL;
+            if (wholemode) upperData[P_osc2TriangleLevel] = storedOsc2_TriL;
+          }
+          toggleOsc2_TriL = !toggleOsc2_TriL;
+          osc2TriangleLevelstr = lowerData[P_osc2TriangleLevel];
+        }
+        updateOsc2TriangleLevel(1);
+      }
+      break;
   }
 }
 
@@ -2207,13 +2379,13 @@ void getDelayTime() {
   if (delaytimeL <= 0) {
     delaytimeL = 0.1;
   }
-  intervalL = (delaytimeL * 10);
+  intervalL = (delaytimeL * 100);
 
   delaytimeU = (upperData[P_LFODelay]);
   if (delaytimeU <= 0) {
     delaytimeU = 0.1;
   }
-  intervalU = (delaytimeU * 10);
+  intervalU = (delaytimeU * 100);
 }
 
 void allNotesOff() {
@@ -3142,49 +3314,49 @@ void updateStratusLFOWaveform(boolean announce) {
     switch (panelData[P_LFOWaveform]) {
       case 0:
         StratusLFOWaveform = "Sawtooth Up";
-        LFOWaveCV = 10;
+        LFOWaveCV = 1;
         midiCCOut72(CCLFOWaveform, 0);
         break;
 
       case 1:
         StratusLFOWaveform = "Sawtooth Down";
-        LFOWaveCV = 160;
+        LFOWaveCV = 20;
         midiCCOut72(CCLFOWaveform, 1);
         break;
 
       case 2:
         StratusLFOWaveform = "Squarewave";
-        LFOWaveCV = 280;
+        LFOWaveCV = 35;
         midiCCOut72(CCLFOWaveform, 2);
         break;
 
       case 3:
         StratusLFOWaveform = "Triangle";
-        LFOWaveCV = 400;
+        LFOWaveCV = 50;
         midiCCOut72(CCLFOWaveform, 3);
         break;
 
       case 4:
         StratusLFOWaveform = "Sinewave";
-        LFOWaveCV = 592;
+        LFOWaveCV = 74;
         midiCCOut72(CCLFOWaveform, 4);
         break;
 
       case 5:
         StratusLFOWaveform = "Sweeps";
-        LFOWaveCV = 720;
+        LFOWaveCV = 90;
         midiCCOut72(CCLFOWaveform, 5);
         break;
 
       case 6:
         StratusLFOWaveform = "Lumps";
-        LFOWaveCV = 840;
+        LFOWaveCV = 107;
         midiCCOut72(CCLFOWaveform, 6);
         break;
 
       case 7:
         StratusLFOWaveform = "Sample & Hold";
-        LFOWaveCV = 968;
+        LFOWaveCV = 122;
         midiCCOut72(CCLFOWaveform, 7);
         break;
     }
@@ -3192,49 +3364,49 @@ void updateStratusLFOWaveform(boolean announce) {
     switch (panelData[P_LFOWaveform]) {
       case 0:
         StratusLFOWaveform = "Saw +Oct";
-        LFOWaveCV = 10;
+        LFOWaveCV = 1;
         midiCCOut72(CCLFOWaveform, 0);
         break;
 
       case 1:
         StratusLFOWaveform = "Quad Saw";
-        LFOWaveCV = 160;
+        LFOWaveCV = 20;
         midiCCOut72(CCLFOWaveform, 1);
         break;
 
       case 2:
         StratusLFOWaveform = "Quad Pulse";
-        LFOWaveCV = 280;
+        LFOWaveCV = 35;
         midiCCOut72(CCLFOWaveform, 2);
         break;
 
       case 3:
         StratusLFOWaveform = "Tri Step";
-        LFOWaveCV = 400;
+        LFOWaveCV = 50;
         midiCCOut72(CCLFOWaveform, 3);
         break;
 
       case 4:
         StratusLFOWaveform = "Sine +Oct";
-        LFOWaveCV = 592;
+        LFOWaveCV = 74;
         midiCCOut72(CCLFOWaveform, 4);
         break;
 
       case 5:
         StratusLFOWaveform = "Sine +3rd";
-        LFOWaveCV = 720;
+        LFOWaveCV = 90;
         midiCCOut72(CCLFOWaveform, 5);
         break;
 
       case 6:
         StratusLFOWaveform = "Sine +4th";
-        LFOWaveCV = 840;
+        LFOWaveCV = 107;
         midiCCOut72(CCLFOWaveform, 6);
         break;
 
       case 7:
         StratusLFOWaveform = "Rand Slopes";
-        LFOWaveCV = 968;
+        LFOWaveCV = 122;
         midiCCOut72(CCLFOWaveform, 7);
         break;
     }
@@ -3327,9 +3499,14 @@ void updateampAttack(boolean announce) {
   if (upperSW) {
     midiCCOut(CCampAttack, upperData[P_ampAttack]);
     midiCCOut71(CCampAttack, upperData[P_ampAttack]);
+    upperData[P_oldampAttack] = upperData[P_ampAttack];
   } else {
     midiCCOut(CCampAttack, lowerData[P_ampAttack]);
     midiCCOut71(CCampAttack, lowerData[P_ampAttack]);
+    lowerData[P_oldampAttack] = lowerData[P_ampAttack];
+    if (wholemode) {
+      upperData[P_oldampAttack] = lowerData[P_oldampAttack];
+    }
   }
 }
 
@@ -3344,9 +3521,14 @@ void updateampDecay(boolean announce) {
   if (upperSW) {
     midiCCOut(CCampDecay, upperData[P_ampDecay]);
     midiCCOut71(CCampDecay, upperData[P_ampDecay]);
+    upperData[P_oldampDecay] = upperData[P_ampDecay];
   } else {
     midiCCOut(CCampDecay, lowerData[P_ampDecay]);
     midiCCOut71(CCampDecay, lowerData[P_ampDecay]);
+    lowerData[P_oldampDecay] = lowerData[P_ampDecay];
+    if (wholemode) {
+      upperData[P_oldampDecay] = lowerData[P_oldampDecay];
+    }
   }
 }
 
@@ -3357,9 +3539,14 @@ void updateampSustain(boolean announce) {
   if (upperSW) {
     midiCCOut(CCampSustain, upperData[P_ampSustain]);
     midiCCOut71(CCampSustain, upperData[P_ampSustain]);
+    upperData[P_oldampSustain] = upperData[P_ampSustain];
   } else {
     midiCCOut(CCampSustain, lowerData[P_ampSustain]);
     midiCCOut71(CCampSustain, lowerData[P_ampSustain]);
+    lowerData[P_oldampSustain] = lowerData[P_ampSustain];
+    if (wholemode) {
+      upperData[P_oldampSustain] = lowerData[P_oldampSustain];
+    }
   }
 }
 
@@ -3374,9 +3561,14 @@ void updateampRelease(boolean announce) {
   if (upperSW) {
     midiCCOut(CCampRelease, upperData[P_ampRelease]);
     midiCCOut71(CCampRelease, upperData[P_ampRelease]);
+    upperData[P_oldampRelease] = upperData[P_ampRelease];
   } else {
     midiCCOut(CCampRelease, lowerData[P_ampRelease]);
     midiCCOut71(CCampRelease, lowerData[P_ampRelease]);
+    lowerData[P_oldampRelease] = lowerData[P_ampRelease];
+    if (wholemode) {
+      upperData[P_oldampRelease] = lowerData[P_oldampRelease];
+    }
   }
 }
 
@@ -5340,7 +5532,7 @@ void myControlChange(byte channel, byte control, int value) {
           upperData[P_effectsMix] = value;
         }
       }
-      effectsMixstr = value;  // for display
+      effectsMixstr = LINEARCENTREZERO[value];  // for display
       updateeffectsMix(1);
       break;
 
@@ -5399,13 +5591,10 @@ void myControlChange(byte channel, byte control, int value) {
     case CCampAttack:
       if (upperSW) {
         upperData[P_ampAttack] = value;
-        upperData[P_oldampAttack] = value;
       } else {
         lowerData[P_ampAttack] = value;
-        lowerData[P_oldampAttack] = value;
         if (wholemode) {
           upperData[P_ampAttack] = value;
-          upperData[P_oldampAttack] = value;
         }
       }
       ampAttackstr = ENVTIMES[value];

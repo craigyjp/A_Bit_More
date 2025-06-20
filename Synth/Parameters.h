@@ -26,6 +26,67 @@ boolean accelerate = true;
 int speed = 1;
 int value = 0;
 
+//adding button toggles
+static int storedOsc1PWUpper = -1;
+static int storedOsc1PWLower = -1;
+static bool toggleOsc1PWUpper = false;
+static bool toggleOsc1PWLower = false;
+
+static int storedOsc2PWUpper = -1;
+static int storedOsc2PWLower = -1;
+static bool toggleOsc2PWUpper = false;
+static bool toggleOsc2PWLower = false;
+
+static int storedEffectsMixU = -1;
+static int storedEffectsMixL = -1;
+static bool toggleEffectsMixU = false;
+static bool toggleEffectsMixL = false;
+
+static int storedNoiseLevelU = -1;
+static int storedNoiseLevelL = -1;
+static bool toggleNoiseLevelU = false;
+static bool toggleNoiseLevelL = false;
+
+static int storedFM_DepthU = -1;
+static int storedFM_DepthL = -1;
+static bool toggleFM_DepthU = false;
+static bool toggleFM_DepthL = false;
+
+static int storedOsc2_detuneU = -1;
+static int storedOsc2_detuneL = -1;
+static bool toggleOsc2_detuneU = false;
+static bool toggleOsc2_detuneL = false;
+
+static int storedOsc1_SawU = -1;
+static int storedOsc1_SawL = -1;
+static bool toggleOsc1_SawU = false;
+static bool toggleOsc1_SawL = false;
+
+static int storedOsc2_SawU = -1;
+static int storedOsc2_SawL = -1;
+static bool toggleOsc2_SawU = false;
+static bool toggleOsc2_SawL = false;
+
+static int storedOsc1_PulseU = -1;
+static int storedOsc1_PulseL = -1;
+static bool toggleOsc1_PulseU = false;
+static bool toggleOsc1_PulseL = false;
+
+static int storedOsc2_PulseU = -1;
+static int storedOsc2_PulseL = -1;
+static bool toggleOsc2_PulseU = false;
+static bool toggleOsc2_PulseL = false;
+
+static int storedOsc1_SubU = -1;
+static int storedOsc1_SubL = -1;
+static bool toggleOsc1_SubU = false;
+static bool toggleOsc1_SubL = false;
+
+static int storedOsc2_TriU = -1;
+static int storedOsc2_TriL = -1;
+static bool toggleOsc2_TriU = false;
+static bool toggleOsc2_TriL = false;
+
 int upperData[77];
 int lowerData[77];
 int panelData[77];
@@ -220,12 +281,9 @@ int PitchBendLevelstr = 0;  // for display
 boolean wholemode = true;
 boolean dualmode = false;
 boolean splitmode = false;
+
 int LFOWaveCV = 0;
 int LFOWaveCVupper = 0;
 int LFOWaveCVlower = 0;
 
 int returnvalue = 0;
-
-boolean pickUp = true;  //settings option (EEPROM)
-boolean pickUpActive = false;
-boolean oldpickUpActive;
