@@ -94,7 +94,7 @@ RotaryEncOverMCP rotaryEncoders[] = {
   RotaryEncOverMCP(&mcp6, 10, 11, &RotaryEncoderChanged, 35),
   RotaryEncOverMCP(&mcp6, 12, 13, &RotaryEncoderChanged, 36),
   RotaryEncOverMCP(&mcp7, 0, 1, &RotaryEncoderChanged, 37),
-  RotaryEncOverMCP(&mcp7, 2, 3, &RotaryEncoderChanged, 39),
+  RotaryEncOverMCP(&mcp7, 2, 3, &RotaryEncoderChanged, 38),
   RotaryEncOverMCP(&mcp7, 4, 5, &RotaryEncoderChanged, 39),
   RotaryEncOverMCP(&mcp7, 8, 9, &RotaryEncoderChanged, 40),
   RotaryEncOverMCP(&mcp7, 10, 11, &RotaryEncoderChanged, 41),
@@ -294,8 +294,6 @@ Button *allButtons[] = {
 #define MULT2V 217.4
 #define MULT5V 256
 #define MULT33V 170.85
-//#define DACMULT 6.5
-//#define MIDICCTOPOT 8.62
 #define MULT3V 344
 #define CLAMP2V 26500  // DAC value that corresponds to 2V
 
