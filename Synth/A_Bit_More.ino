@@ -4561,34 +4561,34 @@ void updatesyncSW(boolean announce) {
 void updatefootSwitch() {
 
   if (upperSW) {
-    if (upperData[P_effectPot3] < 2047) {
+    if (upperData[P_effectPot3] < 63) {
       upperslowpot3 = upperData[P_effectPot3];
       upperfast = true;
       upperslow = false;
     }
-    if (upperData[P_effectPot3] > 2047) {
+    if (upperData[P_effectPot3] > 63) {
       upperfastpot3 = upperData[P_effectPot3];
       upperfast = false;
       upperslow = true;
     }
   } else {
-    if (lowerData[P_effectPot3] < 2047) {
+    if (lowerData[P_effectPot3] < 63) {
       lowerslowpot3 = lowerData[P_effectPot3];
       lowerfast = true;
       lowerslow = false;
     }
-    if (lowerData[P_effectPot3] > 2047) {
+    if (lowerData[P_effectPot3] > 63) {
       lowerfastpot3 = lowerData[P_effectPot3];
       lowerfast = false;
       lowerslow = true;
     }
     if (wholemode) {
-      if (upperData[P_effectPot3] < 2047) {
+      if (upperData[P_effectPot3] < 63) {
         upperslowpot3 = upperData[P_effectPot3];
         upperfast = true;
         upperslow = false;
       }
-      if (upperData[P_effectPot3] > 2047) {
+      if (upperData[P_effectPot3] > 63) {
         upperfastpot3 = upperData[P_effectPot3];
         upperfast = false;
         upperslow = true;
@@ -4598,58 +4598,74 @@ void updatefootSwitch() {
 }
 
 void changeSpeed() {
+  static unsigned long lastStep = 0;
+  unsigned long now = millis();
+
+  // Only allow a step every SPEED_STEP_INTERVAL_MS
+  if (now - lastStep < SPEED_STEP_INTERVAL_MS) return;
+  lastStep = now;
+
+  // ---------- UPPER SECTION ----------
   if (upperfootPedal) {
     if (upperslow) {
-      upperData[P_effectPot3] -= 3;
-      if (upperData[P_effectPot3] <= upperslowpot3) {
-        upperData[P_effectPot3] = upperslowpot3;
-        midiCCOut71(CCeffectPot3, upperData[P_effectPot3]);
-        upperLastSentPot3 = upperData[P_effectPot3];
+      if (upperData[P_effectPot3] > upperslowpot3) {
+        upperData[P_effectPot3] -= 1;
+        if (upperData[P_effectPot3] < upperslowpot3)
+          upperData[P_effectPot3] = upperslowpot3;
+        // Send MIDI only if changed
+        if (upperData[P_effectPot3] != upperLastSentPot3) {
+          midiCCOut71(CCeffectPot3, upperData[P_effectPot3]);
+          upperLastSentPot3 = upperData[P_effectPot3];
+        }
+      } else {
+        // Arrived at destination
         upperfootPedal = false;
         upperslow = false;
-      } else if (abs(upperData[P_effectPot3] - upperLastSentPot3) >= 32) {
-        midiCCOut71(CCeffectPot3, upperData[P_effectPot3]);
-        upperLastSentPot3 = upperData[P_effectPot3];
       }
     } else if (upperfast) {
-      upperData[P_effectPot3] += 3;
-      if (upperData[P_effectPot3] >= upperfastpot3) {
-        upperData[P_effectPot3] = upperfastpot3;
-        midiCCOut71(CCeffectPot3, upperData[P_effectPot3]);
-        upperLastSentPot3 = upperData[P_effectPot3];
+      if (upperData[P_effectPot3] < upperfastpot3) {
+        upperData[P_effectPot3] += 1;
+        if (upperData[P_effectPot3] > upperfastpot3)
+          upperData[P_effectPot3] = upperfastpot3;
+        // Send MIDI only if changed
+        if (upperData[P_effectPot3] != upperLastSentPot3) {
+          midiCCOut71(CCeffectPot3, upperData[P_effectPot3]);
+          upperLastSentPot3 = upperData[P_effectPot3];
+        }
+      } else {
         upperfootPedal = false;
         upperfast = false;
-      } else if (abs(upperData[P_effectPot3] - upperLastSentPot3) >= 32) {
-        midiCCOut71(CCeffectPot3, upperData[P_effectPot3]);
-        upperLastSentPot3 = upperData[P_effectPot3];
       }
     }
   }
 
+  // ---------- LOWER SECTION ----------
   if (lowerfootPedal) {
     if (lowerslow) {
-      lowerData[P_effectPot3] -= 3;
-      if (lowerData[P_effectPot3] <= lowerslowpot3) {
-        lowerData[P_effectPot3] = lowerslowpot3;
-        midiCCOut71(CCeffectPot3, lowerData[P_effectPot3]);
-        lowerLastSentPot3 = lowerData[P_effectPot3];
+      if (lowerData[P_effectPot3] > lowerslowpot3) {
+        lowerData[P_effectPot3] -= 1;
+        if (lowerData[P_effectPot3] < lowerslowpot3)
+          lowerData[P_effectPot3] = lowerslowpot3;
+        if (lowerData[P_effectPot3] != lowerLastSentPot3) {
+          midiCCOut71(CCeffectPot3, lowerData[P_effectPot3]);
+          lowerLastSentPot3 = lowerData[P_effectPot3];
+        }
+      } else {
         lowerfootPedal = false;
         lowerslow = false;
-      } else if (abs(lowerData[P_effectPot3] - lowerLastSentPot3) >= 32) {
-        midiCCOut71(CCeffectPot3, lowerData[P_effectPot3]);
-        lowerLastSentPot3 = lowerData[P_effectPot3];
       }
     } else if (lowerfast) {
-      lowerData[P_effectPot3] += 3;
-      if (lowerData[P_effectPot3] >= lowerfastpot3) {
-        lowerData[P_effectPot3] = lowerfastpot3;
-        midiCCOut71(CCeffectPot3, lowerData[P_effectPot3]);
-        lowerLastSentPot3 = lowerData[P_effectPot3];
+      if (lowerData[P_effectPot3] < lowerfastpot3) {
+        lowerData[P_effectPot3] += 1;
+        if (lowerData[P_effectPot3] > lowerfastpot3)
+          lowerData[P_effectPot3] = lowerfastpot3;
+        if (lowerData[P_effectPot3] != lowerLastSentPot3) {
+          midiCCOut71(CCeffectPot3, lowerData[P_effectPot3]);
+          lowerLastSentPot3 = lowerData[P_effectPot3];
+        }
+      } else {
         lowerfootPedal = false;
         lowerfast = false;
-      } else if (abs(lowerData[P_effectPot3] - lowerLastSentPot3) >= 32) {
-        midiCCOut71(CCeffectPot3, lowerData[P_effectPot3]);
-        lowerLastSentPot3 = lowerData[P_effectPot3];
       }
     }
   }

@@ -185,15 +185,17 @@ int scaled = 0;
 bool upperfootPedal = false;
 bool lowerfootPedal = false;
 int upperfastpot3 = 125;
-int upperslowpot3 = 2;
+int upperslowpot3 = 3;
 bool upperfast = false;
 bool upperslow = true;
 int lowerfastpot3 = 125;
-int lowerslowpot3 = 2;
+int lowerslowpot3 = 3;
 bool lowerfast = false;
 bool lowerslow = true;
 int upperLastSentPot3 = -1;
 int lowerLastSentPot3 = -1;
+unsigned long lastSpeedStepTime = 0;
+const int SPEED_STEP_INTERVAL_MS = 20; // for ~2.5s traversal
 
 //Delayed LFO
 int numberOfNotes = 0;
