@@ -52,6 +52,106 @@ void setup() {
   renderCurrentPatchPage();
 }
 
+void drawThickLine(int x0, int y0, int x1, int y1, uint16_t color, int thickness) {
+  int t = thickness / 2;
+  for (int dx = -t; dx <= t; dx++) {
+    for (int dy = -t; dy <= t; dy++) {
+      tft.drawLine(x0 + dx, y0 + dy, x1 + dx, y1 + dy, color);
+    }
+  }
+}
+
+int interpExpo(int start, int end, float t, float curve) {
+  float shaped = 1.0 - pow(1.0 - t, curve);  // classic synth curve
+  return round(start + (end - start) * shaped);
+}
+
+int interpLinear(int start, int end, float t) {
+  return round(start + (end - start) * t);
+}
+
+// Interpolate for attack curve (convex for exp, linear for curve=1)
+int interpAttack(int start, int end, float t, float curve) {
+  // curve=1: linear; curve>1: convex (exponential); curve<1: concave (log)
+  float shaped = 1.0 - pow(1.0 - t, curve);
+  return round(start + (end - start) * shaped);
+}
+
+// Interpolate for decay/release (concave for exp, linear for curve=1)
+int interpDecayRelease(int start, int end, float t, float curve) {
+  float shaped = pow(t, curve);
+  return round(start + (end - start) * shaped);
+}
+
+void drawThickCurve(int x0, int y0, int x1, int y1, uint16_t color, int thickness, float curve, bool exponential) {
+  const int steps = 16;
+  for (int i = 0; i < steps; ++i) {
+    float t1 = (float)i / steps;
+    float t2 = (float)(i + 1) / steps;
+    int xa = round(x0 + (x1 - x0) * t1);
+    int xb = round(x0 + (x1 - x0) * t2);
+    int ya, yb;
+    if (exponential) {
+      ya = interpExpo(y0, y1, t1, curve);
+      yb = interpExpo(y0, y1, t2, curve);
+    } else {
+      ya = interpLinear(y0, y1, t1);
+      yb = interpLinear(y0, y1, t2);
+    }
+    drawThickLine(xa, ya, xb, yb, color, thickness);
+  }
+}
+
+void drawEnvADSR(
+  int attack, int decay, int sustain, int release,
+  int screenW, int baseY, int envHeight, int thickness,
+  bool isExponential) {
+
+  float fatt = constrain(attack / 1023.0, 0, 1);
+  float fdec = constrain(decay / 1023.0, 0, 1);
+  float fsus = constrain(sustain / 1023.0, 0, 1);
+  float frel = constrain(release / 1023.0, 0, 1);
+
+  float totalFrac = fatt + fdec + frel + 0.5;
+  float attW = (fatt / totalFrac) * (screenW - 1);
+  float decW = (fdec / totalFrac) * (screenW - 1);
+  float susW = (0.5 / totalFrac) * (screenW - 1);
+  float relW = (frel / totalFrac) * (screenW - 1);
+
+  int x0 = 10; // Now starts at x = 10
+  int y0 = baseY;
+
+  int x1 = x0 + attW;
+  int y1 = baseY - envHeight;
+
+  int x2 = x1 + decW;
+  int y2 = baseY - (fsus * envHeight);
+
+  int x3 = x2 + susW;
+  int y3 = y2;
+
+  int x4 = min(x3 + relW, x0 + screenW - 1);
+  int y4 = baseY;
+
+  uint16_t envColor = getActiveColor();
+
+  int margin = thickness + 2;
+  tft.fillRect(
+      x0 - margin,                  // left edge
+      baseY - envHeight - margin,   // top edge
+      screenW + margin * 2,         // width
+      envHeight + margin * 2,       // height
+      TFT_BLACK
+  );
+
+  float curve = isExponential ? 2.0 : 1.0;
+
+  drawThickCurve(x0, y0, x1, y1, envColor, thickness, curve, isExponential);
+  drawThickCurve(x1, y1, x2, y2, envColor, thickness, curve, isExponential);
+  drawThickLine(x2, y2, x3, y3, envColor, thickness);
+  drawThickCurve(x3, y3, x4, y4, envColor, thickness, curve, isExponential);
+}
+
 int mapValue(int value, int max_value, int scale) {
   return (value * scale) / max_value;
 }
@@ -80,22 +180,50 @@ void myControlChange(byte channel, byte control, int value) {
 
     case CCfilterAttack:
       panelData[P_filterAttack] = value;
-      drawBar0(6, panelData[P_filterAttack], NUM_STEPS, STEP_HEIGHT);
+      drawEnvADSR(
+        panelData[P_filterAttack],
+        panelData[P_filterDecay],
+        panelData[P_filterSustain],
+        panelData[P_filterRelease],
+        300, 236, 130, 4,
+        panelData[P_filterLogLin] != 0  // true=exponential, false=linear
+      );
       break;
 
     case CCfilterDecay:
       panelData[P_filterDecay] = value;
-      drawBar0(52, panelData[P_filterDecay], NUM_STEPS, STEP_HEIGHT);
+      drawEnvADSR(
+        panelData[P_filterAttack],
+        panelData[P_filterDecay],
+        panelData[P_filterSustain],
+        panelData[P_filterRelease],
+        300, 236, 130, 4,
+        panelData[P_filterLogLin] != 0  // true=exponential, false=linear
+      );
       break;
 
     case CCfilterSustain:
       panelData[P_filterSustain] = value;
-      drawBar0(98, panelData[P_filterSustain], NUM_STEPS, STEP_HEIGHT);
+      drawEnvADSR(
+        panelData[P_filterAttack],
+        panelData[P_filterDecay],
+        panelData[P_filterSustain],
+        panelData[P_filterRelease],
+        300, 236, 130, 4,
+        panelData[P_filterLogLin] != 0  // true=exponential, false=linear
+      );
       break;
 
     case CCfilterRelease:
       panelData[P_filterRelease] = value;
-      drawBar0(144, panelData[P_filterRelease], NUM_STEPS, STEP_HEIGHT);
+      drawEnvADSR(
+        panelData[P_filterAttack],
+        panelData[P_filterDecay],
+        panelData[P_filterSustain],
+        panelData[P_filterRelease],
+        300, 236, 130, 4,
+        panelData[P_filterLogLin] != 0  // true=exponential, false=linear
+      );
       break;
   }
 }
@@ -121,23 +249,31 @@ void myLEDupdate(byte channel, byte control, int value) {
     case CCfilterVel:
       panelData[P_filterVel] = value;
       if (panelData[P_filterVel] == 0) {
-        tft.fillRoundRect(180, 170, 130, 30, 5, TFT_GREEN);  // Green box for off
+        tft.fillRoundRect(10, 50, 130, 30, 5, TFT_GREEN);  // Green box for off
       } else {
-        tft.fillRoundRect(180, 170, 130, 30, 5, TFT_RED);  // Red box for on
+        tft.fillRoundRect(10, 50, 130, 30, 5, TFT_RED);  // Red box for on
       }
-      tft.setCursor(210, 193);
+      tft.setCursor(30, 73);
       tft.print(panelData[P_filterVel] == 0 ? "Vel Off" : "Vel On");
       break;
 
     case CCfilterenvLinLogSW:
       panelData[P_filterLogLin] = value;
       if (!panelData[P_filterLogLin]) {
-        tft.fillRoundRect(180, 90, 130, 30, 5, TFT_GREEN);  // Green box for off
+        tft.fillRoundRect(180, 50, 130, 30, 5, TFT_GREEN);  // Green box for off
       } else {
-        tft.fillRoundRect(180, 90, 130, 30, 5, TFT_RED);  // Red box for on
+        tft.fillRoundRect(180, 50, 130, 30, 5, TFT_RED);  // Red box for on
       }
-      tft.setCursor(210, 113);
+      tft.setCursor(210, 73);
       tft.print(panelData[P_filterLogLin] == 0 ? "Env Lin" : "Env Log");
+      drawEnvADSR(
+        panelData[P_filterAttack],
+        panelData[P_filterDecay],
+        panelData[P_filterSustain],
+        panelData[P_filterRelease],
+        300, 236, 130, 4,
+        panelData[P_filterLogLin] != 0  // true=exponential, false=linear
+      );
       break;
 
     case CCFilterLoop:
@@ -202,26 +338,16 @@ void renderCurrentPatchPage() {
   // ************************ DISPLAY 4 **************************
   tft.fillScreen(TFT_BLACK);
   tft.setFreeFont(&FreeSans9pt7b);
-  tft.setTextColor(TFT_WHITE);
-  tft.setTextSize(1);
-  tft.setCursor(10, 233);
-  tft.print("A");
-  tft.setCursor(58, 233);
-  tft.print("D");
-  tft.setCursor(106, 233);
-  tft.print("S");
-  tft.setCursor(148, 233);
-  tft.print("R");
 
   // filterVelocity
   tft.setFreeFont(&FreeSans12pt7b);
   tft.setTextColor(TFT_BLACK);  // Change text color to black for better contrast
   if (panelData[P_filterVel] == 0) {
-    tft.fillRoundRect(180, 170, 130, 30, 5, TFT_GREEN);  // Green box for off
+    tft.fillRoundRect(10, 50, 130, 30, 5, TFT_GREEN);  // Green box for off
   } else {
-    tft.fillRoundRect(180, 170, 130, 30, 5, TFT_RED);  // Red box for on
+    tft.fillRoundRect(10, 50, 130, 30, 5, TFT_RED);  // Red box for on
   }
-  tft.setCursor(210, 193);
+  tft.setCursor(30, 73);
   tft.print(panelData[P_filterVel] == 0 ? "Vel Off" : "Vel On");
 
   // filterEGInv
@@ -235,11 +361,11 @@ void renderCurrentPatchPage() {
 
   // filterLinLog
   if (!panelData[P_filterLogLin]) {
-    tft.fillRoundRect(180, 90, 130, 30, 5, TFT_GREEN);  // Green box for off
+    tft.fillRoundRect(180, 50, 130, 30, 5, TFT_GREEN);  // Green box for off
   } else {
-    tft.fillRoundRect(180, 90, 130, 30, 5, TFT_RED);  // Red box for on
+    tft.fillRoundRect(180, 50, 130, 30, 5, TFT_RED);  // Red box for on
   }
-  tft.setCursor(210, 113);
+  tft.setCursor(210, 73);
   tft.print(panelData[P_filterLogLin] == 0 ? "Env Lin" : "Env Log");
 
   // filterLoop
@@ -260,14 +386,16 @@ void renderCurrentPatchPage() {
       break;
   }
 
-  // Drawing the bars
-  drawBar0(6, panelData[P_filterAttack], NUM_STEPS, STEP_HEIGHT);
-  drawBar0(52, panelData[P_filterDecay], NUM_STEPS, STEP_HEIGHT);
-  drawBar0(98, panelData[P_filterSustain], NUM_STEPS, STEP_HEIGHT);
-  drawBar0(144, panelData[P_filterRelease], NUM_STEPS, STEP_HEIGHT);
+  drawEnvADSR(
+    panelData[P_filterAttack],
+    panelData[P_filterDecay],
+    panelData[P_filterSustain],
+    panelData[P_filterRelease],
+    300, 236, 130, 4,
+    panelData[P_filterLogLin] != 0  // true=exponential, false=linear
+  );
 }
 
 void loop(void) {
   MIDI.read(MIDI_CHANNEL_OMNI);
 }
-
