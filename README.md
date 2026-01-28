@@ -1,4 +1,4 @@
-## Based on the the original Crumar Bit series synthesizers I have created an RP2040 based DCO synthesizer. 
+## Based on the the original Crumar Bit series synthesizers I had created an RP2040 based DCO synthesizer. 
 
 ## Unfortunately the project did not work out too well as the DCO's were noisy and the PWM and triangle sounded atrocious.
 
