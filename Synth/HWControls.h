@@ -289,11 +289,11 @@ Button *allButtons[] = {
 
 
 //Note DAC
-#define MULT1V 106.4
-#define MULT1_2V 122.5
-#define MULT2V 217.4
-#define MULT5V 256
-#define MULT33V 170.85
+#define MULT1V 107
+#define MULT1_2V 123
+#define MULT2V 210
+#define MULT5V 260
+#define MULT33V 172
 #define MULT3V 344
 #define CLAMP2V 26500  // DAC value that corresponds to 2V
 

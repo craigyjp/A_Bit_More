@@ -18,6 +18,15 @@ int lastPlayedNote = -1;  // Track the last note played
 int lastPlayedVoice = 0;  // Track the voice of the last note played
 int lastUsedVoice = 0;    // Global variable to store the last used voice
 
+// Chord hold
+bool chordHoldActive = false;
+bool chordHoldWaitingForNotes = false;
+uint8_t chordHoldCount = 0;
+uint8_t chordHoldRoot = 0;
+uint8_t chordHoldIntervals[MAX_CHORD_NOTES] = {0};
+unsigned long chordHoldStartTime = 0;
+bool chordHoldCaptureWindowActive = false;
+
 // adding encoders
 bool rotaryEncoderChanged(int id, bool clockwise, int speed);
 #define NUM_ENCODERS 42
@@ -25,6 +34,7 @@ unsigned long lastTransition[NUM_ENCODERS + 1];
 boolean accelerate = true;
 int speed = 1;
 int value = 0;
+float lastSpeed[NUM_ENCODERS + 1] = { 0 }; // Or whatever your encoder count is
 
 //adding button toggles
 static int storedOsc1PWUpper = -1;

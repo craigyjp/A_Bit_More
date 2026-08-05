@@ -693,8 +693,15 @@ void showSettingsPage(const char *option, const char *value, int settingsPart) {
 }
 
 void displayThread() {
-  threads.delay(2000);  //Give bootup page chance to display
+  threads.delay(2000);  // Give bootup page chance to display
   while (1) {
+    // If a DMA push is still in flight, don't touch the framebuffer —
+    // yield so the main loop (encoder polling) gets the CPU.
+    if (tft.asyncUpdateActive()) {
+      threads.delay(2);
+      continue;
+    }
+
     switch (state) {
       case PARAMETER:
         if ((millis() - timer) > DISPLAYTIMEOUT) {
@@ -703,52 +710,90 @@ void displayThread() {
           renderCurrentParameterPage();
         }
         break;
-      case RECALL:
-        renderRecallPage();
-        break;
-      case SAVE:
-        renderSavePage();
-        break;
+      case RECALL:            renderRecallPage(); break;
+      case SAVE:              renderSavePage(); break;
       case REINITIALISE:
         renderReinitialisePage();
-        tft.updateScreen();  //update before delay
+        tft.updateScreen();   // keep this one blocking; it's a one-off with a delay after
         threads.delay(1000);
         state = PARAMETER;
-        break;
-      case PATCHNAMING:
-        renderPatchNamingPage();
-        break;
-      case PATCH:
-        renderCurrentPatchPage();
-        break;
-      case DELETE:
-        renderDeletePatchPage();
-        break;
-      case DELETEMSG:
-        renderDeleteMessagePage();
-        break;
+        continue;             // skip the async kick below
+      case PATCHNAMING:       renderPatchNamingPage(); break;
+      case PATCH:             renderCurrentPatchPage(); break;
+      case DELETE:            renderDeletePatchPage(); break;
+      case DELETEMSG:         renderDeleteMessagePage(); break;
       case SETTINGS:
-      case SETTINGSVALUE:
-        renderSettingsPage();
-        break;
+      case SETTINGSVALUE:     renderSettingsPage(); break;
       case PERFORMANCE_RECALL:
       case PERFORMANCE_EDIT:
-      case PERFORMANCE_SAVE:
-        renderPerformancePage();
-        break;
-      case PERFORMANCE_NAMING:
-        renderPerformanceNamingPage();  // see below
-        break;
-      case PERFORMANCE_DELETE:
-        renderPerformanceDeletePage();
-        break;
-      case PERFORMANCE_DELETEMSG:
-        // Handled inside checkSwitches() (already shows a message & delay)
-        break;
+      case PERFORMANCE_SAVE:  renderPerformancePage(); break;
+      case PERFORMANCE_NAMING:  renderPerformanceNamingPage(); break;
+      case PERFORMANCE_DELETE:  renderPerformanceDeletePage(); break;
+      case PERFORMANCE_DELETEMSG: break;
     }
-    tft.updateScreen();
+
+    tft.updateScreenAsync();   // DMA push — returns immediately
+    threads.delay(25);         // ~30–40 fps cap; hands the CPU back to loop()
   }
 }
+
+// void displayThread() {
+//   threads.delay(2000);  //Give bootup page chance to display
+//   while (1) {
+//     switch (state) {
+//       case PARAMETER:
+//         if ((millis() - timer) > DISPLAYTIMEOUT) {
+//           renderCurrentPatchPage();
+//         } else {
+//           renderCurrentParameterPage();
+//         }
+//         break;
+//       case RECALL:
+//         renderRecallPage();
+//         break;
+//       case SAVE:
+//         renderSavePage();
+//         break;
+//       case REINITIALISE:
+//         renderReinitialisePage();
+//         tft.updateScreen();  //update before delay
+//         threads.delay(1000);
+//         state = PARAMETER;
+//         break;
+//       case PATCHNAMING:
+//         renderPatchNamingPage();
+//         break;
+//       case PATCH:
+//         renderCurrentPatchPage();
+//         break;
+//       case DELETE:
+//         renderDeletePatchPage();
+//         break;
+//       case DELETEMSG:
+//         renderDeleteMessagePage();
+//         break;
+//       case SETTINGS:
+//       case SETTINGSVALUE:
+//         renderSettingsPage();
+//         break;
+//       case PERFORMANCE_RECALL:
+//       case PERFORMANCE_EDIT:
+//       case PERFORMANCE_SAVE:
+//         renderPerformancePage();
+//         break;
+//       case PERFORMANCE_NAMING:
+//         renderPerformanceNamingPage();  // see below
+//         break;
+//       case PERFORMANCE_DELETE:
+//         renderPerformanceDeletePage();
+//         break;
+//       case PERFORMANCE_DELETEMSG:
+//         // Handled inside checkSwitches() (already shows a message & delay)
+//         break;
+//     }
+//     tft.updateScreen();
+//   }
+// }
 
 void setupDisplay() {
   tft.init(240, 320);

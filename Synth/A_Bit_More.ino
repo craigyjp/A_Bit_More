@@ -163,6 +163,11 @@ void initButtons();
 int getEncoderSpeed(int id);
 
 void setup() {
+
+  chordHoldActive = false;
+  chordHoldWaitingForNotes = false;
+  chordHoldCount = 0;
+
   SPI.begin();
   Wire.begin();           // Join the I2C bus as Master
   Wire.setClock(400000);  // Set I2C speed to 400 kHz
@@ -301,7 +306,6 @@ void setup() {
   Serial.println("MIDI In DIN Listening");
 
   MIDI7.begin();
-  MIDI7.setHandleControlChange(panelControlChange);
   MIDI7.turnThruOn(midi::Thru::Mode::Off);
 
   MIDI6.begin();
@@ -322,8 +326,6 @@ void setup() {
 
   // Read the encoders accelerate
   accelerate = getEncoderAccelerate();
-  Serial.print("Accelerate ");
-  Serial.println(accelerate);
 
   //setupDisplay();
   delay(500);
@@ -384,19 +386,28 @@ int getEncoderSpeed(int id) {
   if (id < 1 || id > numEncoders) return 1;
 
   unsigned long now = millis();
-  unsigned long revolutionTime = now - lastTransition[id];
+  unsigned long dt = now - lastTransition[id];
 
-  int speed = 1;
-  if (revolutionTime < 50) {
-    speed = 10;
-  } else if (revolutionTime < 125) {
-    speed = 5;
-  } else if (revolutionTime < 250) {
-    speed = 2;
-  }
+  // Linear acceleration mapping
+  float minMult = 1.0f;
+  float maxMult = 10.0f;
+  float minDt = 30.0f;   // Fastest spins
+  float maxDt = 350.0f;  // Slowest for any acceleration
+
+  float mult;
+  if (dt < minDt)
+    mult = maxMult;
+  else if (dt > maxDt)
+    mult = minMult;
+  else
+    mult = maxMult - (maxMult - minMult) * ((dt - minDt) / (maxDt - minDt));
+
+  // Optional: smooth multiplier for less jumpy response
+  float alpha = 0.5f;  // 0.0 = no smoothing, 1.0 = max smoothing
+  lastSpeed[id] = alpha * mult + (1.0f - alpha) * lastSpeed[id];
 
   lastTransition[id] = now;
-  return speed;
+  return (int)(lastSpeed[id] + 0.5f);
 }
 
 void RotaryEncoderChanged(bool clockwise, int id) {
@@ -1578,11 +1589,6 @@ void savePerformance(const char *fileName, const Performance &perf) {
 }
 
 void editControlChange(byte channel, byte control, byte value) {
-  int newvalue = (value << 3);
-  myControlChange(channel, control, newvalue);
-}
-
-void panelControlChange(byte channel, byte control, byte value) {
   int newvalue = value;
   myControlChange(channel, control, newvalue);
 }
@@ -1798,6 +1804,78 @@ void commandLastNoteUniUpper() {
   for (int v = 4; v < 8; v++) releaseVoice(noteMsg, v);
 }
 
+void memorizeChordFromVoices() {
+  uint8_t heldNotes[MAX_CHORD_NOTES];
+  uint8_t count = 0;
+  for (int i = 0; i < NO_OF_VOICES; ++i) {
+    // Use .noteOn or voiceOn[] (either works)
+    if (voices[i].note >= 0 && voices[i].noteOn) {
+      bool already = false;
+      for (int j = 0; j < count; ++j)
+        if (heldNotes[j] == voices[i].note) already = true;
+      if (!already && count < MAX_CHORD_NOTES)
+        heldNotes[count++] = voices[i].note;
+    }
+  }
+  if (count > 0) {
+    // Sort
+    for (int i = 0; i < count - 1; i++)
+      for (int j = i + 1; j < count; j++)
+        if (heldNotes[j] < heldNotes[i])
+          std::swap(heldNotes[i], heldNotes[j]);
+    chordHoldRoot = heldNotes[0];
+    chordHoldCount = count;
+    for (int i = 0; i < count; i++)
+      chordHoldIntervals[i] = heldNotes[i] - chordHoldRoot;
+    chordHoldActive = true;
+    chordHoldWaitingForNotes = false;
+    //Serial.print("Chord Hold: root ");
+    //Serial.print(chordHoldRoot);
+    //Serial.print(" intervals: ");
+    //for (int i = 0; i < count; i++) Serial.print((int)chordHoldIntervals[i]), Serial.print(" ");
+    //Serial.println();
+  } else {
+    chordHoldActive = true;
+    chordHoldWaitingForNotes = false;
+    chordHoldCount = 0;
+    //Serial.println("Chord Hold: No chord detected, disarmed.");
+  }
+}
+
+void onHoldButtonPressed() {
+    chordHoldActive = true;
+    chordHoldWaitingForNotes = true;
+    chordHoldCount = 0;
+
+    // --- New: if notes are already held, capture immediately ---
+    bool anyActive = false;
+    for (int i = 0; i < NO_OF_VOICES; ++i) {
+        if (voices[i].note >= 0 && voices[i].noteOn) {
+            anyActive = true;
+            break;
+        }
+    }
+    if (anyActive) {
+        memorizeChordFromVoices();
+        chordHoldWaitingForNotes = false;
+        chordHoldCaptureWindowActive = false;
+        //Serial.println("Chord Hold: Captured chord immediately.");
+    } else {
+        // No notes held: start waiting for a chord (timer capture window)
+        chordHoldCaptureWindowActive = false;
+        chordHoldStartTime = 0;
+        //Serial.println("Chord Hold: ARMED, waiting for chord input.");
+    }
+}
+
+void onHoldButtonReleased() {
+  chordHoldActive = false;
+  chordHoldWaitingForNotes = false;
+  chordHoldCount = 0;
+  chordHoldCaptureWindowActive = false;
+  chordHoldStartTime = 0;
+  //Serial.println("Chord Hold: OFF");
+}
 
 void myNoteOn(byte channel, byte note, byte velocity) {
 
@@ -1805,8 +1883,25 @@ void myNoteOn(byte channel, byte note, byte velocity) {
 
   numberOfNotesU++;
   numberOfNotesL++;
-
   prevNote = note;
+
+  // ---- CHORD HOLD FOR POLY1/POLY2 ----
+  bool polyMode = (lowerData[P_keyboardMode] == 0 || lowerData[P_keyboardMode] == 1);
+  bool chordHoldIsActive = chordHoldActive && polyMode && playMode == 0;
+
+  // Chord Hold active: play transposed chord
+  if (chordHoldIsActive && chordHoldCount > 0 && !chordHoldWaitingForNotes) {
+    for (int i = 0; i < chordHoldCount; i++) {
+      uint8_t chordNote = note + chordHoldIntervals[i];
+      int voiceNum = (lowerData[P_keyboardMode] == 0) ? getVoiceNo(-1) - 1 : getVoiceNoPoly2(-1) - 1;
+      assignVoice(chordNote, velocity, voiceNum);
+      voiceAssignment[chordNote] = voiceNum;
+      //Serial.print("NoteOn: ");
+      //Serial.println(chordNote);
+    }
+    return;
+  }
+  // ---- END CHORD HOLD ----
 
   int voiceNum = -1;
 
@@ -1925,6 +2020,14 @@ void myNoteOn(byte channel, byte note, byte velocity) {
       }
       break;
   }
+  if (chordHoldActive && chordHoldWaitingForNotes) {
+    if (!chordHoldCaptureWindowActive) {
+      chordHoldCaptureWindowActive = true;
+      chordHoldStartTime = millis();
+      //Serial.println("Chord Hold: Capture window started.");
+    }
+    // Do NOT call memorizeChordFromVoices() here; let loop() do it after window ends
+  }
 }
 
 void myNoteOff(byte channel, byte note, byte velocity) {
@@ -1933,6 +2036,25 @@ void myNoteOff(byte channel, byte note, byte velocity) {
 
   numberOfNotesU--;
   numberOfNotesL--;
+
+  // ---- CHORD HOLD FOR POLY1/POLY2 ----
+  bool polyMode = (lowerData[P_keyboardMode] == 0 || lowerData[P_keyboardMode] == 1);
+  bool chordHoldIsActive = chordHoldActive && polyMode && playMode == 0;
+
+  if (chordHoldIsActive && chordHoldCount > 0) {
+    for (int i = 0; i < chordHoldCount; i++) {
+      uint8_t chordNote = note + chordHoldIntervals[i];
+      int assignedVoice = voiceAssignment[chordNote];
+      if (assignedVoice >= 0) {
+        releaseVoice(chordNote, assignedVoice);
+        voiceAssignment[chordNote] = -1;
+        //Serial.print("NoteOff: ");
+        //Serial.println(chordNote);
+      }
+    }
+    return;
+  }
+  // ---- END CHORD HOLD ----
 
   int assignedVoice = voiceAssignment[note];
 
@@ -2258,6 +2380,7 @@ void assignVoice(byte note, byte velocity, int voiceIdx) {
     voices[voiceIdx].note = note;
     voices[voiceIdx].velocity = velocity;
     voices[voiceIdx].timeOn = millis();
+    voices[voiceIdx].noteOn = true;  // <-- This enables chord hold!
     MIDI6.sendNoteOn(note, velocity, voiceIdx + 1);
     voiceOn[voiceIdx] = true;
   }
@@ -2265,8 +2388,9 @@ void assignVoice(byte note, byte velocity, int voiceIdx) {
 
 void releaseVoice(byte note, int voiceIdx) {
   if (voiceIdx >= 0 && voiceIdx < 8 && voices[voiceIdx].note == note) {
-    MIDI6.sendNoteOn(note, 0, voiceIdx + 1);
+    MIDI6.sendNoteOff(note, 0, voiceIdx + 1);
     voices[voiceIdx].note = -1;
+    voices[voiceIdx].noteOn = false;
     voiceOn[voiceIdx] = false;
 
     if (voiceIdx < 4) {
@@ -3621,12 +3745,14 @@ void updatechordHoldSW(boolean announce) {
       }
       midiCCOut(CCchordHoldSW, 0);
       midiCCOut72(CCchordHoldSW, 0);
+      onHoldButtonReleased();
     } else {
       if (announce) {
         showCurrentParameterPage("Chord Hold", "On");
       }
       midiCCOut(CCchordHoldSW, 127);
       midiCCOut72(CCchordHoldSW, 127);
+      onHoldButtonPressed();
     }
   } else {
     if (chordHoldL == 0) {
@@ -3635,15 +3761,18 @@ void updatechordHoldSW(boolean announce) {
       }
       midiCCOut(CCchordHoldSW, 0);
       midiCCOut72(CCchordHoldSW, 0);
+      onHoldButtonReleased();
     } else {
       if (announce) {
         showCurrentParameterPage("Chord Hold", "On");
       }
       midiCCOut(CCchordHoldSW, 127);
       midiCCOut72(CCchordHoldSW, 127);
+      onHoldButtonPressed();
     }
   }
 }
+
 
 void updateplayMode(boolean announce) {
   if (playMode == 0) {
@@ -6586,7 +6715,7 @@ void writeDemux() {
       digitalWriteFast(DEMUX_EN_1, LOW);
       break;
   }
-  delayMicroseconds(10);
+  delayMicroseconds(20);
   digitalWriteFast(DEMUX_EN_1, HIGH);
   //delayMicroseconds(100);
 
@@ -6662,6 +6791,8 @@ void reinitialiseToPanel() {
       setAllButtons();
     }
   }
+  patchName = INITPATCHNAME;
+  showPatchPage("Initial", "Patch Settings", "", "");
 }
 
 void deletePerformance(int perfNo) {
@@ -7564,6 +7695,17 @@ void onButtonPress(uint16_t btnIndex, uint8_t btnType) {
   }
 }
 
+void checkChordHold() {
+  if (chordHoldActive && chordHoldWaitingForNotes && chordHoldCaptureWindowActive) {
+    if (millis() - chordHoldStartTime >= CHORD_HOLD_CAPTURE_WINDOW) {
+      // Window is over, memorize chord from current voices
+      memorizeChordFromVoices();
+      chordHoldCaptureWindowActive = false;
+      // Now chordHoldWaitingForNotes is false if a chord was captured
+    }
+  }
+}
+
 void loop() {
 
   if (digitalRead(AUTOTUNE_INPUT) == HIGH) {
@@ -7605,5 +7747,6 @@ void loop() {
     srp.update();         // update all the LEDs in the buttons
     LFODelayHandle();
     changeSpeed();
+    checkChordHold();
   }
 }
